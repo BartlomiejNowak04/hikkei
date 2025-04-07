@@ -1,6 +1,32 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.diffplug.spotless' version '7.0.2'
+}
+
+spotless {
+  encoding 'UTF-8'
+
+  format 'misc', {
+    target '*.gradle', '.gitattributes', '.gitignore'
+
+    trimTrailingWhitespace()
+    leadingTabsToSpaces(2)
+    endWithNewline()
+  }
+
+  /// Maybe add extra options here in the future
+  java {
+    toggleOffOn('fmt: off', 'fmt: on')
+
+    trimTrailingWhitespace()
+    endWithNewline()
+
+    googleJavaFormat('1.26.0')
+    formatAnnotations()
+
+    // licenseHeader '/* (C) $YEAR under TBD */'
+  }
 }
 
 java {
