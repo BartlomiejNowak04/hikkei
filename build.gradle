@@ -41,6 +41,8 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter:5.12.1'
   testImplementation 'net.jqwik:jqwik:1.9.2'
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+  implementation 'com.vladsch.flexmark:flexmark-all:0.64.8'
 }
 
 /// Test naming convention:
