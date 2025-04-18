@@ -15,8 +15,7 @@ As such every non-trivial change should be accompanied by the corresponding
 tests and, unless for very good reasons, no class shall be left untested.
 
 The code should be formatted according to the
-[Google Java Style Guide](https://google.github.io/styleguide/javaguide.html)
-(with an exception for type-level annotations).
+[Google Java Style Guide](https://google.github.io/styleguide/javaguide.html).
 Formatting can be done automatically by the provided configuration to the
 [spotless](https://github.com/diffplug/spotless) Gradle plugin.
 

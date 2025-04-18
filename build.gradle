@@ -23,7 +23,7 @@ spotless {
     endWithNewline()
 
     googleJavaFormat('1.26.0')
-    formatAnnotations()
+    // formatAnnotations()
 
     // licenseHeader '/* (C) $YEAR under TBD */'
   }
