@@ -1,7 +1,7 @@
 plugins {
-    id 'java'
-    id 'application'
-    id 'com.diffplug.spotless' version '7.0.2'
+  id 'java'
+  id 'application'
+  id 'com.diffplug.spotless' version '7.0.2'
 }
 
 spotless {
@@ -30,32 +30,32 @@ spotless {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
+  sourceCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.12.1'
-    testImplementation 'net.jqwik:jqwik:1.9.2'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.12.1'
+  testImplementation 'net.jqwik:jqwik:1.9.2'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 /// Test naming convention:
 /// - *Test.class     - for standard jupyter unitary tests
 /// - *PropTest.class - for jqwik property-based tests
 test {
-    useJUnitPlatform {
-        includeEngines 'junit-jupyter', 'jqwik'
-    }
-    systemProperty 'jqwik.seeds.whenfixed', 'WARN'
-    testLogging {
-        events "passed", "skipped", "failed"
-    }
+  useJUnitPlatform {
+    includeEngines 'junit-jupyter', 'jqwik'
+  }
+  systemProperty 'jqwik.seeds.whenfixed', 'WARN'
+  testLogging {
+    events "passed", "skipped", "failed"
+  }
 }
 
 application {
-    mainClass = 'Program'
+  mainClass = 'Program'
 }
