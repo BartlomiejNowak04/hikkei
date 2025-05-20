@@ -9,9 +9,9 @@ class ConfigurationPropTest {
   @Provide
   Arbitrary<Tuple.Tuple3<String, Function<ConfigView, Object>, Arbitrary<?>>> configMapping() {
     return Arbitraries.of(
-      Tuple.of("database", ConfigView::databaseUrl, Arbitraries.strings().ofMaxLength(256)),
-      Tuple.of("host", ConfigView::siteHost, Arbitraries.strings().ofMaxLength(256)),
-      Tuple.of("port", ConfigView::sitePort, Arbitraries.integers().between(0, 1<<16-1)));
+        Tuple.of("database", ConfigView::databaseUrl, Arbitraries.strings().ofMaxLength(256)),
+        Tuple.of("host", ConfigView::siteHost, Arbitraries.strings().ofMaxLength(256)),
+        Tuple.of("port", ConfigView::sitePort, Arbitraries.integers().between(0, 1 << 16 - 1)));
   }
 
   @Provide
@@ -20,24 +20,27 @@ class ConfigurationPropTest {
   }
 
   @Provide
-  Arbitrary<String> configKeys() { return Arbitraries.of(Configuration.configKeys); }
+  Arbitrary<String> configKeys() {
+    return Arbitraries.of(Configuration.configKeys);
+  }
 
   @Provide
   Arbitrary<ConfigView> standardConfigViews() {
     return Arbitraries.of(
-      ConfigViewFactory.standardConfigView(), ConfigViewFactory.defaultConfigView());
+        ConfigViewFactory.standardConfigView(), ConfigViewFactory.defaultConfigView());
   }
+
   @Provide
   Arbitrary<ConfigView> allConfigViews() {
     return standardConfigViews();
   }
 
   @Property(generation = GenerationMode.EXHAUSTIVE)
-  boolean allKeysAreTested(@ForAll("configKeys") String key){
+  boolean allKeysAreTested(@ForAll("configKeys") String key) {
     var maybeStream = configMapping().allValues();
-    return maybeStream.isPresent() && maybeStream.get().filter(
-      tuple -> Objects.equals(tuple.get1(), key)
-    ).toArray().length >= 1;
+    return maybeStream.isPresent()
+        && maybeStream.get().filter(tuple -> Objects.equals(tuple.get1(), key)).toArray().length
+            >= 1;
   }
 
   @Property

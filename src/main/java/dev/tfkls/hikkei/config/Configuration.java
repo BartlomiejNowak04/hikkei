@@ -8,7 +8,8 @@ public class Configuration implements ConfigView {
   public Configuration() {
     configMapping = new HashMap<>();
   }
-  Configuration(Map<String,String> mapping) {
+
+  Configuration(Map<String, String> mapping) {
     configMapping = new HashMap<>(mapping);
   }
 
