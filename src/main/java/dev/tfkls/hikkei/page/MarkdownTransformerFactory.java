@@ -1,4 +1,4 @@
-package dev.tfkls.hikkei.page.markup;
+package dev.tfkls.hikkei.page;
 
 import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension;
 import com.vladsch.flexmark.ext.wikilink.WikiLinkExtension;
@@ -8,7 +8,7 @@ import com.vladsch.flexmark.util.data.DataHolder;
 import com.vladsch.flexmark.util.data.MutableDataSet;
 import java.util.List;
 
-public class MarkdownOptionsFactory {
+public class MarkdownTransformerFactory {
   static final DataHolder defaultOptions =
       new MutableDataSet()
           .set(
@@ -16,13 +16,8 @@ public class MarkdownOptionsFactory {
               List.of(WikiLinkExtension.create(), StrikethroughExtension.create()))
           .toImmutable();
 
-  // @NotNull
-  public static Parser defaultParser() {
-    return Parser.builder(defaultOptions).build();
-  }
-
-  // @NotNull
-  public static HtmlRenderer defaultRenderer() {
-    return HtmlRenderer.builder(defaultOptions).build();
+  public static MarkdownTransformer defaultTransformer() {
+    return new MarkdownTransformer(
+        Parser.builder(defaultOptions)::build, HtmlRenderer.builder(defaultOptions)::build);
   }
 }
