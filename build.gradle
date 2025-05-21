@@ -38,8 +38,8 @@ repositories {
 }
 
 dependencies {
-  testImplementation 'org.junit.jupiter:junit-jupiter:5.12.1'
   testImplementation 'net.jqwik:jqwik:1.9.2'
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.12.1'
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
   compileOnly 'org.jetbrains:annotations:26.0.2'
@@ -52,7 +52,7 @@ dependencies {
 /// - *PropTest.class - for jqwik property-based tests
 test {
   useJUnitPlatform {
-    includeEngines 'junit-jupyter', 'jqwik'
+    includeEngines 'jqwik', 'junit-jupiter'
   }
   systemProperty 'jqwik.seeds.whenfixed', 'WARN'
   testLogging {
