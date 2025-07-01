@@ -1,5 +1,3 @@
 package dev.tfkls.hikkei.model;
 
-import java.util.Optional;
-
-public record AuthData(String type, Optional<String> token) {}
+public record AuthData(String type, String token) {}
