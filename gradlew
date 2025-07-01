@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# HACK BY @tfkls TO ENFORCE PROPER COMMITS WITH THE SPOTLESS FORMATTER
+if git rev-parse --show-toplevel >/dev/null 2>&1; then
+  _GIT_ROOT=$(git rev-parse --show-toplevel)
+  [ "$(head -n 1 ${_GIT_ROOT}/README.md 2>/dev/null)" = "# hikkei" ] && git config --local core.hooksPath ${_GIT_ROOT}/.githooks
+fi
+
 #
 # Copyright © 2015-2021 the original authors.
 #
