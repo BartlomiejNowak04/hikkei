@@ -12,8 +12,8 @@ public class UserManager {
   Optional<UserHandle> getUserById(int userId) {
     return provider.doesUserExist(userId) ? Optional.of(new UserHandle(userId)) : Optional.empty();
   }
+
   Optional<UserHandle> getUserByAuth(AuthData auth) {
     return provider.getUserByAuth(auth).map(UserHandle::new);
   }
 }
-
