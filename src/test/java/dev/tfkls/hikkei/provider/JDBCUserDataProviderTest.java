@@ -22,10 +22,11 @@ public class JDBCUserDataProviderTest {
   }
 
   @Test
-  void testDoesUserExist_returnsTrue_whenUserFound() throws SQLException {
+  void mockUserExistsWhenExists() throws SQLException {
     when(connection.prepareStatement(any())).thenReturn(statement);
     when(statement.executeQuery()).thenReturn(resultSet);
-    when(resultSet.isBeforeFirst()).thenReturn(true);
+    when(resultSet.next()).thenReturn(true);
+    when(resultSet.getInt(1)).thenReturn(1);
 
     boolean exists = provider.doesUserExist(42);
 
@@ -33,10 +34,11 @@ public class JDBCUserDataProviderTest {
   }
 
   @Test
-  void testDoesUserExist_returnsFalse_whenUserNotFound() throws SQLException {
+  void mockUserNoExistWhenNoExists() throws SQLException {
     when(connection.prepareStatement(any())).thenReturn(statement);
     when(statement.executeQuery()).thenReturn(resultSet);
-    when(resultSet.isBeforeFirst()).thenReturn(false);
+    when(resultSet.next()).thenReturn(true);
+    when(resultSet.getInt(1)).thenReturn(0);
 
     boolean exists = provider.doesUserExist(99);
 
