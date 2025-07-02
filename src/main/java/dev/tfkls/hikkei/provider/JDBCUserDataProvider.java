@@ -1,7 +1,6 @@
 package dev.tfkls.hikkei.provider;
 
 import dev.tfkls.hikkei.model.user.*;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -150,7 +149,7 @@ public class JDBCUserDataProvider implements UserDataProvider {
         connection.prepareStatement("UPDATE users SET picture = ? WHERE id = ?")) {
       st.setBytes(1, picture);
       st.setInt(2, userId);
-      int num_rows = st.executeUpdate();
+      st.executeUpdate();
     } catch (SQLException ignored) {
     }
   }

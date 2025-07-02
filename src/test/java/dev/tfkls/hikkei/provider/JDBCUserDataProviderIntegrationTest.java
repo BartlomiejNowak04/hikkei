@@ -2,7 +2,7 @@ package dev.tfkls.hikkei.provider;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.tfkls.hikkei.model.UserData;
+import dev.tfkls.hikkei.model.user.UserData;
 import io.github.cdimascio.dotenv.Dotenv;
 import java.sql.*;
 import java.time.LocalDateTime;
