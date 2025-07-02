@@ -2,6 +2,7 @@
 .idea
 build
 .env
+.test-env
 
 .jqwik-database
 
