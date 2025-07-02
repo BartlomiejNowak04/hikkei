@@ -1,7 +1,7 @@
 package dev.tfkls.hikkei.model;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 public interface UserDataProvider {
   // Find a user by their properties
@@ -12,14 +12,16 @@ public interface UserDataProvider {
   // Get the user properties by their handle
   UserData getUserData(int userId) throws BadHandleException;
 
-  Stream<Integer> getUserRoles(int userId) throws BadHandleException;
+  List<Integer> getUserRoles(int userId) throws BadHandleException;
 
-  Stream<AuthData> getUserAuthMethods(int userId) throws BadHandleException;
+  List<AuthData> getUserAuthMethods(int userId) throws BadHandleException;
 
   // Modify the user by their handle
   Integer createUser(UserData data) throws BadDataException;
 
-  void updateUser(int userId, UserData data) throws BadHandleException, BadDataException;
+  void updateUsername(int userId, String username) throws BadHandleException, BadDataException;
+
+  void updateUserPicture(int userId, byte[] picture) throws BadHandleException;
 
   void deleteUser(int userId) throws BadHandleException;
 
