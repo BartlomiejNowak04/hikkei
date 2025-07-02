@@ -20,7 +20,8 @@ public class JDBCUserDataProvider implements UserDataProvider {
         connection.prepareStatement("SELECT COUNT(*) FROM users WHERE id = ?")) {
       st.setInt(1, userId);
       try (ResultSet rs = st.executeQuery()) {
-        return rs.isBeforeFirst();
+        if (!rs.next()) return false;
+        return rs.getInt(1) > 0;
       }
     } catch (SQLException ignored) {
     }
