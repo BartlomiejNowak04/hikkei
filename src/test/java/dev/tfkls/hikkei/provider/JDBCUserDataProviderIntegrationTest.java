@@ -3,77 +3,27 @@ package dev.tfkls.hikkei.provider;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.tfkls.hikkei.model.user.UserData;
-import dev.tfkls.hikkei.test.IntegrationTest;
-import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.*;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class JDBCUserDataProviderIntegrationTest extends IntegrationTest {
-
-  private Connection connection;
+public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
   private JDBCUserDataProvider provider;
 
   @BeforeAll
-  void initDatabase() throws SQLException {
-    String host = require("POSTGRES_HOST");
-    String db = require("POSTGRES_TESTDB");
-    String user = require("POSTGRES_USER");
-    String password = require("POSTGRES_PASS");
-    connection =
-        DriverManager.getConnection("jdbc:postgresql://" + host + "/" + db, user, password);
+  void initProvider() {
     provider = new JDBCUserDataProvider(connection);
-
-    try (Statement stmt = connection.createStatement()) {
-      stmt.execute(
-          """
-                DROP TABLE IF EXISTS users, auth, roles, user_role CASCADE;
-
-                CREATE TABLE users (
-                    id SERIAL PRIMARY KEY,
-                    username VARCHAR(125) UNIQUE NOT NULL,
-                    picture BYTEA,
-                    joined TIMESTAMP NOT NULL DEFAULT now(),
-                    deleted BOOLEAN NOT NULL DEFAULT false
-                );
-
-                CREATE TABLE auth (
-                    user_id INTEGER REFERENCES users(id),
-                    type VARCHAR(125),
-                    PRIMARY KEY (user_id, type),
-                    token TEXT NOT NULL,
-                    UNIQUE(type, token)
-                );
-
-                CREATE TABLE roles (
-                    id SERIAL PRIMARY KEY,
-                    name VARCHAR(125) NOT NULL
-                );
-
-                CREATE TABLE user_role (
-                    user_id INTEGER REFERENCES users(id),
-                    role_id INTEGER REFERENCES roles(id),
-                    PRIMARY KEY (user_id, role_id)
-                );
-            """);
-    }
   }
 
   @Test
-  void unexistingUserDoesNotExist() {
+  void nonExistentUserDoesNotExist() {
     assertFalse(provider.doesUserExist(2));
   }
 
   @Test
-  void creatingUserWorks() {
+  void freshlyAddedUserExists() {
     UserData user = new UserData("testname", Optional.empty(), LocalDateTime.now(), false);
     Integer userId = provider.createUser(user);
     assertTrue(userId > 0);
-  }
-
-  @AfterAll
-  void tearDown() throws SQLException {
-    if (connection != null) connection.close();
   }
 }

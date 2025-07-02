@@ -29,7 +29,7 @@ Running integration tests requires appropriate environment variables to be defin
 ```bash
 # Database integration testing
 POSTGRES_HOST=[hostname]:[port]
-POSTGRES_TESTDB=[testing_database_name]
+POSTGRES_NAME=[testing_database_name]
 POSTGRES_USER=[username]
 POSTGRES_PASS=[password]
 ```
