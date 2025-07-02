@@ -1,3 +1,5 @@
+-- DROP TABLE IF EXISTS users, auth, roles, user_role, categories, category_role, pages, revisions, comments CASCADE;
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(125) UNIQUE NOT NULL,
