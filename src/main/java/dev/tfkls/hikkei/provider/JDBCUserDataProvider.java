@@ -1,6 +1,7 @@
 package dev.tfkls.hikkei.provider;
 
-import dev.tfkls.hikkei.model.*;
+import dev.tfkls.hikkei.model.user.*;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;

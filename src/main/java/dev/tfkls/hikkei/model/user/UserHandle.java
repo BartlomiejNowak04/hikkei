@@ -1,4 +1,4 @@
-package dev.tfkls.hikkei.model;
+package dev.tfkls.hikkei.model.user;
 
 /// An externally opaque data type representing a user instance,
 ///   primarily used within the context of some UserManager class.
