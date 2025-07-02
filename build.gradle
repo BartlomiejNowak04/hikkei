@@ -54,6 +54,8 @@ dependencies {
   implementation "io.vertx:vertx-config"
   implementation "io.vertx:vertx-web"
 
+  implementation "io.mikael:urlbuilder:2.0.9"
+
   testImplementation("io.vertx:vertx-junit5")
 }
 
