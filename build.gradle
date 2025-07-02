@@ -40,6 +40,9 @@ repositories {
 dependencies {
   testImplementation 'net.jqwik:jqwik:1.9.2'
   testImplementation 'org.junit.jupiter:junit-jupiter:5.12.1'
+  testImplementation 'org.mockito:mockito-core:5.+'
+  testImplementation 'com.h2database:h2:2.2.224'
+  testImplementation 'org.postgresql:postgresql:42.7.3'
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
   compileOnly 'org.jetbrains:annotations:26.0.2'
