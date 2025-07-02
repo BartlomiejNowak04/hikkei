@@ -24,5 +24,23 @@ Commits to this repository shall be named in accordance to the
 convention, and follow the overall good commit guidelines which are described in
 [this blog post](http://who-t.blogspot.com/2009/12/on-commit-messages.html).
 
+## Testing
+Running integration tests requires appropriate environment variables to be defined in the `.test-env` file located in the project root directory. The variables are as follows:
+```bash
+# Database integration testing
+POSTGRES_HOST=[hostname]:[port]
+POSTGRES_TESTDB=[testing_database_name]
+POSTGRES_USER=[username]
+POSTGRES_PASS=[password]
+```
+
+### Database testing
+To run database integration tests one needs to configure PostgreSQL database named `[POSTGRES_TESTDB]` running at the address `[POSTGRES_HOST]`. The user `[POSTGRES_USER]` with password `[POSTGRES_PASS]` needs permissions to access and modify the database. This can be achieved like this:
+```bash
+sudo -u postgres psql postgres # Log into psql as superuser
+CREATE USER [POSTGRES_USER] WITH PASSWORD [POSTGRES_PASS];
+CREATE DATABASE [POSTGRES_TESTDB] OWNER [POSTGRES_USER];
+```
+
 ## License
 *tbd*
