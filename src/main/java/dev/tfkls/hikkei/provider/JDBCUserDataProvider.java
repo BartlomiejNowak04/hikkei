@@ -108,15 +108,14 @@ public class JDBCUserDataProvider implements UserDataProvider {
     // NOTE: decided not to allow join date other than default, nor to add deleted user accounts
     try (PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO users (username, picture) VALUES (? ?)",
+            "INSERT INTO users (username, picture) VALUES (?, ?)",
             Statement.RETURN_GENERATED_KEYS)) {
       st.setString(1, data.username());
       st.setBytes(2, data.picture().orElse(null));
-      int num_rows = st.executeUpdate();
-      if (num_rows == 1) throw new BadDataException("Couldn't create new user " + data.username());
+      st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next()) return 0;
+        if (!rs.next()) throw new BadDataException("Couldn't create new user " + data.username());
         return rs.getInt(1);
       }
     } catch (SQLException ignored) {
