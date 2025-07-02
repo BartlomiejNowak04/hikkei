@@ -11,7 +11,7 @@ abstract class AuthenticationProvider {
   }
 
   interface Callback {
-    void onAuthenticate(String authToken, HttpServerResponse response);
+    void onAuthenticate(HttpServerResponse response, String authToken);
   }
 
   protected final URL authRoute;
