@@ -1,6 +1,7 @@
 .gradle
 .idea
 build
+.env
 
 .jqwik-database
 

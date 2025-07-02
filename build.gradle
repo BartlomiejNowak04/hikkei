@@ -53,6 +53,7 @@ dependencies {
   implementation "io.vertx:vertx-web-client"
   implementation "io.vertx:vertx-config"
   implementation "io.vertx:vertx-web"
+  implementation 'io.github.cdimascio:dotenv-java:3.2.0'
 
   implementation "io.mikael:urlbuilder:2.0.9"
 
