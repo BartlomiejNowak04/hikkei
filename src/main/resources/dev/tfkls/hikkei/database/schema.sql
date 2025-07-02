@@ -44,7 +44,8 @@ CREATE TABLE category_role (
 CREATE TABLE pages (
     id SERIAL PRIMARY KEY,
     url TEXT UNIQUE NOT NULL,
-    category INTEGER REFERENCES categories(id) NOT NULL
+    category INTEGER REFERENCES categories(id) NOT NULL,
+    archived BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE revisions (

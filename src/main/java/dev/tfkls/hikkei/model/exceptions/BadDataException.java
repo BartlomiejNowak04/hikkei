@@ -1,4 +1,4 @@
-package dev.tfkls.hikkei.model.user;
+package dev.tfkls.hikkei.model.exceptions;
 
 public class BadDataException extends RuntimeException {
   public BadDataException(String message) {

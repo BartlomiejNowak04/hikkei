@@ -3,8 +3,8 @@ package dev.tfkls.hikkei.provider;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import dev.tfkls.hikkei.model.exceptions.BadHandleException;
 import dev.tfkls.hikkei.model.user.AuthData;
-import dev.tfkls.hikkei.model.user.BadHandleException;
 import dev.tfkls.hikkei.model.user.UserData;
 import java.sql.*;
 import java.time.LocalDateTime;

@@ -1,5 +1,7 @@
 package dev.tfkls.hikkei.model.user;
 
+import dev.tfkls.hikkei.model.exceptions.BadDataException;
+import dev.tfkls.hikkei.model.exceptions.BadHandleException;
 import java.util.List;
 import java.util.Optional;
 
