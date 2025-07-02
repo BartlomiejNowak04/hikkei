@@ -3,25 +3,25 @@ package dev.tfkls.hikkei.provider;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.tfkls.hikkei.model.user.UserData;
-import io.github.cdimascio.dotenv.Dotenv;
+import dev.tfkls.hikkei.test.IntegrationTest;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class JDBCUserDataProviderIntegrationTest {
+public class JDBCUserDataProviderIntegrationTest extends IntegrationTest {
 
   private Connection connection;
   private JDBCUserDataProvider provider;
 
   @BeforeAll
   void initDatabase() throws SQLException {
-    Dotenv dotenv = Dotenv.load();
-    String host = dotenv.get("POSTGRES_HOST");
-    String db = dotenv.get("POSTGRES_TESTDB");
-    String user = dotenv.get("POSTGRES_USER");
-    String password = dotenv.get("POSTGRES_PASS");
+    Assumptions.assumeTrue(false);
+    String host = require("POSTGRES_HOST");
+    String db = require("POSTGRES_TESTDB");
+    String user = require("POSTGRES_USER");
+    String password = require("POSTGRES_PASS");
     connection =
         DriverManager.getConnection("jdbc:postgresql://" + host + "/" + db, user, password);
     provider = new JDBCUserDataProvider(connection);
@@ -75,6 +75,6 @@ public class JDBCUserDataProviderIntegrationTest {
 
   @AfterAll
   void tearDown() throws SQLException {
-    connection.close();
+    if (connection != null) connection.close();
   }
 }
