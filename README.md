@@ -39,7 +39,7 @@ To run database integration tests one needs to configure PostgreSQL database nam
 ```bash
 sudo -u postgres psql postgres # Log into psql as superuser
 CREATE USER [POSTGRES_USER] WITH PASSWORD [POSTGRES_PASS];
-CREATE DATABASE [POSTGRES_TESTDB] OWNER [POSTGRES_USER];
+CREATE DATABASE [POSTGRES_NAME] OWNER [POSTGRES_USER];
 ```
 
 ## License

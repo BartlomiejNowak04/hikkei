@@ -1,6 +1,9 @@
 package dev.tfkls.hikkei.config;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class Configuration implements ConfigView {
   Map<String, String> configMapping;

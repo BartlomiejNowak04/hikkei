@@ -1,17 +1,19 @@
 package dev.tfkls.hikkei.auth;
 
-import static dev.tfkls.hikkei.util.WebTranscoder.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import dev.tfkls.hikkei.util.WebTranscoder;
 import io.mikael.urlbuilder.UrlBuilder;
 import io.vertx.core.MultiMap;
-import io.vertx.core.http.*;
+import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
 import java.net.URL;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.Base64;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 

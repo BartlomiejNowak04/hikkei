@@ -2,7 +2,9 @@ package dev.tfkls.hikkei.provider;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.BadHandleException;
-import dev.tfkls.hikkei.model.user.*;
+import dev.tfkls.hikkei.model.user.AuthData;
+import dev.tfkls.hikkei.model.user.UserData;
+import dev.tfkls.hikkei.model.user.UserDataProvider;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
