@@ -59,7 +59,7 @@ public class JDBCUserDataProvider implements UserDataProvider {
         if (!rs.next()) throw new BadHandleException("Incorrect user handle");
         return new UserData(
             rs.getString(2),
-            Optional.of(rs.getBytes(3)),
+            rs.getBytes(3) != null ? Optional.of(rs.getBytes(3)) : Optional.empty(),
             rs.getTimestamp(4).toLocalDateTime(),
             rs.getBoolean(5));
       }
@@ -138,9 +138,9 @@ public class JDBCUserDataProvider implements UserDataProvider {
         connection.prepareStatement("UPDATE users SET username = ? WHERE id = ?")) {
       st.setString(1, username);
       st.setInt(2, userId);
-      int num_rows = st.executeUpdate();
-      if (num_rows == 1) throw new BadDataException("Couldn't update username " + userId);
+      st.executeUpdate();
     } catch (SQLException ignored) {
+      throw new BadDataException("Couldn't update username " + userId);
     }
   }
 
@@ -178,7 +178,7 @@ public class JDBCUserDataProvider implements UserDataProvider {
     if (!doesUserExist(userId)) throw new BadHandleException("Incorrect user handle");
 
     try (PreparedStatement st =
-        connection.prepareStatement("INSERT INTO auth (user_id, type, token) VALUES (? ? ?)")) {
+        connection.prepareStatement("INSERT INTO auth (user_id, type, token) VALUES (?, ?, ?)")) {
       st.setInt(1, userId);
       st.setString(2, auth.type());
       st.setString(3, auth.token());
@@ -210,7 +210,7 @@ public class JDBCUserDataProvider implements UserDataProvider {
 
     if (value) {
       try (PreparedStatement st =
-          connection.prepareStatement("INSERT INTO user_role (user_id, role_id) VALUES (? ?)")) {
+          connection.prepareStatement("INSERT INTO user_role (user_id, role_id) VALUES (?, ?)")) {
         st.setInt(1, userId);
         st.setInt(2, roleId);
         return st.executeUpdate() > 0;
