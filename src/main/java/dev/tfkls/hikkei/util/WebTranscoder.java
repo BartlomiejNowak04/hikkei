@@ -12,6 +12,8 @@ public class WebTranscoder {
 
   private static final Base64.Encoder base64Encoder = Base64.getEncoder();
   private static final Base64.Decoder base64Decoder = Base64.getDecoder();
+  private static final Base64.Encoder url64Encoder = Base64.getUrlEncoder();
+  private static final Base64.Decoder url64Decoder = Base64.getUrlDecoder();
 
   public static String urlEncode(String raw) {
     return urlEncoder.encodeQueryElement(raw);
@@ -27,5 +29,13 @@ public class WebTranscoder {
 
   public static String base64Decode(String armor) {
     return new String(base64Decoder.decode(armor.getBytes(UTF_8)), UTF_8);
+  }
+
+  public static String url64Encode(String armor) {
+    return new String(url64Encoder.encode(armor.getBytes(UTF_8)), UTF_8);
+  }
+
+  public static String url64Decode(String armor) {
+    return new String(url64Decoder.decode(armor.getBytes(UTF_8)), UTF_8);
   }
 }

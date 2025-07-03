@@ -1,23 +1,28 @@
 package dev.tfkls.hikkei.auth;
 
+import static dev.tfkls.hikkei.util.WebTranscoder.url64Decode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import dev.tfkls.hikkei.util.WebTranscoder;
 import io.mikael.urlbuilder.UrlBuilder;
+import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
-import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.*;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.client.HttpRequest;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import java.net.URL;
-import java.security.SecureRandom;
-import java.util.Base64;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
+import java.util.random.RandomGenerator;
 
 public class OAuth2Provider extends AuthenticationProvider {
+  public interface Fetcher {
+    String fetchUserId(String token, String type, WebClient client);
+  }
+
   public record Specification(
       String name,
       URL authEndpoint,
@@ -25,16 +30,17 @@ public class OAuth2Provider extends AuthenticationProvider {
       String clientId,
       String clientSecret,
       String permissionScope,
-      Function<String, String> fetchUserId) {}
+      boolean authByQueryParams,
+      Fetcher userIdFetcher) {}
 
   private final Specification specification;
-  private final SecureRandom generator;
+  private final RandomGenerator generator;
   private final WebClient httpClient;
 
   protected OAuth2Provider(
       Specification specification,
       URL authRoute,
-      SecureRandom randomGenerator,
+      RandomGenerator randomGenerator,
       WebClient httpClient) {
     super(authRoute);
 
@@ -87,26 +93,45 @@ public class OAuth2Provider extends AuthenticationProvider {
 
     String code = params.get("code");
 
-    var tokenResponse =
-        httpClient
-            .post(specification.tokenEndpoint.toString())
-            .basicAuthentication(
-                WebTranscoder.urlEncode(specification.clientId),
-                WebTranscoder.urlEncode(specification.clientSecret))
-            .sendForm(
-                MultiMap.caseInsensitiveMultiMap()
-                    .add("grant_type", "authorization_code")
-                    .add("code", code)
-                    .add("redirect_uri", getCallbackUrl().toString())
-                    .add("client_id", specification.clientId)
-                    .add("client_secret", specification.clientSecret))
-            .await();
+    var tokenResponse = queryForToken(code).await().bodyAsJsonObject();
 
-    throw new RuntimeException("Not yet implemented");
+    if (tokenResponse.containsKey("error")) {
+      throw new IllegalStateException(
+          "Failed to verify access code: "
+              + tokenResponse.getString("error_description", tokenResponse.getString("error")));
+    }
+    var token = tokenResponse.getString("access_token");
+    var tokenType = tokenResponse.getString("token_type");
+    var userId = specification.userIdFetcher.fetchUserId(token, tokenType, httpClient);
+
+    authCallback.onAuthenticate(response, userId);
   }
 
-  private void handleRedirectRequest(HttpServerResponse response, String redirectAfterAuth) {
-    String nonce = new String(Base64.getUrlEncoder().encode(generator.generateSeed(48)), UTF_8);
+  private Future<HttpResponse<Buffer>> queryForToken(String code) {
+    MultiMap params =
+        MultiMap.caseInsensitiveMultiMap()
+            .add("grant_type", "authorization_code")
+            .add("code", code)
+            .add("redirect_uri", getCallbackUrl().toString())
+            .add("client_id", specification.clientId);
+
+    HttpRequest<Buffer> query = httpClient.post(specification.tokenEndpoint.toString());
+    if (specification.authByQueryParams) {
+      params.add("client_secret", specification.clientSecret);
+    } else {
+      query =
+          query.basicAuthentication(
+              WebTranscoder.urlEncode(specification.clientId),
+              WebTranscoder.urlEncode(specification.clientSecret));
+    }
+    return query.sendForm(params);
+  }
+
+  private void handleRedirectRequest(HttpServerResponse response, String redirectAfterAuthRaw) {
+    String redirectAfterAuth = url64Decode(redirectAfterAuthRaw);
+    byte[] nonceArray = new byte[48];
+    generator.nextBytes(nonceArray);
+    String nonce = new String(Base64.getUrlEncoder().encode(nonceArray), UTF_8);
     // TODO: THE REQUESTS SHOULD EXPIRE ON THE BACKEND SIDE!
     if (!Objects.equals(
         UrlBuilder.fromString(redirectAfterAuth).toUrl().getHost(), authRoute.getHost())) {
@@ -114,13 +139,13 @@ public class OAuth2Provider extends AuthenticationProvider {
     }
     currentRequests.put(nonce, redirectAfterAuth);
 
-    String oauthRedirect = getRedirectUrl(nonce).toString();
+    String oauthRedirect = getAuthenticationUrl(nonce).toString();
     response.setStatusCode(302);
     response.putHeader("Location", oauthRedirect);
     response.end("Redirecting to: " + oauthRedirect);
   }
 
-  private URL getRedirectUrl(String nonce) {
+  private URL getAuthenticationUrl(String nonce) {
     return UrlBuilder.fromUrl(specification.authEndpoint)
         .addParameter("client_id", specification.clientId)
         .addParameter("response_type", "code")

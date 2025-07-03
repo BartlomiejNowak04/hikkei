@@ -1,5 +1,7 @@
 package dev.tfkls.hikkei.auth;
 
+import static dev.tfkls.hikkei.util.WebTranscoder.url64Encode;
+
 import io.mikael.urlbuilder.UrlBuilder;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
@@ -11,7 +13,7 @@ abstract class AuthenticationProvider {
   }
 
   interface Callback {
-    void onAuthenticate(HttpServerResponse response, String authToken);
+    void onAuthenticate(HttpServerResponse response, String userId);
   }
 
   protected final URL authRoute;
@@ -31,7 +33,8 @@ abstract class AuthenticationProvider {
   }
 
   protected UrlBuilder getRedirectBuilder(URL redirectAfterAuth) {
-    return UrlBuilder.fromUrl(authRoute).addParameter("redirect_uri", redirectAfterAuth.toString());
+    return UrlBuilder.fromUrl(authRoute)
+        .addParameter("redirect_uri", url64Encode(redirectAfterAuth.toString()));
   }
 
   /// Set the callback to be called after a user is properly authenticated.
