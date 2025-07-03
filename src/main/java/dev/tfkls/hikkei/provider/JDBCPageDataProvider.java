@@ -161,7 +161,9 @@ public class JDBCPageDataProvider implements PageDataProvider {
     if (!doesPageExist(pageId)) throw new BadHandleException("Incorrect page handle");
 
     try (PreparedStatement st =
-        connection.prepareStatement("INSERT INTO revisions (page_id) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
+        connection.prepareStatement(
+            "INSERT INTO revisions (page_id) VALUES (?)",
+            PreparedStatement.RETURN_GENERATED_KEYS)) {
       st.setInt(1, pageId);
       st.executeUpdate();
 
@@ -204,7 +206,9 @@ public class JDBCPageDataProvider implements PageDataProvider {
     if (!doesPageExist(pageId)) throw new BadHandleException("Incorrect page handle");
 
     try (PreparedStatement st =
-        connection.prepareStatement("INSERT INTO comments (page_id, content) VALUES (?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
+        connection.prepareStatement(
+            "INSERT INTO comments (page_id, content) VALUES (?, ?)",
+            PreparedStatement.RETURN_GENERATED_KEYS)) {
       st.setInt(1, pageId);
       st.setString(2, content);
       st.executeUpdate();
