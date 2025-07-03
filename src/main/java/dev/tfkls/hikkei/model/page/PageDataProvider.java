@@ -26,12 +26,12 @@ public interface PageDataProvider {
   // revisions
   List<RevisionData> getPageRevisions(int pageId) throws BadHandleException;
 
-  boolean createRevision(int pageId, RevisionData data) throws BadHandleException;
+  Integer createRevision(int pageId) throws BadHandleException;
 
   // comments
   List<CommentData> getPageComments(int pageId) throws BadHandleException;
 
-  boolean addComment(int pageId, String content) throws BadHandleException, BadDataException;
+  Integer addComment(int pageId, String content) throws BadHandleException, BadDataException;
 
   boolean deleteComment(int commentId) throws BadHandleException;
 }

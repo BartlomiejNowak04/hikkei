@@ -113,10 +113,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
         connection.prepareStatement("UPDATE pages SET category = ? WHERE id = ?")) {
       st.setInt(1, categoryId);
       st.setInt(2, pageId);
-      int num_rows = st.executeUpdate();
-      if (num_rows < 1)
-        throw new BadDataException(
-            "Couldn't update category for page " + pageId + " to " + categoryId);
+      st.executeUpdate();
     } catch (SQLException ignored) {
     }
   }
@@ -159,21 +156,23 @@ public class JDBCPageDataProvider implements PageDataProvider {
   }
 
   @Override
-  public boolean createRevision(int pageId, RevisionData data) throws BadHandleException {
-    // TODO: this should probably return revision id
-    // NOTE: do we actually need any data to create the revision?
+  public Integer createRevision(int pageId) throws BadHandleException {
 
     if (!doesPageExist(pageId)) throw new BadHandleException("Incorrect page handle");
 
     try (PreparedStatement st =
-        connection.prepareStatement("INSERT INTO revisions (page_id) VALUES (?)")) {
+        connection.prepareStatement("INSERT INTO revisions (page_id) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
       st.setInt(1, pageId);
       st.executeUpdate();
-      return true;
+
+      try (ResultSet rs = st.getGeneratedKeys()) {
+        if (!rs.next()) return 0;
+        return rs.getInt(1);
+      }
     } catch (SQLException ignored) {
     }
 
-    return false;
+    return 0;
   }
 
   @Override
@@ -199,21 +198,25 @@ public class JDBCPageDataProvider implements PageDataProvider {
   }
 
   @Override
-  public boolean addComment(int pageId, String content)
+  public Integer addComment(int pageId, String content)
       throws BadHandleException, BadDataException {
-    // TODO: this should probably return comment id
+
     if (!doesPageExist(pageId)) throw new BadHandleException("Incorrect page handle");
 
     try (PreparedStatement st =
-        connection.prepareStatement("INSERT INTO comments (page_id, content) VALUES (?, ?)")) {
+        connection.prepareStatement("INSERT INTO comments (page_id, content) VALUES (?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
       st.setInt(1, pageId);
       st.setString(2, content);
       st.executeUpdate();
-      return true;
+
+      try (ResultSet rs = st.getGeneratedKeys()) {
+        if (!rs.next()) return 0;
+        return rs.getInt(1);
+      }
     } catch (SQLException ignored) {
     }
 
-    return false;
+    return 0;
   }
 
   @Override
