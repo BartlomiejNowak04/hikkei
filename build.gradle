@@ -42,12 +42,13 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter:5.12.1'
   testImplementation 'org.mockito:mockito-core:5.+'
   testImplementation 'com.h2database:h2:2.2.224'
-  testImplementation 'org.postgresql:postgresql:42.7.3'
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
   compileOnly 'org.jetbrains:annotations:26.0.2'
 
   implementation 'com.vladsch.flexmark:flexmark-all:0.64.8'
+
+  implementation 'org.postgresql:postgresql:42.7.3'
 
   implementation(platform("io.vertx:vertx-stack-depchain:5.0.1"))
   implementation "io.vertx:vertx-web-client"
@@ -74,5 +75,5 @@ test {
 }
 
 application {
-  mainClass = 'Program'
+  mainClass = 'dev.tfkls.hikkei.server.Main'
 }
