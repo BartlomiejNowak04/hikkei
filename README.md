@@ -35,7 +35,7 @@ POSTGRES_PASS=[password]
 ```
 
 ### Database testing
-To run database integration tests one needs to configure PostgreSQL database named `[POSTGRES_TESTDB]` running at the address `[POSTGRES_HOST]`. The user `[POSTGRES_USER]` with password `[POSTGRES_PASS]` needs permissions to access and modify the database. This can be achieved like this:
+To run database integration tests one needs to configure PostgreSQL database named `[POSTGRES_NAME]` running at the address `[POSTGRES_HOST]`. The user `[POSTGRES_USER]` with password `[POSTGRES_PASS]` needs permissions to access and modify the database. This can be achieved like this:
 ```bash
 sudo -u postgres psql postgres # Log into psql as superuser
 CREATE USER [POSTGRES_USER] WITH PASSWORD [POSTGRES_PASS];
