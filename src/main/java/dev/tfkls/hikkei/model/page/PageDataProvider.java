@@ -10,10 +10,12 @@ public interface PageDataProvider {
   // check existence
   boolean doesPageExist(int pageId);
 
+  Integer getRandomPage();
+
   // get page data
   PageData getPageData(int pageId) throws BadHandleException;
 
-  Optional<Integer> getPageByUrl(String url);
+  Optional<Integer> getPageByTitle(String title);
 
   Integer createPage(PageData data) throws BadDataException;
 

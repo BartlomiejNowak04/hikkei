@@ -43,7 +43,8 @@ CREATE TABLE category_role (
 
 CREATE TABLE pages (
     id SERIAL PRIMARY KEY,
-    url TEXT UNIQUE NOT NULL,
+    -- The title will serve as a URL (like on Wikipedia)
+    title TEXT UNIQUE NOT NULL,
     category INTEGER REFERENCES categories(id) NOT NULL,
     archived BOOLEAN NOT NULL DEFAULT FALSE
 );

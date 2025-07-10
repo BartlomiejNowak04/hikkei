@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.model.page;
 
+import dev.tfkls.hikkei.model.exceptions.BadHandleException;
 import java.util.Optional;
 
 public class PageManager {
@@ -11,5 +12,15 @@ public class PageManager {
 
   Optional<PageHandle> getPageById(int pageId) {
     return provider.doesPageExist(pageId) ? Optional.of(new PageHandle(pageId)) : Optional.empty();
+  }
+
+  public PageData getRandomPage() {
+    Integer id = provider.getRandomPage();
+    if (id == null) return null;
+    try {
+      return provider.getPageData(id);
+    } catch (BadHandleException e) {
+      return null;
+    }
   }
 }

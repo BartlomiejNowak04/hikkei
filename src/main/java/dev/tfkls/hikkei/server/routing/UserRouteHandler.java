@@ -1,4 +1,4 @@
-package dev.tfkls.hikkei.server;
+package dev.tfkls.hikkei.server.routing;
 
 import dev.tfkls.hikkei.model.user.UserManager;
 import io.vertx.ext.web.Router;

@@ -1,7 +1,11 @@
 package dev.tfkls.hikkei.server;
 
+import dev.tfkls.hikkei.model.page.PageManager;
 import dev.tfkls.hikkei.model.user.UserManager;
+import dev.tfkls.hikkei.provider.JDBCPageDataProvider;
 import dev.tfkls.hikkei.provider.JDBCUserDataProvider;
+import dev.tfkls.hikkei.server.routing.PageRouteHandler;
+import dev.tfkls.hikkei.server.routing.UserRouteHandler;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvBuilder;
 import io.vertx.core.Future;
@@ -33,8 +37,12 @@ public class MainVerticle extends VerticleBase {
     UserRouteHandler userRoute =
         new UserRouteHandler(new UserManager(new JDBCUserDataProvider(connection)));
 
+    PageRouteHandler pageRoute =
+        new PageRouteHandler(new PageManager(new JDBCPageDataProvider(connection)));
+
     Router router = Router.router(vertx);
     userRoute.addRoutes(router, "/api/user");
+    pageRoute.addRoutes(router, "/api/page");
 
     return vertx
         .createHttpServer()

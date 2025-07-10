@@ -6,10 +6,7 @@ import dev.tfkls.hikkei.model.page.CommentData;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.page.RevisionData;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -39,13 +36,25 @@ public class JDBCPageDataProvider implements PageDataProvider {
   }
 
   @Override
+  public Integer getRandomPage() {
+    try (Statement st = connection.createStatement()) {
+      ResultSet rs = st.executeQuery("SELECT id FROM pages ORDER BY RANDOM() LIMIT 1");
+      if (!rs.next()) return null;
+      return rs.getInt(1);
+    } catch (SQLException ignored) {
+    }
+
+    return null;
+  }
+
+  @Override
   public PageData getPageData(int pageId) throws BadHandleException {
 
     try (PreparedStatement st = connection.prepareStatement("SELECT * FROM pages WHERE id = ?")) {
       st.setInt(1, pageId);
       try (ResultSet rs = st.executeQuery()) {
         if (!rs.next()) throw new BadHandleException("Incorrect page handle");
-        return new PageData(rs.getString(2), rs.getInt(3), rs.getBoolean(4));
+        return new PageData(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getBoolean(4));
       }
     } catch (SQLException ignored) {
     }
@@ -54,10 +63,10 @@ public class JDBCPageDataProvider implements PageDataProvider {
   }
 
   @Override
-  public Optional<Integer> getPageByUrl(String url) {
+  public Optional<Integer> getPageByTitle(String title) {
 
     try (PreparedStatement st = connection.prepareStatement("SELECT id FROM pages WHERE url = ?")) {
-      st.setString(1, url);
+      st.setString(1, title);
       try (ResultSet rs = st.executeQuery()) {
         if (!rs.next()) return Optional.empty();
         else return Optional.of(rs.getInt(1));
@@ -75,12 +84,12 @@ public class JDBCPageDataProvider implements PageDataProvider {
         connection.prepareStatement(
             "INSERT INTO pages (url, category) VALUES (?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
-      st.setString(1, data.url());
+      st.setString(1, data.title());
       st.setInt(2, data.category());
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next()) throw new BadDataException("Couldn't create new page at " + data.url());
+        if (!rs.next()) throw new BadDataException("Couldn't create new page " + data.title());
         return rs.getInt(1);
       }
     } catch (SQLException ignored) {
