@@ -3,15 +3,26 @@ package dev.tfkls.hikkei.server.routing;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageManager;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.BodyHandler;
+import java.util.List;
 
 public class PageRouteHandler implements RouteHandler {
   private final PageManager pageManager;
 
   public PageRouteHandler(PageManager manager) {
     pageManager = manager;
+  }
+
+  private JsonObject pageToJson(PageData page) {
+    return new JsonObject()
+        .put("id", page.id())
+        .put("title", page.title())
+        .put("category", page.category())
+        .put("archived", page.archived());
   }
 
   private void getRandomPage(RoutingContext ctx) {
@@ -24,17 +35,33 @@ public class PageRouteHandler implements RouteHandler {
       response.end();
     } else {
       response.setStatusCode(200);
-      JsonObject json = new JsonObject();
-      json.put("id", data.id());
-      json.put("title", data.title());
-      json.put("category", data.category());
-      json.put("archived", data.archived());
-      response.end(json.encode());
+      response.end(pageToJson(data).encode());
+    }
+  }
+
+  private void searchByTitle(RoutingContext ctx) {
+    HttpServerResponse response = ctx.response();
+    response.putHeader("content-type", "application/json");
+    JsonObject body = ctx.body().asJsonObject();
+
+    if (!body.containsKey("title")) {
+      response.setStatusCode(400);
+      response.end(new JsonObject().put("message", "Missing required parameter: title").encode());
+    } else {
+      String title = body.getString("title");
+      List<PageData> data = pageManager.searchByTitle(title);
+      JsonArray items = new JsonArray();
+      for (PageData item : data) items.add(pageToJson(item));
+
+      response.setStatusCode(200);
+      response.end(items.encode());
     }
   }
 
   @Override
   public void addRoutes(Router router, String url) {
     router.get(url + "/random").handler(this::getRandomPage);
+    router.route(url + "/search").handler(BodyHandler.create());
+    router.post(url + "/search").handler(this::searchByTitle);
   }
 }

@@ -1,6 +1,7 @@
 package dev.tfkls.hikkei.model.page;
 
 import dev.tfkls.hikkei.model.exceptions.BadHandleException;
+import java.util.List;
 import java.util.Optional;
 
 public class PageManager {
@@ -22,5 +23,9 @@ public class PageManager {
     } catch (BadHandleException e) {
       return null;
     }
+  }
+
+  public List<PageData> searchByTitle(String title) {
+    return provider.searchPageByTitle(title);
   }
 }

@@ -38,13 +38,32 @@ public class JDBCPageDataProvider implements PageDataProvider {
   @Override
   public Integer getRandomPage() {
     try (Statement st = connection.createStatement()) {
-      ResultSet rs = st.executeQuery("SELECT id FROM pages ORDER BY RANDOM() LIMIT 1");
-      if (!rs.next()) return null;
-      return rs.getInt(1);
+      try (ResultSet rs = st.executeQuery("SELECT id FROM pages ORDER BY RANDOM() LIMIT 1")) {
+        if (!rs.next()) return null;
+        return rs.getInt(1);
+      }
     } catch (SQLException ignored) {
     }
 
     return null;
+  }
+
+  @Override
+  public List<PageData> searchPageByTitle(String title) {
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT * FROM pages WHERE title ILIKE ?")) {
+      st.setString(1, "%" + title + "%");
+      try (ResultSet rs = st.executeQuery()) {
+        ArrayList<PageData> res = new ArrayList<>();
+        while (rs.next()) {
+          res.add(new PageData(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getBoolean(4)));
+        }
+        return res;
+      }
+    } catch (SQLException ignored) {
+    }
+
+    return List.of();
   }
 
   @Override

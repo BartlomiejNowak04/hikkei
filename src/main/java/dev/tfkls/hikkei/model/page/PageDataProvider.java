@@ -12,6 +12,8 @@ public interface PageDataProvider {
 
   Integer getRandomPage();
 
+  List<PageData> searchPageByTitle(String title);
+
   // get page data
   PageData getPageData(int pageId) throws BadHandleException;
 
