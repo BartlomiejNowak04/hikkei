@@ -28,4 +28,19 @@ public class PageManager {
   public List<PageData> searchByTitle(String title) {
     return provider.searchPageByTitle(title);
   }
+
+  public List<RevisionData> getRevisions(int pageId) {
+    try {
+      return provider.getPageRevisions(pageId);
+    } catch (BadHandleException e) {
+      return null;
+    }
+  }
+
+  public List<RevisionData> getApprovedRevisions(int pageId) {
+    List<RevisionData> res = getRevisions(pageId);
+    if (res == null) return null;
+    res.removeIf(rev -> !rev.approved());
+    return res;
+  }
 }
