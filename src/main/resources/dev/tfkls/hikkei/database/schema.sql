@@ -55,7 +55,8 @@ CREATE TABLE revisions (
     PRIMARY KEY (page_id, id),
     -- No need to verify UUID uniqueness, if we collide the universe ends anyway
     filename UUID NOT NULL DEFAULT gen_random_uuid(),
-    date TIMESTAMP NOT NULL DEFAULT NOW()
+    date TIMESTAMP NOT NULL DEFAULT NOW(),
+    approved BOOLEAN
 );
 
 CREATE TABLE comments (
