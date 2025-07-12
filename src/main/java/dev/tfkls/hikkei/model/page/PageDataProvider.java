@@ -30,7 +30,7 @@ public interface PageDataProvider {
   // revisions
   List<RevisionData> getPageRevisions(int pageId) throws BadHandleException;
 
-  Integer createRevision(int pageId) throws BadHandleException;
+  Integer createRevision(RevisionData data) throws BadHandleException;
 
   // comments
   List<CommentData> getPageComments(int pageId) throws BadHandleException;

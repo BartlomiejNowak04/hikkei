@@ -187,25 +187,26 @@ public class JDBCPageDataProvider implements PageDataProvider {
   }
 
   @Override
-  public Integer createRevision(int pageId) throws BadHandleException {
+  public Integer createRevision(RevisionData data) throws BadHandleException {
 
-    if (!doesPageExist(pageId)) throw new BadHandleException("Incorrect page handle");
+    if (!doesPageExist(data.pageId())) throw new BadHandleException("Incorrect page handle");
 
     try (PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO revisions (page_id) VALUES (?)",
+            "INSERT INTO revisions (page_id, filename) VALUES (?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
-      st.setInt(1, pageId);
+      st.setInt(1, data.pageId());
+      st.setObject(2, data.filename());
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next()) return 0;
+        if (!rs.next()) return null;
         return rs.getInt(1);
       }
     } catch (SQLException ignored) {
     }
 
-    return 0;
+    return null;
   }
 
   @Override

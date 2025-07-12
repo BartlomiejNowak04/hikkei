@@ -2,6 +2,7 @@ package dev.tfkls.hikkei.server;
 
 import dev.tfkls.hikkei.model.page.PageManager;
 import dev.tfkls.hikkei.model.user.UserManager;
+import dev.tfkls.hikkei.provider.FileVersionProvider;
 import dev.tfkls.hikkei.provider.JDBCPageDataProvider;
 import dev.tfkls.hikkei.provider.JDBCUserDataProvider;
 import dev.tfkls.hikkei.server.routing.PageRouteHandler;
@@ -37,8 +38,12 @@ public class MainVerticle extends VerticleBase {
     UserRouteHandler userRoute =
         new UserRouteHandler(new UserManager(new JDBCUserDataProvider(connection)));
 
+    String file_dir = dotenv.get("FILE_DIRECTORY");
+
     PageRouteHandler pageRoute =
-        new PageRouteHandler(new PageManager(new JDBCPageDataProvider(connection)));
+        new PageRouteHandler(
+            new PageManager(
+                new JDBCPageDataProvider(connection), new FileVersionProvider(file_dir)));
 
     Router router = Router.router(vertx);
     userRoute.addRoutes(router, "/api/user");

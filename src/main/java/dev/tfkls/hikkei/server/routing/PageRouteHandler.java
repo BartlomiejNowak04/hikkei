@@ -3,6 +3,8 @@ package dev.tfkls.hikkei.server.routing;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageManager;
 import dev.tfkls.hikkei.model.page.RevisionData;
+import dev.tfkls.hikkei.server.routing.handler.ArgumentCheckHandler;
+import dev.tfkls.hikkei.server.routing.handler.JsonHeaderHandler;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -34,10 +36,14 @@ public class PageRouteHandler implements RouteHandler {
         .put("approved", revision.approved());
   }
 
+  private void userError(String message, HttpServerResponse response) {
+    response.setStatusCode(400);
+    response.end(new JsonObject().put("message", message).encode());
+  }
+
   private void getRandomPage(RoutingContext ctx) {
     PageData data = pageManager.getRandomPage();
     HttpServerResponse response = ctx.response();
-    response.putHeader("content-type", "application/json");
 
     if (data == null) {
       response.setStatusCode(404);
@@ -50,44 +56,25 @@ public class PageRouteHandler implements RouteHandler {
 
   private void searchByTitle(RoutingContext ctx) {
     HttpServerResponse response = ctx.response();
-    response.putHeader("content-type", "application/json");
     JsonObject body = ctx.body().asJsonObject();
 
-    if (!body.containsKey("title")) {
-      response.setStatusCode(400);
-      response.end(new JsonObject().put("message", "Missing required parameter: title").encode());
-    } else {
-      String title = body.getString("title");
-      List<PageData> data = pageManager.searchByTitle(title);
-      JsonArray items = new JsonArray();
-      for (PageData item : data) items.add(pageToJson(item));
+    String title = body.getString("title");
+    List<PageData> data = pageManager.searchByTitle(title);
+    JsonArray items = new JsonArray();
+    for (PageData item : data) items.add(pageToJson(item));
 
-      response.setStatusCode(200);
-      response.end(items.encode());
-    }
+    response.setStatusCode(200);
+    response.end(items.encode());
   }
 
   private void getRevisions(RoutingContext ctx) {
     HttpServerResponse response = ctx.response();
-    response.putHeader("content-type", "application/json");
     JsonObject body = ctx.body().asJsonObject();
 
-    if (!body.containsKey("id")) {
-      response.setStatusCode(400);
-      response.end(new JsonObject().put("message", "Missing required parameter: id").encode());
-      return;
-    }
-
     Integer id = body.getInteger("id");
-    if (id == null) {
-      response.setStatusCode(400);
-      response.end(new JsonObject().put("message", "Incorrect parameter: id").encode());
-      return;
-    }
     List<RevisionData> data = pageManager.getRevisions(id);
     if (data == null) {
-      response.setStatusCode(400);
-      response.end(new JsonObject().put("message", "Incorrect parameter value: id").encode());
+      userError("Incorrect parameter value: id", response);
       return;
     }
     JsonArray items = new JsonArray();
@@ -97,12 +84,54 @@ public class PageRouteHandler implements RouteHandler {
     response.end(items.encode());
   }
 
+  private void getCurrentContent(RoutingContext ctx) {
+    HttpServerResponse response = ctx.response();
+    JsonObject body = ctx.body().asJsonObject();
+
+    Integer id = body.getInteger("id");
+    String data = pageManager.getCurrentContent(id);
+    if (data == null) {
+      userError("No content found for page " + id, response);
+      return;
+    }
+
+    response.setStatusCode(200);
+    response.end(new JsonObject().put("content", data).encode());
+  }
+
+  private void addRevision(RoutingContext ctx) {
+    HttpServerResponse response = ctx.response();
+    JsonObject body = ctx.body().asJsonObject();
+
+    Integer id = body.getInteger("id");
+    String content = body.getString("content");
+    if (pageManager.createRevision(id, content)) {
+      response.setStatusCode(201);
+      response.end();
+    } else {
+      response.setStatusCode(500);
+      response.end();
+    }
+  }
+
   @Override
   public void addRoutes(Router router, String url) {
+    // common handlers
+    router.route(url + "/*").handler(BodyHandler.create());
+    router.route(url + "/*").handler(new JsonHeaderHandler());
+
     router.get(url + "/random").handler(this::getRandomPage);
-    router.route(url + "/search").handler(BodyHandler.create());
+
+    router.post(url + "/search").handler(new ArgumentCheckHandler(List.of("title")));
     router.post(url + "/search").handler(this::searchByTitle);
-    router.route(url + "/revisions").handler(BodyHandler.create());
+
+    router.post(url + "/revisions").handler(new ArgumentCheckHandler(List.of("id")));
     router.post(url + "/revisions").handler(this::getRevisions);
+
+    router.post(url + "/current").handler(new ArgumentCheckHandler(List.of("id")));
+    router.post(url + "/current").handler(this::getCurrentContent);
+
+    router.post(url + "/update").handler(new ArgumentCheckHandler(List.of("id", "content")));
+    router.put(url + "/update").handler(this::addRevision);
   }
 }
