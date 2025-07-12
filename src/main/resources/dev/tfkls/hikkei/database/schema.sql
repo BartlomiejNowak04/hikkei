@@ -54,7 +54,7 @@ CREATE TABLE revisions (
     page_id INTEGER REFERENCES pages(id),
     PRIMARY KEY (page_id, id),
     -- No need to verify UUID uniqueness, if we collide the universe ends anyway
-    filename UUID NOT NULL DEFAULT gen_random_uuid(),
+    filename UUID NOT NULL,
     date TIMESTAMP NOT NULL DEFAULT NOW(),
     approved BOOLEAN
 );
