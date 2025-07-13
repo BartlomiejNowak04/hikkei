@@ -81,21 +81,8 @@ public class PageRouteHandler implements RouteHandler {
     response.end(new JsonObject().put("content", data).encode());
   }
 
-  private void addRevision(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
-    JsonObject body = ctx.body().asJsonObject();
-
-    Integer id = body.getInteger("id");
-    String content = body.getString("content");
-    if (pageManager.createRevision(id, content)) {
-      response.setStatusCode(201);
-      response.end();
-    } else throwError(500, "Failed to create revision", response);
-  }
-
   @Override
   public void addRoutes(Router router, String url) {
-    // common handlers
     router.route(url + "/*").handler(BodyHandler.create());
     router.route(url + "/*").handler(new JsonHeaderHandler());
 
@@ -109,10 +96,5 @@ public class PageRouteHandler implements RouteHandler {
 
     router.post(url + "/current").handler(new ArgumentCheckHandler(Map.of("id", Integer.class)));
     router.post(url + "/current").handler(this::getCurrentContent);
-
-    router
-        .post(url + "/update")
-        .handler(new ArgumentCheckHandler(Map.of("id", Integer.class, "content", String.class)));
-    router.put(url + "/update").handler(this::addRevision);
   }
 }

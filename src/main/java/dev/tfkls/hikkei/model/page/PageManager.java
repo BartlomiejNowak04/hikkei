@@ -3,7 +3,6 @@ package dev.tfkls.hikkei.model.page;
 import dev.tfkls.hikkei.model.exceptions.BadHandleException;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 public class PageManager {
   private final PageDataProvider provider;
@@ -45,12 +44,6 @@ public class PageManager {
     if (res == null) return null;
     res.removeIf(rev -> !rev.approved());
     return res;
-  }
-
-  public boolean createRevision(int pageId, String content) {
-    UUID id = version.storeContent(content);
-    if (id == null) return false;
-    return provider.createRevision(new RevisionData(pageId, id, null, null)) != null;
   }
 
   public String getCurrentContent(int pageId) {

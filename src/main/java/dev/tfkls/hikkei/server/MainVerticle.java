@@ -1,11 +1,16 @@
 package dev.tfkls.hikkei.server;
 
+import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.page.PageManager;
+import dev.tfkls.hikkei.model.page.RevisionManager;
+import dev.tfkls.hikkei.model.page.VersionProvider;
+import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.model.user.UserManager;
 import dev.tfkls.hikkei.provider.FileVersionProvider;
 import dev.tfkls.hikkei.provider.JDBCPageDataProvider;
 import dev.tfkls.hikkei.provider.JDBCUserDataProvider;
 import dev.tfkls.hikkei.server.routing.PageRouteHandler;
+import dev.tfkls.hikkei.server.routing.RevisionRouteHandler;
 import dev.tfkls.hikkei.server.routing.UserRouteHandler;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvBuilder;
@@ -35,19 +40,24 @@ public class MainVerticle extends VerticleBase {
       throw new RuntimeException(e.getMessage());
     }
 
-    UserRouteHandler userRoute =
-        new UserRouteHandler(new UserManager(new JDBCUserDataProvider(connection)));
-
     String file_dir = dotenv.get("FILE_DIRECTORY");
 
-    PageRouteHandler pageRoute =
-        new PageRouteHandler(
-            new PageManager(
-                new JDBCPageDataProvider(connection), new FileVersionProvider(file_dir)));
+    UserDataProvider userDataProvider = new JDBCUserDataProvider(connection);
+    UserManager userManager = new UserManager(userDataProvider);
+
+    PageDataProvider pageDataProvider = new JDBCPageDataProvider(connection);
+    VersionProvider versionProvider = new FileVersionProvider(file_dir);
+    PageManager pageManager = new PageManager(pageDataProvider, versionProvider);
+    RevisionManager revisionManager = new RevisionManager(pageDataProvider, versionProvider);
+
+    UserRouteHandler userRoute = new UserRouteHandler(userManager);
+    PageRouteHandler pageRoute = new PageRouteHandler(pageManager);
+    RevisionRouteHandler revisionRoute = new RevisionRouteHandler(revisionManager);
 
     Router router = Router.router(vertx);
     userRoute.addRoutes(router, "/api/user");
     pageRoute.addRoutes(router, "/api/page");
+    revisionRoute.addRoutes(router, "/api/revision");
 
     return vertx
         .createHttpServer()
