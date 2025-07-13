@@ -6,7 +6,7 @@ import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
 
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageManager;
-import dev.tfkls.hikkei.model.page.RevisionData;
+import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.server.routing.handler.ArgumentCheckHandler;
 import dev.tfkls.hikkei.server.routing.handler.JsonHeaderHandler;
 import io.vertx.core.http.HttpServerResponse;

@@ -1,6 +1,6 @@
 package dev.tfkls.hikkei.provider;
 
-import dev.tfkls.hikkei.model.page.VersionProvider;
+import dev.tfkls.hikkei.model.version.VersionProvider;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;

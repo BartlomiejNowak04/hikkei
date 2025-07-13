@@ -2,6 +2,7 @@ package dev.tfkls.hikkei.model.page;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.BadHandleException;
+import dev.tfkls.hikkei.model.revision.RevisionData;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,8 +30,6 @@ public interface PageDataProvider {
 
   // revisions
   List<RevisionData> getPageRevisions(int pageId) throws BadHandleException;
-
-  Integer createRevision(RevisionData data) throws BadHandleException;
 
   // comments
   List<CommentData> getPageComments(int pageId) throws BadHandleException;

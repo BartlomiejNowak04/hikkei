@@ -1,12 +1,13 @@
-package dev.tfkls.hikkei.model.page;
+package dev.tfkls.hikkei.model.revision;
 
+import dev.tfkls.hikkei.model.version.VersionProvider;
 import java.util.UUID;
 
 public class RevisionManager {
-  private final PageDataProvider provider;
+  private final RevisionDataProvider provider;
   private final VersionProvider version;
 
-  public RevisionManager(PageDataProvider provider, VersionProvider version) {
+  public RevisionManager(RevisionDataProvider provider, VersionProvider version) {
     this.provider = provider;
     this.version = version;
   }

@@ -2,12 +2,14 @@ package dev.tfkls.hikkei.server;
 
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.page.PageManager;
-import dev.tfkls.hikkei.model.page.RevisionManager;
-import dev.tfkls.hikkei.model.page.VersionProvider;
+import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
+import dev.tfkls.hikkei.model.revision.RevisionManager;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.model.user.UserManager;
+import dev.tfkls.hikkei.model.version.VersionProvider;
 import dev.tfkls.hikkei.provider.FileVersionProvider;
 import dev.tfkls.hikkei.provider.JDBCPageDataProvider;
+import dev.tfkls.hikkei.provider.JDBCRevisionDataProvider;
 import dev.tfkls.hikkei.provider.JDBCUserDataProvider;
 import dev.tfkls.hikkei.server.routing.PageRouteHandler;
 import dev.tfkls.hikkei.server.routing.RevisionRouteHandler;
@@ -43,12 +45,13 @@ public class MainVerticle extends VerticleBase {
     String file_dir = dotenv.get("FILE_DIRECTORY");
 
     UserDataProvider userDataProvider = new JDBCUserDataProvider(connection);
-    UserManager userManager = new UserManager(userDataProvider);
-
     PageDataProvider pageDataProvider = new JDBCPageDataProvider(connection);
+    RevisionDataProvider revisionDataProvider = new JDBCRevisionDataProvider(connection);
     VersionProvider versionProvider = new FileVersionProvider(file_dir);
+
+    UserManager userManager = new UserManager(userDataProvider);
     PageManager pageManager = new PageManager(pageDataProvider, versionProvider);
-    RevisionManager revisionManager = new RevisionManager(pageDataProvider, versionProvider);
+    RevisionManager revisionManager = new RevisionManager(revisionDataProvider, versionProvider);
 
     UserRouteHandler userRoute = new UserRouteHandler(userManager);
     PageRouteHandler pageRoute = new PageRouteHandler(pageManager);

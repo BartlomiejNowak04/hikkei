@@ -5,7 +5,7 @@ import dev.tfkls.hikkei.model.exceptions.BadHandleException;
 import dev.tfkls.hikkei.model.page.CommentData;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
-import dev.tfkls.hikkei.model.page.RevisionData;
+import dev.tfkls.hikkei.model.revision.RevisionData;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -184,29 +184,6 @@ public class JDBCPageDataProvider implements PageDataProvider {
     }
 
     return new ArrayList<>();
-  }
-
-  @Override
-  public Integer createRevision(RevisionData data) throws BadHandleException {
-
-    if (!doesPageExist(data.pageId())) throw new BadHandleException("Incorrect page handle");
-
-    try (PreparedStatement st =
-        connection.prepareStatement(
-            "INSERT INTO revisions (page_id, filename) VALUES (?, ?)",
-            PreparedStatement.RETURN_GENERATED_KEYS)) {
-      st.setInt(1, data.pageId());
-      st.setObject(2, data.filename());
-      st.executeUpdate();
-
-      try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next()) return null;
-        return rs.getInt(1);
-      }
-    } catch (SQLException ignored) {
-    }
-
-    return null;
   }
 
   @Override

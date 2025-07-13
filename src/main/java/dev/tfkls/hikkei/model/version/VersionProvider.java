@@ -1,4 +1,4 @@
-package dev.tfkls.hikkei.model.page;
+package dev.tfkls.hikkei.model.version;
 
 import java.util.UUID;
 

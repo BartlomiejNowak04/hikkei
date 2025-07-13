@@ -1,6 +1,8 @@
 package dev.tfkls.hikkei.model.page;
 
 import dev.tfkls.hikkei.model.exceptions.BadHandleException;
+import dev.tfkls.hikkei.model.revision.RevisionData;
+import dev.tfkls.hikkei.model.version.VersionProvider;
 import java.util.List;
 import java.util.Optional;
 

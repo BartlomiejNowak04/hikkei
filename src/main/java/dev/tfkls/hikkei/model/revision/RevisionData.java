@@ -1,4 +1,4 @@
-package dev.tfkls.hikkei.model.page;
+package dev.tfkls.hikkei.model.revision;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

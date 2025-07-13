@@ -1,7 +1,7 @@
 package dev.tfkls.hikkei.server.util;
 
 import dev.tfkls.hikkei.model.page.PageData;
-import dev.tfkls.hikkei.model.page.RevisionData;
+import dev.tfkls.hikkei.model.revision.RevisionData;
 import io.vertx.core.json.JsonObject;
 
 public class Jsonifier {

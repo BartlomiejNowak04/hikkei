@@ -2,7 +2,7 @@ package dev.tfkls.hikkei.server.routing;
 
 import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
 
-import dev.tfkls.hikkei.model.page.RevisionManager;
+import dev.tfkls.hikkei.model.revision.RevisionManager;
 import dev.tfkls.hikkei.server.routing.handler.ArgumentCheckHandler;
 import dev.tfkls.hikkei.server.routing.handler.JsonHeaderHandler;
 import io.vertx.core.http.HttpServerResponse;
@@ -29,6 +29,12 @@ public class RevisionRouteHandler implements RouteHandler {
       response.setStatusCode(201);
       response.end();
     } else throwError(500, "Failed to create revision", response);
+  }
+
+  // TODO: add middleware to authorize
+  private void changeStatus(RoutingContext ctx) {
+    HttpServerResponse response = ctx.response();
+    JsonObject body = ctx.body().asJsonObject();
   }
 
   @Override
