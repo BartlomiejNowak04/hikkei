@@ -1,5 +1,9 @@
 package dev.tfkls.hikkei.server.routing;
 
+import static dev.tfkls.hikkei.server.util.Jsonifier.pageToJson;
+import static dev.tfkls.hikkei.server.util.Jsonifier.revisionToJson;
+import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
+
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageManager;
 import dev.tfkls.hikkei.model.page.RevisionData;
@@ -12,6 +16,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import java.util.List;
+import java.util.Map;
 
 public class PageRouteHandler implements RouteHandler {
   private final PageManager pageManager;
@@ -20,35 +25,12 @@ public class PageRouteHandler implements RouteHandler {
     pageManager = manager;
   }
 
-  private JsonObject pageToJson(PageData page) {
-    return new JsonObject()
-        .put("id", page.id())
-        .put("title", page.title())
-        .put("category", page.category())
-        .put("archived", page.archived());
-  }
-
-  private JsonObject revisionToJson(RevisionData revision) {
-    return new JsonObject()
-        .put("page_id", revision.pageId())
-        .put("filename", revision.filename().toString())
-        .put("date", revision.date().toString())
-        .put("approved", revision.approved());
-  }
-
-  private void userError(String message, HttpServerResponse response) {
-    response.setStatusCode(400);
-    response.end(new JsonObject().put("message", message).encode());
-  }
-
   private void getRandomPage(RoutingContext ctx) {
     PageData data = pageManager.getRandomPage();
     HttpServerResponse response = ctx.response();
 
-    if (data == null) {
-      response.setStatusCode(404);
-      response.end();
-    } else {
+    if (data == null) throwError(404, "No pages available", response);
+    else {
       response.setStatusCode(200);
       response.end(pageToJson(data).encode());
     }
@@ -74,7 +56,7 @@ public class PageRouteHandler implements RouteHandler {
     Integer id = body.getInteger("id");
     List<RevisionData> data = pageManager.getRevisions(id);
     if (data == null) {
-      userError("Incorrect parameter value: id", response);
+      throwError(400, "Incorrect parameter value: id", response);
       return;
     }
     JsonArray items = new JsonArray();
@@ -91,7 +73,7 @@ public class PageRouteHandler implements RouteHandler {
     Integer id = body.getInteger("id");
     String data = pageManager.getCurrentContent(id);
     if (data == null) {
-      userError("No content found for page " + id, response);
+      throwError(400, "No content found for page " + id, response);
       return;
     }
 
@@ -108,10 +90,7 @@ public class PageRouteHandler implements RouteHandler {
     if (pageManager.createRevision(id, content)) {
       response.setStatusCode(201);
       response.end();
-    } else {
-      response.setStatusCode(500);
-      response.end();
-    }
+    } else throwError(500, "Failed to create revision", response);
   }
 
   @Override
@@ -122,16 +101,18 @@ public class PageRouteHandler implements RouteHandler {
 
     router.get(url + "/random").handler(this::getRandomPage);
 
-    router.post(url + "/search").handler(new ArgumentCheckHandler(List.of("title")));
+    router.post(url + "/search").handler(new ArgumentCheckHandler(Map.of("title", String.class)));
     router.post(url + "/search").handler(this::searchByTitle);
 
-    router.post(url + "/revisions").handler(new ArgumentCheckHandler(List.of("id")));
+    router.post(url + "/revisions").handler(new ArgumentCheckHandler(Map.of("id", Integer.class)));
     router.post(url + "/revisions").handler(this::getRevisions);
 
-    router.post(url + "/current").handler(new ArgumentCheckHandler(List.of("id")));
+    router.post(url + "/current").handler(new ArgumentCheckHandler(Map.of("id", Integer.class)));
     router.post(url + "/current").handler(this::getCurrentContent);
 
-    router.post(url + "/update").handler(new ArgumentCheckHandler(List.of("id", "content")));
+    router
+        .post(url + "/update")
+        .handler(new ArgumentCheckHandler(Map.of("id", Integer.class, "content", String.class)));
     router.put(url + "/update").handler(this::addRevision);
   }
 }
