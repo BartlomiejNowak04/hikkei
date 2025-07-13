@@ -174,10 +174,11 @@ public class JDBCPageDataProvider implements PageDataProvider {
         while (rs.next())
           res.add(
               new RevisionData(
+                  rs.getInt(1),
                   rs.getInt(2),
                   rs.getObject(3, UUID.class),
                   rs.getTimestamp(4).toLocalDateTime(),
-                  rs.getBoolean(5)));
+                  rs.getObject(5, Boolean.class)));
         return res;
       }
     } catch (SQLException ignored) {

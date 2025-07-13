@@ -15,6 +15,14 @@ public class RevisionManager {
   public boolean createRevision(int pageId, String content) {
     UUID id = version.storeContent(content);
     if (id == null) return false;
-    return provider.createRevision(new RevisionData(pageId, id, null, null)) != null;
+    return provider.createRevision(new RevisionData(null, pageId, id, null, null)) != null;
+  }
+
+  public boolean changeStatus(int revId, Boolean status) {
+    return provider.changeState(revId, status);
+  }
+
+  public Integer getPage(int revId) {
+    return provider.getPage(revId);
   }
 }

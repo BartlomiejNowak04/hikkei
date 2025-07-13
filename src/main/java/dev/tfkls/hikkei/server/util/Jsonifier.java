@@ -15,6 +15,7 @@ public class Jsonifier {
 
   public static JsonObject revisionToJson(RevisionData revision) {
     return new JsonObject()
+        .put("id", revision.id())
         .put("page_id", revision.pageId())
         .put("filename", revision.filename().toString())
         .put("date", revision.date().toString())

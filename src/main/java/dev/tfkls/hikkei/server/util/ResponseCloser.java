@@ -8,4 +8,9 @@ public class ResponseCloser {
     response.setStatusCode(statusCode);
     response.end(new JsonObject().put("message", message).encode());
   }
+
+  public static void endWithStatus(int statusCode, HttpServerResponse response) {
+    response.setStatusCode(statusCode);
+    response.end();
+  }
 }

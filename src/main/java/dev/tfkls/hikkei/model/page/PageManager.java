@@ -44,7 +44,7 @@ public class PageManager {
   public List<RevisionData> getApprovedRevisions(int pageId) {
     List<RevisionData> res = getRevisions(pageId);
     if (res == null) return null;
-    res.removeIf(rev -> !rev.approved());
+    res.removeIf(rev -> rev.approved() == null || !rev.approved());
     return res;
   }
 
