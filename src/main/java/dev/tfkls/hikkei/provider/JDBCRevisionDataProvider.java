@@ -36,6 +36,29 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
 
   @Override
   public Integer getPage(int revId) {
-    return 0;
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT page_id FROM revisions WHERE id = ?")) {
+      st.setInt(1, revId);
+      try (ResultSet rs = st.executeQuery()) {
+        if (!rs.next()) return null;
+        return rs.getInt(1);
+      }
+    } catch (SQLException ignored) {
+    }
+
+    return null;
+  }
+
+  @Override
+  public boolean changeState(int revId, Boolean state) {
+    try (PreparedStatement st =
+        connection.prepareStatement("UPDATE revisions SET approved = ? WHERE id = ?")) {
+      st.setBoolean(1, state);
+      st.setInt(2, revId);
+      return st.executeUpdate() > 0;
+    } catch (SQLException ignored) {
+    }
+
+    return false;
   }
 }
