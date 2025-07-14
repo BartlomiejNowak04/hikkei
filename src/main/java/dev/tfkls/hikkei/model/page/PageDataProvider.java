@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.model.page;
 
+import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.revision.RevisionData;
@@ -30,8 +31,4 @@ public interface PageDataProvider {
   List<RevisionData> getPageRevisions(int pageId) throws InternalErrorException;
 
   List<CommentData> getPageComments(int pageId) throws InternalErrorException;
-
-  Integer addComment(CommentData data) throws BadDataException, InternalErrorException;
-
-  void deleteComment(int pageId, int commentId) throws BadDataException, InternalErrorException;
 }

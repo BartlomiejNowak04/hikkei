@@ -1,12 +1,11 @@
 package dev.tfkls.hikkei.server.routing;
 
 import static dev.tfkls.hikkei.server.util.Jsonifier.*;
-import static dev.tfkls.hikkei.server.util.ResponseCloser.endWithStatus;
 import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
 
+import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
-import dev.tfkls.hikkei.model.page.CommentData;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionData;
@@ -130,38 +129,6 @@ public class PageRouteHandler implements RouteHandler {
     }
   }
 
-  private void addComment(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
-    JsonObject body = ctx.body().asJsonObject();
-
-    Integer id = body.getInteger("id");
-    String content = body.getString("content");
-    try {
-      pageProvider.addComment(new CommentData(null, id, content, null, null));
-      endWithStatus(201, response);
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
-    } catch (BadDataException e) {
-      throwError(400, e.getMessage(), response);
-    }
-  }
-
-  private void deleteComment(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
-    JsonObject body = ctx.body().asJsonObject();
-
-    Integer id = body.getInteger("id");
-    Integer pageId = body.getInteger("page_id");
-    try {
-      pageProvider.deleteComment(pageId, id);
-      endWithStatus(200, response);
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
-    } catch (BadDataException e) {
-      throwError(400, e.getMessage(), response);
-    }
-  }
-
   private void getPageByTitle(RoutingContext ctx) {
     HttpServerResponse response = ctx.response();
     JsonObject body = ctx.body().asJsonObject();
@@ -229,16 +196,6 @@ public class PageRouteHandler implements RouteHandler {
 
     router.post(url + "/comments").handler(new ArgumentCheckHandler(Map.of("id", Integer.class)));
     router.post(url + "/comments").handler(this::getComments);
-
-    router
-        .put(url + "/comment/add")
-        .handler(new ArgumentCheckHandler(Map.of("id", Integer.class, "content", String.class)));
-    router.put(url + "/comment/add").handler(this::addComment);
-
-    router
-        .post(url + "/comment/delete")
-        .handler(new ArgumentCheckHandler(Map.of("id", Integer.class, "page_id", Integer.class)));
-    router.post(url + "/comment/delete").handler(this::deleteComment);
 
     router
         .post(url + "/get")

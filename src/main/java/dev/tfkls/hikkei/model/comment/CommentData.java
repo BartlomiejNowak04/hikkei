@@ -1,4 +1,4 @@
-package dev.tfkls.hikkei.model.page;
+package dev.tfkls.hikkei.model.comment;
 
 import java.time.LocalDateTime;
 

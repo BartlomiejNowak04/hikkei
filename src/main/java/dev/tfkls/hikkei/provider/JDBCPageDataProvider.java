@@ -1,8 +1,8 @@
 package dev.tfkls.hikkei.provider;
 
+import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
-import dev.tfkls.hikkei.model.page.CommentData;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionData;
@@ -223,41 +223,6 @@ public class JDBCPageDataProvider implements PageDataProvider {
                   rs.getBoolean(5)));
         return res;
       }
-    } catch (SQLException e) {
-      throw new InternalErrorException(internal_error);
-    }
-  }
-
-  @Override
-  public Integer addComment(CommentData data) throws BadDataException, InternalErrorException {
-    try (PreparedStatement st =
-        connection.prepareStatement(
-            "INSERT INTO comments (page_id, content) VALUES (?, ?)",
-            PreparedStatement.RETURN_GENERATED_KEYS)) {
-      st.setInt(1, data.pageId());
-      st.setString(2, data.content());
-      st.executeUpdate();
-
-      try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next()) throw new InternalErrorException("Couldn't create a new comment");
-        return rs.getInt(1);
-      }
-    } catch (SQLException e) {
-      String message = e.getMessage();
-      if (message.contains("comments_page_id_fkey")) throw new BadDataException(invalid_id);
-      throw new InternalErrorException(internal_error);
-    }
-  }
-
-  @Override
-  public void deleteComment(int pageId, int commentId)
-      throws BadDataException, InternalErrorException {
-    try (PreparedStatement st =
-        connection.prepareStatement(
-            "UPDATE comments SET deleted = true WHERE id = ? AND page_id = ?")) {
-      st.setInt(1, commentId);
-      st.setInt(2, pageId);
-      if (st.executeUpdate() < 1) throw new BadDataException(invalid_comment);
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
     }

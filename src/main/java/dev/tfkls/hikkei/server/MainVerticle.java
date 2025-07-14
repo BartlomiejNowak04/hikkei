@@ -1,14 +1,13 @@
 package dev.tfkls.hikkei.server;
 
+import dev.tfkls.hikkei.model.comment.CommentDataProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.model.user.UserManager;
 import dev.tfkls.hikkei.model.version.VersionProvider;
-import dev.tfkls.hikkei.provider.FileVersionProvider;
-import dev.tfkls.hikkei.provider.JDBCPageDataProvider;
-import dev.tfkls.hikkei.provider.JDBCRevisionDataProvider;
-import dev.tfkls.hikkei.provider.JDBCUserDataProvider;
+import dev.tfkls.hikkei.provider.*;
+import dev.tfkls.hikkei.server.routing.CommentRouteHandler;
 import dev.tfkls.hikkei.server.routing.PageRouteHandler;
 import dev.tfkls.hikkei.server.routing.RevisionRouteHandler;
 import dev.tfkls.hikkei.server.routing.UserRouteHandler;
@@ -45,6 +44,7 @@ public class MainVerticle extends VerticleBase {
     UserDataProvider userDataProvider = new JDBCUserDataProvider(connection);
     PageDataProvider pageDataProvider = new JDBCPageDataProvider(connection);
     RevisionDataProvider revisionDataProvider = new JDBCRevisionDataProvider(connection);
+    CommentDataProvider commentDataProvider = new JDBCCommentDataProvider(connection);
     VersionProvider versionProvider = new FileVersionProvider(file_dir);
 
     UserManager userManager = new UserManager(userDataProvider);
@@ -53,11 +53,13 @@ public class MainVerticle extends VerticleBase {
     PageRouteHandler pageRoute = new PageRouteHandler(pageDataProvider, versionProvider);
     RevisionRouteHandler revisionRoute =
         new RevisionRouteHandler(revisionDataProvider, versionProvider);
+    CommentRouteHandler commentRoute = new CommentRouteHandler(commentDataProvider);
 
     Router router = Router.router(vertx);
     userRoute.addRoutes(router, "/api/user");
     pageRoute.addRoutes(router, "/api/page");
     revisionRoute.addRoutes(router, "/api/revision");
+    commentRoute.addRoutes(router, "/api/comment");
 
     return vertx
         .createHttpServer()

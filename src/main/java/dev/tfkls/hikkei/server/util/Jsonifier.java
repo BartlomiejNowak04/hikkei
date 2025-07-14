@@ -1,6 +1,6 @@
 package dev.tfkls.hikkei.server.util;
 
-import dev.tfkls.hikkei.model.page.CommentData;
+import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import io.vertx.core.json.JsonObject;
