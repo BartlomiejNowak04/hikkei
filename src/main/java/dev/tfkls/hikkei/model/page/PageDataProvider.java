@@ -1,39 +1,37 @@
 package dev.tfkls.hikkei.model.page;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
-import dev.tfkls.hikkei.model.exceptions.BadHandleException;
+import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import java.util.List;
 
 public interface PageDataProvider {
 
   // check existence
-  boolean doesPageExist(int pageId);
+  boolean doesPageExist(int pageId) throws InternalErrorException;
 
-  PageData getRandomPage();
+  PageData getRandomPage() throws InternalErrorException;
 
-  List<PageData> searchPageByTitle(String title);
+  List<PageData> searchPageByTitle(String title) throws InternalErrorException;
 
-  // get page data
-  PageData getPageData(int pageId) throws BadHandleException;
+  PageData getPageData(int pageId) throws InternalErrorException;
 
-  PageData getPageByTitle(String title);
+  PageData getPageByTitle(String title) throws InternalErrorException;
 
-  Integer createPage(PageData data) throws BadDataException;
+  Integer createPage(PageData data) throws BadDataException, InternalErrorException;
 
-  void updatePageUrl(int pageId, String url) throws BadHandleException, BadDataException;
+  void updatePageTitle(int pageId, String title) throws BadDataException, InternalErrorException;
 
-  void updatePageCategory(int pageId, int categoryId) throws BadHandleException;
+  void updatePageCategory(int pageId, int categoryId)
+      throws BadDataException, InternalErrorException;
 
-  void archivePage(int pageId) throws BadHandleException;
+  void toggleArchive(int pageId, boolean type) throws BadDataException, InternalErrorException;
 
-  // revisions
-  List<RevisionData> getPageRevisions(int pageId) throws BadHandleException;
+  List<RevisionData> getPageRevisions(int pageId) throws InternalErrorException;
 
-  // comments
-  List<CommentData> getPageComments(int pageId) throws BadHandleException;
+  List<CommentData> getPageComments(int pageId) throws InternalErrorException;
 
-  Integer addComment(CommentData data) throws BadHandleException, BadDataException;
+  Integer addComment(CommentData data) throws BadDataException, InternalErrorException;
 
-  boolean deleteComment(int commentId) throws BadHandleException;
+  void deleteComment(int pageId, int commentId) throws BadDataException, InternalErrorException;
 }

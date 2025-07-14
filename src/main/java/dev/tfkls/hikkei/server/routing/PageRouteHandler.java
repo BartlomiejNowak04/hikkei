@@ -4,6 +4,8 @@ import static dev.tfkls.hikkei.server.util.Jsonifier.*;
 import static dev.tfkls.hikkei.server.util.ResponseCloser.endWithStatus;
 import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
 
+import dev.tfkls.hikkei.model.exceptions.BadDataException;
+import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.page.CommentData;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
@@ -30,13 +32,16 @@ public class PageRouteHandler implements RouteHandler {
   }
 
   private void getRandomPage(RoutingContext ctx) {
-    PageData data = pageProvider.getRandomPage();
     HttpServerResponse response = ctx.response();
-
-    if (data == null) throwError(404, "No pages available", response);
-    else {
-      response.setStatusCode(200);
-      response.end(pageToJson(data).encode());
+    try {
+      PageData data = pageProvider.getRandomPage();
+      if (data == null) throwError(404, "No pages available", response);
+      else {
+        response.setStatusCode(200);
+        response.end(pageToJson(data).encode());
+      }
+    } catch (InternalErrorException e) {
+      throwError(500, e.getMessage(), response);
     }
   }
 
@@ -45,12 +50,16 @@ public class PageRouteHandler implements RouteHandler {
     JsonObject body = ctx.body().asJsonObject();
 
     String title = body.getString("title");
-    List<PageData> data = pageProvider.searchPageByTitle(title);
-    JsonArray items = new JsonArray();
-    for (PageData item : data) items.add(pageToJson(item));
+    try {
+      List<PageData> data = pageProvider.searchPageByTitle(title);
+      JsonArray items = new JsonArray();
+      for (PageData item : data) items.add(pageToJson(item));
 
-    response.setStatusCode(200);
-    response.end(items.encode());
+      response.setStatusCode(200);
+      response.end(items.encode());
+    } catch (InternalErrorException e) {
+      throwError(500, e.getMessage(), response);
+    }
   }
 
   private void getRevisions(RoutingContext ctx) {
@@ -58,16 +67,20 @@ public class PageRouteHandler implements RouteHandler {
     JsonObject body = ctx.body().asJsonObject();
 
     Integer id = body.getInteger("id");
-    List<RevisionData> data = pageProvider.getPageRevisions(id);
-    if (data == null) {
-      throwError(400, "Incorrect parameter value: id", response);
-      return;
-    }
-    JsonArray items = new JsonArray();
-    for (RevisionData item : data) items.add(revisionToJson(item));
+    try {
+      List<RevisionData> data = pageProvider.getPageRevisions(id);
+      if (data == null) {
+        throwError(400, "Incorrect parameter value: id", response);
+        return;
+      }
+      JsonArray items = new JsonArray();
+      for (RevisionData item : data) items.add(revisionToJson(item));
 
-    response.setStatusCode(200);
-    response.end(items.encode());
+      response.setStatusCode(200);
+      response.end(items.encode());
+    } catch (InternalErrorException e) {
+      throwError(500, e.getMessage(), response);
+    }
   }
 
   private void getCurrentContent(RoutingContext ctx) {
@@ -75,21 +88,25 @@ public class PageRouteHandler implements RouteHandler {
     JsonObject body = ctx.body().asJsonObject();
 
     Integer id = body.getInteger("id");
-    List<RevisionData> revisions = pageProvider.getPageRevisions(id);
-    revisions.removeIf(rev -> rev.approved() == null || !rev.approved());
-    if (revisions.isEmpty()) {
-      throwError(404, "No content found for page " + id, response);
-      return;
-    }
+    try {
+      List<RevisionData> revisions = pageProvider.getPageRevisions(id);
+      revisions.removeIf(rev -> rev.approved() == null || !rev.approved());
+      if (revisions.isEmpty()) {
+        throwError(404, "No content found for page " + id, response);
+        return;
+      }
 
-    String data = versionProvider.getContent(revisions.getFirst().filename());
-    if (data == null) {
-      throwError(404, "Could not retrieve content for page " + id, response);
-      return;
-    }
+      String data = versionProvider.getContent(revisions.getFirst().filename());
+      if (data == null) {
+        throwError(404, "Couldn't retrieve content for page " + id, response);
+        return;
+      }
 
-    response.setStatusCode(200);
-    response.end(new JsonObject().put("content", data).encode());
+      response.setStatusCode(200);
+      response.end(new JsonObject().put("content", data).encode());
+    } catch (InternalErrorException e) {
+      throwError(500, e.getMessage(), response);
+    }
   }
 
   private void getComments(RoutingContext ctx) {
@@ -97,16 +114,20 @@ public class PageRouteHandler implements RouteHandler {
     JsonObject body = ctx.body().asJsonObject();
 
     Integer id = body.getInteger("id");
-    List<CommentData> data = pageProvider.getPageComments(id);
-    if (data == null) {
-      throwError(400, "Incorrect parameter value: id", response);
-      return;
-    }
-    JsonArray items = new JsonArray();
-    for (CommentData item : data) items.add(commentToJson(item));
+    try {
+      List<CommentData> data = pageProvider.getPageComments(id);
+      if (data == null) {
+        throwError(400, "Incorrect parameter value: id", response);
+        return;
+      }
+      JsonArray items = new JsonArray();
+      for (CommentData item : data) items.add(commentToJson(item));
 
-    response.setStatusCode(200);
-    response.end(items.encode());
+      response.setStatusCode(200);
+      response.end(items.encode());
+    } catch (InternalErrorException e) {
+      throwError(500, e.getMessage(), response);
+    }
   }
 
   private void addComment(RoutingContext ctx) {
@@ -115,9 +136,14 @@ public class PageRouteHandler implements RouteHandler {
 
     Integer id = body.getInteger("id");
     String content = body.getString("content");
-    if (pageProvider.addComment(new CommentData(null, id, content, null, null)) != null)
+    try {
+      pageProvider.addComment(new CommentData(null, id, content, null, null));
       endWithStatus(201, response);
-    else throwError(500, "Unable to add comment", response);
+    } catch (InternalErrorException e) {
+      throwError(500, e.getMessage(), response);
+    } catch (BadDataException e) {
+      throwError(400, e.getMessage(), response);
+    }
   }
 
   private void deleteComment(RoutingContext ctx) {
@@ -125,8 +151,15 @@ public class PageRouteHandler implements RouteHandler {
     JsonObject body = ctx.body().asJsonObject();
 
     Integer id = body.getInteger("id");
-    if (pageProvider.deleteComment(id)) endWithStatus(200, response);
-    else throwError(500, "Unable to delete comment " + id, response);
+    Integer pageId = body.getInteger("page_id");
+    try {
+      pageProvider.deleteComment(pageId, id);
+      endWithStatus(200, response);
+    } catch (InternalErrorException e) {
+      throwError(500, e.getMessage(), response);
+    } catch (BadDataException e) {
+      throwError(400, e.getMessage(), response);
+    }
   }
 
   private void getPageByTitle(RoutingContext ctx) {
@@ -136,11 +169,45 @@ public class PageRouteHandler implements RouteHandler {
     String key = body.getString("key");
     if (body.getBoolean("url")) key = key.replace("_", " ");
 
-    PageData data = pageProvider.getPageByTitle(key);
-    if (data == null) throwError(404, "Invalid page title: " + key, response);
-    else {
-      response.setStatusCode(200);
-      response.end(pageToJson(data).encode());
+    try {
+      PageData data = pageProvider.getPageByTitle(key);
+      if (data == null) throwError(404, "Invalid page title: " + key, response);
+      else {
+        response.setStatusCode(200);
+        response.end(pageToJson(data).encode());
+      }
+    } catch (InternalErrorException e) {
+      throwError(500, e.getMessage(), response);
+    }
+  }
+
+  private void createPage(RoutingContext ctx) {
+    HttpServerResponse response = ctx.response();
+    JsonObject body = ctx.body().asJsonObject();
+
+    String title = body.getString("title");
+    Integer category = body.getInteger("category");
+    try {
+      pageProvider.createPage(new PageData(null, title, category, null));
+    } catch (InternalErrorException e) {
+      throwError(500, e.getMessage(), response);
+    } catch (BadDataException e) {
+      throwError(400, e.getMessage(), response);
+    }
+  }
+
+  private void updateTitle(RoutingContext ctx) {
+    HttpServerResponse response = ctx.response();
+    JsonObject body = ctx.body().asJsonObject();
+
+    String title = body.getString("title");
+    Integer id = body.getInteger("id");
+    try {
+      pageProvider.updatePageTitle(id, title);
+    } catch (InternalErrorException e) {
+      throwError(500, e.getMessage(), response);
+    } catch (BadDataException e) {
+      throwError(400, e.getMessage(), response);
     }
   }
 
@@ -170,12 +237,23 @@ public class PageRouteHandler implements RouteHandler {
 
     router
         .post(url + "/comment/delete")
-        .handler(new ArgumentCheckHandler(Map.of("id", Integer.class)));
+        .handler(new ArgumentCheckHandler(Map.of("id", Integer.class, "page_id", Integer.class)));
     router.post(url + "/comment/delete").handler(this::deleteComment);
 
     router
         .post(url + "/get")
         .handler(new ArgumentCheckHandler(Map.of("key", String.class, "url", Boolean.class)));
     router.post(url + "/get").handler(this::getPageByTitle);
+
+    router
+        .put(url + "/create")
+        .handler(
+            new ArgumentCheckHandler(Map.of("title", String.class, "category", Integer.class)));
+    router.put(url + "/create").handler(this::createPage);
+
+    router
+        .post(url + "/update_title")
+        .handler(new ArgumentCheckHandler(Map.of("title", String.class, "id", Integer.class)));
+    router.post(url + "/update_title").handler(this::updateTitle);
   }
 }

@@ -1,7 +1,7 @@
 package dev.tfkls.hikkei.provider;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
-import dev.tfkls.hikkei.model.exceptions.BadHandleException;
+import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.page.CommentData;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
@@ -13,76 +13,87 @@ import java.util.UUID;
 
 public class JDBCPageDataProvider implements PageDataProvider {
   private final Connection connection;
+  private final String internal_error = "Database internal error";
+  private final String invalid_category = "The provided category is invalid";
+  private final String invalid_id = "The provided page id is invalid";
+  private final String invalid_comment = "The provided comment id is invalid";
+  private final String taken_title = "This title is already taken";
 
   public JDBCPageDataProvider(Connection conn) {
     connection = conn;
   }
 
   @Override
-  public boolean doesPageExist(int pageId) {
-
+  public boolean doesPageExist(int pageId) throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement("SELECT COUNT(*) FROM pages WHERE id = ?")) {
       st.setInt(1, pageId);
       try (ResultSet rs = st.executeQuery()) {
-        if (!rs.next()) return false;
+        rs.next();
         return rs.getInt(1) > 0;
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
-
-    return false;
   }
 
   @Override
-  public PageData getRandomPage() {
+  public PageData getRandomPage() throws InternalErrorException {
     try (Statement st = connection.createStatement()) {
       try (ResultSet rs = st.executeQuery("SELECT * FROM pages ORDER BY RANDOM() LIMIT 1")) {
         if (!rs.next()) return null;
-        return new PageData(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getBoolean(4));
+        return new PageData(
+            rs.getInt("id"),
+            rs.getString("title"),
+            rs.getInt("category"),
+            rs.getBoolean("archived"));
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
-
-    return null;
   }
 
   @Override
-  public List<PageData> searchPageByTitle(String title) {
+  public List<PageData> searchPageByTitle(String title) throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement("SELECT * FROM pages WHERE title ILIKE ?")) {
       st.setString(1, "%" + title + "%");
       try (ResultSet rs = st.executeQuery()) {
         ArrayList<PageData> res = new ArrayList<>();
         while (rs.next()) {
-          res.add(new PageData(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getBoolean(4)));
+          res.add(
+              new PageData(
+                  rs.getInt("id"),
+                  rs.getString("title"),
+                  rs.getInt("category"),
+                  rs.getBoolean("archived")));
         }
         return res;
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
-
-    return List.of();
   }
 
   @Override
-  public PageData getPageData(int pageId) throws BadHandleException {
-
+  public PageData getPageData(int pageId) throws InternalErrorException {
     try (PreparedStatement st = connection.prepareStatement("SELECT * FROM pages WHERE id = ?")) {
       st.setInt(1, pageId);
       try (ResultSet rs = st.executeQuery()) {
-        if (!rs.next()) throw new BadHandleException("Incorrect page handle");
-        return new PageData(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getBoolean(4));
+        if (!rs.next()) return null;
+        return new PageData(
+            rs.getInt("id"),
+            rs.getString("title"),
+            rs.getInt("category"),
+            rs.getBoolean("archived"));
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
-
-    return null;
   }
 
   @Override
-  public PageData getPageByTitle(String title) {
-
+  public PageData getPageByTitle(String title) throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement("SELECT * FROM pages WHERE title = ?")) {
       st.setString(1, title);
@@ -90,80 +101,86 @@ public class JDBCPageDataProvider implements PageDataProvider {
         if (!rs.next()) return null;
         else return new PageData(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getBoolean(4));
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
-
-    return null;
   }
 
   @Override
-  public Integer createPage(PageData data) throws BadDataException {
-
+  public Integer createPage(PageData data) throws BadDataException, InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO pages (url, category) VALUES (?, ?)",
+            "INSERT INTO pages (title, category) VALUES (?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
       st.setString(1, data.title());
       st.setInt(2, data.category());
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next()) throw new BadDataException("Couldn't create new page " + data.title());
+        if (!rs.next())
+          throw new InternalErrorException("Couldn't create a new page " + data.title());
         return rs.getInt(1);
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("pages_title_key")) throw new BadDataException(taken_title);
+      if (message.contains("pages_category_fkey")) throw new BadDataException(invalid_category);
+      throw new InternalErrorException(internal_error);
     }
-    return 0;
   }
 
   @Override
-  public void updatePageUrl(int pageId, String url) throws BadHandleException, BadDataException {
-
-    if (!doesPageExist(pageId)) throw new BadHandleException("Incorrect page handle");
+  public void updatePageTitle(int pageId, String title)
+      throws BadDataException, InternalErrorException {
+    if (!doesPageExist(pageId)) throw new BadDataException(invalid_id);
 
     try (PreparedStatement st =
-        connection.prepareStatement("UPDATE pages SET url = ? WHERE id = ?")) {
-      st.setString(1, url);
+        connection.prepareStatement("UPDATE pages SET title = ? WHERE id = ?")) {
+      st.setString(1, title);
       st.setInt(2, pageId);
-      int num_rows = st.executeUpdate();
-      if (num_rows < 1)
-        throw new BadDataException("Couldn't update url for page " + pageId + " to " + url);
-    } catch (SQLException ignored) {
+      st.executeUpdate();
+    } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("pages_title_key")) throw new BadDataException(taken_title);
+      throw new InternalErrorException(internal_error);
     }
   }
 
   @Override
-  public void updatePageCategory(int pageId, int categoryId) throws BadHandleException {
-
-    if (!doesPageExist(pageId)) throw new BadHandleException("Incorrect page handle");
+  public void updatePageCategory(int pageId, int categoryId)
+      throws BadDataException, InternalErrorException {
+    if (!doesPageExist(pageId)) throw new BadDataException(invalid_id);
 
     try (PreparedStatement st =
         connection.prepareStatement("UPDATE pages SET category = ? WHERE id = ?")) {
       st.setInt(1, categoryId);
       st.setInt(2, pageId);
       st.executeUpdate();
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("pages_category_fkey")) throw new BadDataException(invalid_category);
+      throw new InternalErrorException(internal_error);
     }
   }
 
   @Override
-  public void archivePage(int pageId) throws BadHandleException {
-    // TODO: de-archivisation option
-
-    if (!doesPageExist(pageId)) throw new BadHandleException("Incorrect user handle");
+  public void toggleArchive(int pageId, boolean type)
+      throws BadDataException, InternalErrorException {
+    if (!doesPageExist(pageId)) throw new BadDataException(invalid_id);
 
     try (PreparedStatement st =
-        connection.prepareStatement("UPDATE pages SET archive = true WHERE id = ?")) {
-      st.setInt(1, pageId);
+        connection.prepareStatement("UPDATE pages SET archive = ? WHERE id = ?")) {
+      st.setBoolean(1, type);
+      st.setInt(2, pageId);
       st.executeUpdate();
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
   }
 
   @Override
-  public List<RevisionData> getPageRevisions(int pageId) throws BadHandleException {
-
-    if (!doesPageExist(pageId)) throw new BadHandleException("Incorrect page handle");
+  public List<RevisionData> getPageRevisions(int pageId) throws InternalErrorException {
+    if (!doesPageExist(pageId)) return null;
 
     try (PreparedStatement st =
         connection.prepareStatement(
@@ -181,16 +198,14 @@ public class JDBCPageDataProvider implements PageDataProvider {
                   rs.getObject(5, Boolean.class)));
         return res;
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
-
-    return new ArrayList<>();
   }
 
   @Override
-  public List<CommentData> getPageComments(int pageId) throws BadHandleException {
-
-    if (!doesPageExist(pageId)) throw new BadHandleException("Incorrect page handle");
+  public List<CommentData> getPageComments(int pageId) throws InternalErrorException {
+    if (!doesPageExist(pageId)) return null;
 
     try (PreparedStatement st =
         connection.prepareStatement(
@@ -208,17 +223,13 @@ public class JDBCPageDataProvider implements PageDataProvider {
                   rs.getBoolean(5)));
         return res;
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
-
-    return new ArrayList<>();
   }
 
   @Override
-  public Integer addComment(CommentData data) throws BadHandleException, BadDataException {
-
-    if (!doesPageExist(data.pageId())) throw new BadHandleException("Incorrect page handle");
-
+  public Integer addComment(CommentData data) throws BadDataException, InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO comments (page_id, content) VALUES (?, ?)",
@@ -228,22 +239,27 @@ public class JDBCPageDataProvider implements PageDataProvider {
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next()) return null;
+        if (!rs.next()) throw new InternalErrorException("Couldn't create a new comment");
         return rs.getInt(1);
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("comments_page_id_fkey")) throw new BadDataException(invalid_id);
+      throw new InternalErrorException(internal_error);
     }
-
-    return null;
   }
 
   @Override
-  public boolean deleteComment(int commentId) throws BadHandleException {
-    try (PreparedStatement st = connection.prepareStatement("DELETE FROM comments WHERE id = ?")) {
+  public void deleteComment(int pageId, int commentId)
+      throws BadDataException, InternalErrorException {
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "UPDATE comments SET deleted = true WHERE id = ? AND page_id = ?")) {
       st.setInt(1, commentId);
-      return st.executeUpdate() > 0;
-    } catch (SQLException ignored) {
+      st.setInt(2, pageId);
+      if (st.executeUpdate() < 1) throw new BadDataException(invalid_comment);
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
-    return false;
   }
 }
