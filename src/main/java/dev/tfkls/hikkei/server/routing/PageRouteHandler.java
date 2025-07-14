@@ -6,8 +6,9 @@ import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
 
 import dev.tfkls.hikkei.model.page.CommentData;
 import dev.tfkls.hikkei.model.page.PageData;
-import dev.tfkls.hikkei.model.page.PageManager;
+import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionData;
+import dev.tfkls.hikkei.model.version.VersionProvider;
 import dev.tfkls.hikkei.server.routing.handler.ArgumentCheckHandler;
 import dev.tfkls.hikkei.server.routing.handler.JsonHeaderHandler;
 import io.vertx.core.http.HttpServerResponse;
@@ -20,14 +21,16 @@ import java.util.List;
 import java.util.Map;
 
 public class PageRouteHandler implements RouteHandler {
-  private final PageManager pageManager;
+  private final PageDataProvider pageProvider;
+  private final VersionProvider versionProvider;
 
-  public PageRouteHandler(PageManager manager) {
-    pageManager = manager;
+  public PageRouteHandler(PageDataProvider pageProvider, VersionProvider versionProvider) {
+    this.pageProvider = pageProvider;
+    this.versionProvider = versionProvider;
   }
 
   private void getRandomPage(RoutingContext ctx) {
-    PageData data = pageManager.getRandomPage();
+    PageData data = pageProvider.getRandomPage();
     HttpServerResponse response = ctx.response();
 
     if (data == null) throwError(404, "No pages available", response);
@@ -42,7 +45,7 @@ public class PageRouteHandler implements RouteHandler {
     JsonObject body = ctx.body().asJsonObject();
 
     String title = body.getString("title");
-    List<PageData> data = pageManager.searchByTitle(title);
+    List<PageData> data = pageProvider.searchPageByTitle(title);
     JsonArray items = new JsonArray();
     for (PageData item : data) items.add(pageToJson(item));
 
@@ -55,7 +58,7 @@ public class PageRouteHandler implements RouteHandler {
     JsonObject body = ctx.body().asJsonObject();
 
     Integer id = body.getInteger("id");
-    List<RevisionData> data = pageManager.getRevisions(id);
+    List<RevisionData> data = pageProvider.getPageRevisions(id);
     if (data == null) {
       throwError(400, "Incorrect parameter value: id", response);
       return;
@@ -72,9 +75,16 @@ public class PageRouteHandler implements RouteHandler {
     JsonObject body = ctx.body().asJsonObject();
 
     Integer id = body.getInteger("id");
-    String data = pageManager.getCurrentContent(id);
+    List<RevisionData> revisions = pageProvider.getPageRevisions(id);
+    revisions.removeIf(rev -> rev.approved() == null || !rev.approved());
+    if (revisions.isEmpty()) {
+      throwError(404, "No content found for page " + id, response);
+      return;
+    }
+
+    String data = versionProvider.getContent(revisions.getFirst().filename());
     if (data == null) {
-      throwError(400, "No content found for page " + id, response);
+      throwError(404, "Could not retrieve content for page " + id, response);
       return;
     }
 
@@ -87,7 +97,7 @@ public class PageRouteHandler implements RouteHandler {
     JsonObject body = ctx.body().asJsonObject();
 
     Integer id = body.getInteger("id");
-    List<CommentData> data = pageManager.getComments(id);
+    List<CommentData> data = pageProvider.getPageComments(id);
     if (data == null) {
       throwError(400, "Incorrect parameter value: id", response);
       return;
@@ -105,7 +115,8 @@ public class PageRouteHandler implements RouteHandler {
 
     Integer id = body.getInteger("id");
     String content = body.getString("content");
-    if (pageManager.addComment(id, content)) endWithStatus(201, response);
+    if (pageProvider.addComment(new CommentData(null, id, content, null, null)) != null)
+      endWithStatus(201, response);
     else throwError(500, "Unable to add comment", response);
   }
 
@@ -114,7 +125,7 @@ public class PageRouteHandler implements RouteHandler {
     JsonObject body = ctx.body().asJsonObject();
 
     Integer id = body.getInteger("id");
-    if (pageManager.deleteComment(id)) endWithStatus(200, response);
+    if (pageProvider.deleteComment(id)) endWithStatus(200, response);
     else throwError(500, "Unable to delete comment " + id, response);
   }
 
@@ -125,8 +136,8 @@ public class PageRouteHandler implements RouteHandler {
     String key = body.getString("key");
     if (body.getBoolean("url")) key = key.replace("_", " ");
 
-    PageData data = pageManager.getPageByTitle(key);
-    if (data == null) throwError(400, "Invalid page title: " + key, response);
+    PageData data = pageProvider.getPageByTitle(key);
+    if (data == null) throwError(404, "Invalid page title: " + key, response);
     else {
       response.setStatusCode(200);
       response.end(pageToJson(data).encode());

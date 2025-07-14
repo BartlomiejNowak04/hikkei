@@ -35,11 +35,11 @@ public class JDBCPageDataProvider implements PageDataProvider {
   }
 
   @Override
-  public Integer getRandomPage() {
+  public PageData getRandomPage() {
     try (Statement st = connection.createStatement()) {
-      try (ResultSet rs = st.executeQuery("SELECT id FROM pages ORDER BY RANDOM() LIMIT 1")) {
+      try (ResultSet rs = st.executeQuery("SELECT * FROM pages ORDER BY RANDOM() LIMIT 1")) {
         if (!rs.next()) return null;
-        return rs.getInt(1);
+        return new PageData(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getBoolean(4));
       }
     } catch (SQLException ignored) {
     }
@@ -83,7 +83,8 @@ public class JDBCPageDataProvider implements PageDataProvider {
   @Override
   public PageData getPageByTitle(String title) {
 
-    try (PreparedStatement st = connection.prepareStatement("SELECT id FROM pages WHERE url = ?")) {
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT * FROM pages WHERE title = ?")) {
       st.setString(1, title);
       try (ResultSet rs = st.executeQuery()) {
         if (!rs.next()) return null;

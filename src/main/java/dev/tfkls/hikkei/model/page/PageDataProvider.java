@@ -10,7 +10,7 @@ public interface PageDataProvider {
   // check existence
   boolean doesPageExist(int pageId);
 
-  Integer getRandomPage();
+  PageData getRandomPage();
 
   List<PageData> searchPageByTitle(String title);
 
