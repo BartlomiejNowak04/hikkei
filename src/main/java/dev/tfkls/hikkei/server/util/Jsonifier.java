@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.server.util;
 
+import dev.tfkls.hikkei.model.page.CommentData;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import io.vertx.core.json.JsonObject;
@@ -20,5 +21,14 @@ public class Jsonifier {
         .put("filename", revision.filename().toString())
         .put("date", revision.date().toString())
         .put("approved", revision.approved());
+  }
+
+  public static JsonObject commentToJson(CommentData comment) {
+    return new JsonObject()
+        .put("id", comment.id())
+        .put("page_id", comment.pageId())
+        .put("content", comment.content())
+        .put("date", comment.date().toString())
+        .put("deleted", comment.deleted());
   }
 }

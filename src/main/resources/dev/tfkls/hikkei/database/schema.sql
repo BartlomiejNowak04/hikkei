@@ -64,5 +64,6 @@ CREATE TABLE comments (
     page_id INTEGER REFERENCES pages(id),
     PRIMARY KEY (page_id, id),
     content TEXT NOT NULL,
-    date TIMESTAMP NOT NULL DEFAULT NOW()
+    date TIMESTAMP NOT NULL DEFAULT NOW(),
+    deleted BOOLEAN NOT NULL DEFAULT FALSE
 );

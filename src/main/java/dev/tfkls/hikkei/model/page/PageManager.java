@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.model.page;
 
+import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.BadHandleException;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.model.version.VersionProvider;
@@ -52,5 +53,30 @@ public class PageManager {
     List<RevisionData> revs = getApprovedRevisions(pageId);
     if (revs == null || revs.isEmpty()) return null;
     return version.getContent(revs.getFirst().filename());
+  }
+
+  public List<CommentData> getComments(int pageId) {
+    try {
+      return provider.getPageComments(pageId);
+    } catch (BadHandleException e) {
+      return null;
+    }
+  }
+
+  public boolean addComment(int pageId, String content) {
+    CommentData data = new CommentData(null, pageId, content, null, null);
+    try {
+      return provider.addComment(data) != null;
+    } catch (BadHandleException | BadDataException e) {
+      return false;
+    }
+  }
+
+  public boolean deleteComment(int commentId) {
+    return provider.deleteComment(commentId);
+  }
+
+  public PageData getPageByTitle(String title) {
+    return provider.getPageByTitle(title);
   }
 }

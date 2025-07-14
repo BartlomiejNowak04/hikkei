@@ -9,7 +9,6 @@ import dev.tfkls.hikkei.model.revision.RevisionData;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public class JDBCPageDataProvider implements PageDataProvider {
@@ -82,18 +81,18 @@ public class JDBCPageDataProvider implements PageDataProvider {
   }
 
   @Override
-  public Optional<Integer> getPageByTitle(String title) {
+  public PageData getPageByTitle(String title) {
 
     try (PreparedStatement st = connection.prepareStatement("SELECT id FROM pages WHERE url = ?")) {
       st.setString(1, title);
       try (ResultSet rs = st.executeQuery()) {
-        if (!rs.next()) return Optional.empty();
-        else return Optional.of(rs.getInt(1));
+        if (!rs.next()) return null;
+        else return new PageData(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getBoolean(4));
       }
     } catch (SQLException ignored) {
     }
 
-    return Optional.empty();
+    return null;
   }
 
   @Override
@@ -200,7 +199,12 @@ public class JDBCPageDataProvider implements PageDataProvider {
         ArrayList<CommentData> res = new ArrayList<>();
         while (rs.next())
           res.add(
-              new CommentData(rs.getInt(2), rs.getString(3), rs.getTimestamp(4).toLocalDateTime()));
+              new CommentData(
+                  rs.getInt(1),
+                  rs.getInt(2),
+                  rs.getString(3),
+                  rs.getTimestamp(4).toLocalDateTime(),
+                  rs.getBoolean(5)));
         return res;
       }
     } catch (SQLException ignored) {
@@ -210,34 +214,30 @@ public class JDBCPageDataProvider implements PageDataProvider {
   }
 
   @Override
-  public Integer addComment(int pageId, String content)
-      throws BadHandleException, BadDataException {
+  public Integer addComment(CommentData data) throws BadHandleException, BadDataException {
 
-    if (!doesPageExist(pageId)) throw new BadHandleException("Incorrect page handle");
+    if (!doesPageExist(data.pageId())) throw new BadHandleException("Incorrect page handle");
 
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO comments (page_id, content) VALUES (?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
-      st.setInt(1, pageId);
-      st.setString(2, content);
+      st.setInt(1, data.pageId());
+      st.setString(2, data.content());
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next()) return 0;
+        if (!rs.next()) return null;
         return rs.getInt(1);
       }
     } catch (SQLException ignored) {
     }
 
-    return 0;
+    return null;
   }
 
   @Override
   public boolean deleteComment(int commentId) throws BadHandleException {
-
-    if (!doesPageExist(commentId)) throw new BadHandleException("Incorrect comment handle");
-
     try (PreparedStatement st = connection.prepareStatement("DELETE FROM comments WHERE id = ?")) {
       st.setInt(1, commentId);
       return st.executeUpdate() > 0;

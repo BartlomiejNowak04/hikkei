@@ -1,9 +1,10 @@
 package dev.tfkls.hikkei.server.routing;
 
-import static dev.tfkls.hikkei.server.util.Jsonifier.pageToJson;
-import static dev.tfkls.hikkei.server.util.Jsonifier.revisionToJson;
+import static dev.tfkls.hikkei.server.util.Jsonifier.*;
+import static dev.tfkls.hikkei.server.util.ResponseCloser.endWithStatus;
 import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
 
+import dev.tfkls.hikkei.model.page.CommentData;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageManager;
 import dev.tfkls.hikkei.model.revision.RevisionData;
@@ -81,6 +82,57 @@ public class PageRouteHandler implements RouteHandler {
     response.end(new JsonObject().put("content", data).encode());
   }
 
+  private void getComments(RoutingContext ctx) {
+    HttpServerResponse response = ctx.response();
+    JsonObject body = ctx.body().asJsonObject();
+
+    Integer id = body.getInteger("id");
+    List<CommentData> data = pageManager.getComments(id);
+    if (data == null) {
+      throwError(400, "Incorrect parameter value: id", response);
+      return;
+    }
+    JsonArray items = new JsonArray();
+    for (CommentData item : data) items.add(commentToJson(item));
+
+    response.setStatusCode(200);
+    response.end(items.encode());
+  }
+
+  private void addComment(RoutingContext ctx) {
+    HttpServerResponse response = ctx.response();
+    JsonObject body = ctx.body().asJsonObject();
+
+    Integer id = body.getInteger("id");
+    String content = body.getString("content");
+    if (pageManager.addComment(id, content)) endWithStatus(201, response);
+    else throwError(500, "Unable to add comment", response);
+  }
+
+  private void deleteComment(RoutingContext ctx) {
+    HttpServerResponse response = ctx.response();
+    JsonObject body = ctx.body().asJsonObject();
+
+    Integer id = body.getInteger("id");
+    if (pageManager.deleteComment(id)) endWithStatus(200, response);
+    else throwError(500, "Unable to delete comment " + id, response);
+  }
+
+  private void getPageByTitle(RoutingContext ctx) {
+    HttpServerResponse response = ctx.response();
+    JsonObject body = ctx.body().asJsonObject();
+
+    String key = body.getString("key");
+    if (body.getBoolean("url")) key = key.replace("_", " ");
+
+    PageData data = pageManager.getPageByTitle(key);
+    if (data == null) throwError(400, "Invalid page title: " + key, response);
+    else {
+      response.setStatusCode(200);
+      response.end(pageToJson(data).encode());
+    }
+  }
+
   @Override
   public void addRoutes(Router router, String url) {
     router.route(url + "/*").handler(BodyHandler.create());
@@ -96,5 +148,23 @@ public class PageRouteHandler implements RouteHandler {
 
     router.post(url + "/current").handler(new ArgumentCheckHandler(Map.of("id", Integer.class)));
     router.post(url + "/current").handler(this::getCurrentContent);
+
+    router.post(url + "/comments").handler(new ArgumentCheckHandler(Map.of("id", Integer.class)));
+    router.post(url + "/comments").handler(this::getComments);
+
+    router
+        .put(url + "/comment/add")
+        .handler(new ArgumentCheckHandler(Map.of("id", Integer.class, "content", String.class)));
+    router.put(url + "/comment/add").handler(this::addComment);
+
+    router
+        .post(url + "/comment/delete")
+        .handler(new ArgumentCheckHandler(Map.of("id", Integer.class)));
+    router.post(url + "/comment/delete").handler(this::deleteComment);
+
+    router
+        .post(url + "/get")
+        .handler(new ArgumentCheckHandler(Map.of("key", String.class, "url", Boolean.class)));
+    router.post(url + "/get").handler(this::getPageByTitle);
   }
 }

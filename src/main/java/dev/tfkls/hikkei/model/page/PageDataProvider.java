@@ -4,7 +4,6 @@ import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.BadHandleException;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import java.util.List;
-import java.util.Optional;
 
 public interface PageDataProvider {
 
@@ -18,7 +17,7 @@ public interface PageDataProvider {
   // get page data
   PageData getPageData(int pageId) throws BadHandleException;
 
-  Optional<Integer> getPageByTitle(String title);
+  PageData getPageByTitle(String title);
 
   Integer createPage(PageData data) throws BadDataException;
 
@@ -34,7 +33,7 @@ public interface PageDataProvider {
   // comments
   List<CommentData> getPageComments(int pageId) throws BadHandleException;
 
-  Integer addComment(int pageId, String content) throws BadHandleException, BadDataException;
+  Integer addComment(CommentData data) throws BadHandleException, BadDataException;
 
   boolean deleteComment(int commentId) throws BadHandleException;
 }
