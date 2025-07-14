@@ -3,7 +3,11 @@ package dev.tfkls.hikkei.server.routing;
 import static dev.tfkls.hikkei.server.util.ResponseCloser.endWithStatus;
 import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
 
-import dev.tfkls.hikkei.model.revision.RevisionManager;
+import dev.tfkls.hikkei.model.exceptions.BadDataException;
+import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.revision.RevisionData;
+import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
+import dev.tfkls.hikkei.model.version.VersionProvider;
 import dev.tfkls.hikkei.server.routing.handler.ArgumentCheckHandler;
 import dev.tfkls.hikkei.server.routing.handler.JsonHeaderHandler;
 import io.vertx.core.http.HttpServerResponse;
@@ -12,12 +16,16 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import java.util.Map;
+import java.util.UUID;
 
 public class RevisionRouteHandler implements RouteHandler {
-  private final RevisionManager revisionManager;
+  private final RevisionDataProvider revisionProvider;
+  private final VersionProvider versionProvider;
 
-  public RevisionRouteHandler(RevisionManager revisionManager) {
-    this.revisionManager = revisionManager;
+  public RevisionRouteHandler(
+      RevisionDataProvider revisionProvider, VersionProvider versionProvider) {
+    this.revisionProvider = revisionProvider;
+    this.versionProvider = versionProvider;
   }
 
   private void addRevision(RoutingContext ctx) {
@@ -26,8 +34,15 @@ public class RevisionRouteHandler implements RouteHandler {
 
     Integer id = body.getInteger("id");
     String content = body.getString("content");
-    if (revisionManager.createRevision(id, content)) endWithStatus(201, response);
-    else throwError(500, "Failed to create revision", response);
+    try {
+      UUID filename = versionProvider.storeContent(content);
+      revisionProvider.createRevision(new RevisionData(null, id, filename, null, null));
+      endWithStatus(201, response);
+    } catch (BadDataException e) {
+      throwError(400, e.getMessage(), response);
+    } catch (InternalErrorException e) {
+      throwError(500, e.getMessage(), response);
+    }
   }
 
   // TODO: add middleware to authorize
@@ -36,6 +51,7 @@ public class RevisionRouteHandler implements RouteHandler {
     JsonObject body = ctx.body().asJsonObject();
 
     Integer id = body.getInteger("id");
+    Integer pageId = body.getInteger("page_id");
     Integer status = body.getInteger("status");
     if (status < 0 || status > 2) {
       throwError(400, "Invalid revision status", response);
@@ -48,8 +64,13 @@ public class RevisionRouteHandler implements RouteHandler {
     else if (status == 1) st = null;
     else st = true;
 
-    if (revisionManager.changeStatus(id, st)) endWithStatus(200, response);
-    else throwError(400, "Invalid revision id " + id, response);
+    try {
+      revisionProvider.changeState(id, pageId, st);
+    } catch (InternalErrorException e) {
+      throwError(500, e.getMessage(), response);
+    } catch (BadDataException e) {
+      throwError(400, e.getMessage(), response);
+    }
   }
 
   @Override
@@ -64,7 +85,9 @@ public class RevisionRouteHandler implements RouteHandler {
 
     router
         .post(url + "/status")
-        .handler(new ArgumentCheckHandler(Map.of("id", Integer.class, "status", Integer.class)));
+        .handler(
+            new ArgumentCheckHandler(
+                Map.of("id", Integer.class, "status", Integer.class, "page_id", Integer.class)));
     router.post(url + "/status").handler(this::changeStatus);
   }
 }

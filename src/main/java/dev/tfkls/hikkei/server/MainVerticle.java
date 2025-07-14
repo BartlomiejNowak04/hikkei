@@ -2,7 +2,6 @@ package dev.tfkls.hikkei.server;
 
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
-import dev.tfkls.hikkei.model.revision.RevisionManager;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.model.user.UserManager;
 import dev.tfkls.hikkei.model.version.VersionProvider;
@@ -49,11 +48,11 @@ public class MainVerticle extends VerticleBase {
     VersionProvider versionProvider = new FileVersionProvider(file_dir);
 
     UserManager userManager = new UserManager(userDataProvider);
-    RevisionManager revisionManager = new RevisionManager(revisionDataProvider, versionProvider);
 
     UserRouteHandler userRoute = new UserRouteHandler(userManager);
     PageRouteHandler pageRoute = new PageRouteHandler(pageDataProvider, versionProvider);
-    RevisionRouteHandler revisionRoute = new RevisionRouteHandler(revisionManager);
+    RevisionRouteHandler revisionRoute =
+        new RevisionRouteHandler(revisionDataProvider, versionProvider);
 
     Router router = Router.router(vertx);
     userRoute.addRoutes(router, "/api/user");

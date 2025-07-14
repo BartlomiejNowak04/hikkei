@@ -1,5 +1,7 @@
 package dev.tfkls.hikkei.provider;
 
+import dev.tfkls.hikkei.model.exceptions.BadDataException;
+import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import java.sql.Connection;
@@ -15,7 +17,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
   }
 
   @Override
-  public Integer createRevision(RevisionData data) {
+  public Integer createRevision(RevisionData data) throws BadDataException, InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO revisions (page_id, filename) VALUES (?, ?)",
@@ -25,40 +27,27 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next()) return null;
+        if (!rs.next()) throw new InternalErrorException("Couldn't create a new revision");
         return rs.getInt(1);
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("revisions_page_id_fkey")) throw new BadDataException("Invalid page id");
+      throw new InternalErrorException("Database internal error");
     }
-
-    return null;
   }
 
   @Override
-  public Integer getPage(int revId) {
+  public void changeState(int revId, int pageId, Boolean state)
+      throws BadDataException, InternalErrorException {
     try (PreparedStatement st =
-        connection.prepareStatement("SELECT page_id FROM revisions WHERE id = ?")) {
-      st.setInt(1, revId);
-      try (ResultSet rs = st.executeQuery()) {
-        if (!rs.next()) return null;
-        return rs.getInt(1);
-      }
-    } catch (SQLException ignored) {
-    }
-
-    return null;
-  }
-
-  @Override
-  public boolean changeState(int revId, Boolean state) {
-    try (PreparedStatement st =
-        connection.prepareStatement("UPDATE revisions SET approved = ? WHERE id = ?")) {
-      st.setBoolean(1, state);
+        connection.prepareStatement(
+            "UPDATE revisions SET approved = ? WHERE id = ? AND page_id = ?")) {
+      st.setObject(1, state);
       st.setInt(2, revId);
-      return st.executeUpdate() > 0;
-    } catch (SQLException ignored) {
+      if (st.executeUpdate() < 1) throw new BadDataException("Invalid revision id");
+    } catch (SQLException e) {
+      throw new InternalErrorException("Database internal error");
     }
-
-    return false;
   }
 }
