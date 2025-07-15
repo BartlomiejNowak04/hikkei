@@ -1,7 +1,7 @@
 package dev.tfkls.hikkei.provider;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
-import dev.tfkls.hikkei.model.exceptions.BadHandleException;
+import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.user.AuthData;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
@@ -12,14 +12,16 @@ import java.util.Optional;
 
 public class JDBCUserDataProvider implements UserDataProvider {
   private final Connection connection;
+  private final String internal_error = "Database internal error";
+  private final String name_taken = "Provided username is taken";
+  private final String user_id = "Invalid user id";
 
   public JDBCUserDataProvider(Connection conn) {
     connection = conn;
   }
 
   @Override
-  public boolean doesUserExist(int userId) {
-
+  public boolean doesUserExist(int userId) throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement("SELECT COUNT(*) FROM users WHERE id = ?")) {
       st.setInt(1, userId);
@@ -27,52 +29,46 @@ public class JDBCUserDataProvider implements UserDataProvider {
         if (!rs.next()) return false;
         return rs.getInt(1) > 0;
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
-
-    return false;
   }
 
   @Override
-  public Optional<Integer> getUserByAuth(AuthData auth) {
-
+  public Integer getUserByAuth(AuthData auth) throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement("SELECT user_id FROM auth WHERE type = ? AND token = ?")) {
       st.setString(1, auth.type());
       st.setString(2, auth.token());
       try (ResultSet rs = st.executeQuery()) {
-        if (!rs.next()) return Optional.empty();
-        else return Optional.of(rs.getInt(1));
+        if (!rs.next()) return null;
+        else return rs.getInt(1);
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
-
-    return Optional.empty();
   }
 
   @Override
-  public UserData getUserData(int userId) throws BadHandleException {
-
+  public UserData getUserData(int userId) throws InternalErrorException {
     try (PreparedStatement st = connection.prepareStatement("SELECT * FROM users WHERE id = ?")) {
       st.setInt(1, userId);
       try (ResultSet rs = st.executeQuery()) {
-        if (!rs.next()) throw new BadHandleException("Incorrect user handle");
+        if (!rs.next()) return null;
         return new UserData(
             rs.getString(2),
             rs.getBytes(3) != null ? Optional.of(rs.getBytes(3)) : Optional.empty(),
             rs.getTimestamp(4).toLocalDateTime(),
             rs.getBoolean(5));
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
-
-    return null;
   }
 
   @Override
-  public List<Integer> getUserRoles(int userId) throws BadHandleException {
-
-    if (!doesUserExist(userId)) throw new BadHandleException("Incorrect user handle");
+  public List<Integer> getUserRoles(int userId) throws InternalErrorException {
+    if (!doesUserExist(userId)) return null;
 
     try (PreparedStatement st =
         connection.prepareStatement("SELECT role_id FROM user_role WHERE user_id = ?")) {
@@ -82,16 +78,14 @@ public class JDBCUserDataProvider implements UserDataProvider {
         while (rs.next()) res.add(rs.getInt(1));
         return res;
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
-
-    return new ArrayList<>();
   }
 
   @Override
-  public List<AuthData> getUserAuthMethods(int userId) throws BadHandleException {
-
-    if (!doesUserExist(userId)) throw new BadHandleException("Incorrect user handle");
+  public List<AuthData> getUserAuthMethods(int userId) throws InternalErrorException {
+    if (!doesUserExist(userId)) return null;
 
     try (PreparedStatement st =
         connection.prepareStatement("SELECT type, token FROM auth WHERE user_id = ?")) {
@@ -101,14 +95,13 @@ public class JDBCUserDataProvider implements UserDataProvider {
         while (rs.next()) res.add(new AuthData(rs.getString(1), rs.getString(2)));
         return res;
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
-
-    return new ArrayList<>();
   }
 
   @Override
-  public Integer createUser(UserData data) throws BadDataException {
+  public Integer createUser(UserData data) throws BadDataException, InternalErrorException {
     // NOTE: decided not to allow join date other than default, nor to add deleted user accounts
     try (PreparedStatement st =
         connection.prepareStatement(
@@ -119,63 +112,66 @@ public class JDBCUserDataProvider implements UserDataProvider {
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next()) throw new BadDataException("Couldn't create new user " + data.username());
+        if (!rs.next()) throw new InternalErrorException("Couldn't create a new user");
         return rs.getInt(1);
       }
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("users_username_key")) throw new BadDataException(name_taken);
+      throw new InternalErrorException(internal_error);
     }
-
-    return 0;
   }
 
   @Override
   public void updateUsername(int userId, String username)
-      throws BadHandleException, BadDataException {
-
-    if (!doesUserExist(userId)) throw new BadHandleException("Incorrect user handle");
+      throws InternalErrorException, BadDataException {
+    if (!doesUserExist(userId)) throw new BadDataException(user_id);
 
     try (PreparedStatement st =
         connection.prepareStatement("UPDATE users SET username = ? WHERE id = ?")) {
       st.setString(1, username);
       st.setInt(2, userId);
       st.executeUpdate();
-    } catch (SQLException ignored) {
-      throw new BadDataException("Couldn't update username " + userId);
+    } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("users_username_key")) throw new BadDataException(name_taken);
+      throw new InternalErrorException(internal_error);
     }
   }
 
   @Override
-  public void updateUserPicture(int userId, byte[] picture) throws BadHandleException {
-
-    if (!doesUserExist(userId)) throw new BadHandleException("Incorrect user handle");
+  public void updateUserPicture(int userId, byte[] picture)
+      throws BadDataException, InternalErrorException {
+    if (!doesUserExist(userId)) throw new BadDataException(user_id);
 
     try (PreparedStatement st =
         connection.prepareStatement("UPDATE users SET picture = ? WHERE id = ?")) {
       st.setBytes(1, picture);
       st.setInt(2, userId);
       st.executeUpdate();
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
   }
 
   @Override
-  public void deleteUser(int userId) throws BadHandleException {
-
-    if (!doesUserExist(userId)) throw new BadHandleException("Incorrect user handle");
+  public void deleteUser(int userId) throws BadDataException, InternalErrorException {
+    if (!doesUserExist(userId)) throw new BadDataException(user_id);
 
     try (PreparedStatement st =
         connection.prepareStatement("UPDATE users SET deleted = ? WHERE id = ?")) {
       st.setBoolean(1, true);
       st.setInt(2, userId);
       st.executeUpdate();
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
   }
 
   @Override
-  public boolean addUserAuthMethod(int userId, AuthData auth) throws BadHandleException {
-
-    if (!doesUserExist(userId)) throw new BadHandleException("Incorrect user handle");
+  public boolean addUserAuthMethod(int userId, AuthData auth)
+      throws BadDataException, InternalErrorException {
+    if (!doesUserExist(userId)) throw new BadDataException(user_id);
 
     try (PreparedStatement st =
         connection.prepareStatement("INSERT INTO auth (user_id, type, token) VALUES (?, ?, ?)")) {
@@ -183,30 +179,38 @@ public class JDBCUserDataProvider implements UserDataProvider {
       st.setString(2, auth.type());
       st.setString(3, auth.token());
       return st.executeUpdate() > 0;
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("auth_pkey"))
+        throw new BadDataException("This authentication type is already defined");
+      if (message.contains("auth_user_id_fkey")) throw new BadDataException(user_id);
+      // This exception should be buried - it would give the information that the provided token is
+      // valid for some account
+      // if (message.contains("auth_type_token_key")) throw new BadDataException("This
+      // authentication type is already defined");
+      throw new InternalErrorException(internal_error);
     }
-    return false;
   }
 
   @Override
-  public boolean removeUserAuthMethod(int userId, String authType) throws BadHandleException {
-
-    if (!doesUserExist(userId)) throw new BadHandleException("Incorrect user handle");
+  public boolean removeUserAuthMethod(int userId, String authType)
+      throws BadDataException, InternalErrorException {
+    if (!doesUserExist(userId)) throw new BadDataException(user_id);
 
     try (PreparedStatement st =
         connection.prepareStatement("DELETE FROM auth WHERE user_id = ? AND type = ?")) {
       st.setInt(1, userId);
       st.setString(2, authType);
       return st.executeUpdate() > 0;
-    } catch (SQLException ignored) {
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
     }
-    return false;
   }
 
   @Override
-  public boolean alterUserRole(int userId, int roleId, boolean value) throws BadHandleException {
-
-    if (!doesUserExist(userId)) throw new BadHandleException("Incorrect user handle");
+  public boolean alterUserRole(int userId, int roleId, boolean value)
+      throws BadDataException, InternalErrorException {
+    if (!doesUserExist(userId)) throw new BadDataException(user_id);
 
     if (value) {
       try (PreparedStatement st =
@@ -214,7 +218,14 @@ public class JDBCUserDataProvider implements UserDataProvider {
         st.setInt(1, userId);
         st.setInt(2, roleId);
         return st.executeUpdate() > 0;
-      } catch (SQLException ignored) {
+      } catch (SQLException e) {
+        String message = e.getMessage();
+        if (message.contains("user_role_pkey"))
+          throw new BadDataException("The user already has this role");
+        if (message.contains("user_role_role_id_fkey"))
+          throw new BadDataException("Invalid role id");
+        if (message.contains("user_role_user_id_fkey")) throw new BadDataException(user_id);
+        throw new InternalErrorException(internal_error);
       }
     } else {
       try (PreparedStatement st =
@@ -222,9 +233,9 @@ public class JDBCUserDataProvider implements UserDataProvider {
         st.setInt(1, userId);
         st.setInt(2, roleId);
         return st.executeUpdate() > 0;
-      } catch (SQLException ignored) {
+      } catch (SQLException e) {
+        throw new InternalErrorException(internal_error);
       }
     }
-    return false;
   }
 }

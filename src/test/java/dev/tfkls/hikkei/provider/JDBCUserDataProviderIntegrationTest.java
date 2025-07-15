@@ -3,7 +3,7 @@ package dev.tfkls.hikkei.provider;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
-import dev.tfkls.hikkei.model.exceptions.BadHandleException;
+import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.user.AuthData;
 import dev.tfkls.hikkei.model.user.UserData;
 import java.sql.PreparedStatement;
@@ -29,12 +29,12 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
   }
 
   @Test
-  void nonExistentUserDoesNotExist() {
+  void nonExistentUserDoesNotExist() throws InternalErrorException {
     assertFalse(provider.doesUserExist(-1));
   }
 
   @Test
-  void freshlyAddedUserExists() {
+  void freshlyAddedUserExists() throws InternalErrorException, BadDataException {
     UserData user = new UserData("testname", Optional.empty(), LocalDateTime.now(), false);
     Integer userId = provider.createUser(user);
     assertTrue(userId > 0);
@@ -42,21 +42,21 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
   }
 
   @Test
-  void basicAuthTest() {
+  void basicAuthTest() throws InternalErrorException, BadDataException {
     UserData user = new UserData("auth", Optional.empty(), LocalDateTime.now(), false);
     Integer userId = provider.createUser(user);
     AuthData auth = new AuthData("google", "abc");
-    assertTrue(provider.getUserByAuth(auth).isEmpty());
-    assertThrows(BadHandleException.class, () -> provider.addUserAuthMethod(-1, auth));
+    assertNull(provider.getUserByAuth(auth));
+    assertThrows(BadDataException.class, () -> provider.addUserAuthMethod(-1, auth));
     assertTrue(provider.addUserAuthMethod(userId, auth));
-    assertTrue(provider.getUserByAuth(auth).isPresent());
+    assertNotNull(provider.getUserByAuth(auth));
   }
 
   @Test
-  void getUserAuthMethodsTest() {
+  void getUserAuthMethodsTest() throws InternalErrorException, BadDataException {
 
-    assertThrows(BadHandleException.class, () -> provider.getUserAuthMethods(-1));
-    assertThrows(BadHandleException.class, () -> provider.removeUserAuthMethod(-1, ""));
+    assertNull(provider.getUserAuthMethods(-1));
+    assertThrows(BadDataException.class, () -> provider.removeUserAuthMethod(-1, ""));
 
     UserData user = new UserData("authmethods", Optional.empty(), LocalDateTime.now(), false);
     Integer userId = provider.createUser(user);
@@ -70,9 +70,9 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
   }
 
   @Test
-  void getUserDataTest() {
+  void getUserDataTest() throws InternalErrorException, BadDataException {
 
-    assertThrows(BadHandleException.class, () -> provider.getUserData(-1));
+    assertNull(provider.getUserData(-1));
 
     UserData user = new UserData("userdata", Optional.empty(), LocalDateTime.now(), false);
     Integer userId = provider.createUser(user);
@@ -84,10 +84,10 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
   }
 
   @Test
-  void basicUserRolesTest() {
+  void basicUserRolesTest() throws InternalErrorException, BadDataException {
 
-    assertThrows(BadHandleException.class, () -> provider.getUserRoles(-1));
-    assertThrows(BadHandleException.class, () -> provider.alterUserRole(-1, 1, true));
+    assertNull(provider.getUserRoles(-1));
+    assertThrows(BadDataException.class, () -> provider.alterUserRole(-1, 1, true));
 
     UserData user = new UserData("roles", Optional.empty(), LocalDateTime.now(), false);
     Integer userId = provider.createUser(user);
@@ -98,11 +98,11 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
   }
 
   @Test
-  void userModificationsTest() {
+  void userModificationsTest() throws InternalErrorException, BadDataException {
 
-    assertThrows(BadHandleException.class, () -> provider.updateUsername(-1, ""));
-    assertThrows(BadHandleException.class, () -> provider.updateUserPicture(-1, new byte[] {}));
-    assertThrows(BadHandleException.class, () -> provider.deleteUser(-1));
+    assertThrows(BadDataException.class, () -> provider.updateUsername(-1, ""));
+    assertThrows(BadDataException.class, () -> provider.updateUserPicture(-1, new byte[] {}));
+    assertThrows(BadDataException.class, () -> provider.deleteUser(-1));
 
     UserData user = new UserData("mod", Optional.empty(), LocalDateTime.now(), false);
     Integer userId = provider.createUser(user);

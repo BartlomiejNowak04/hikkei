@@ -4,7 +4,6 @@ import dev.tfkls.hikkei.model.comment.CommentDataProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
-import dev.tfkls.hikkei.model.user.UserManager;
 import dev.tfkls.hikkei.model.version.VersionProvider;
 import dev.tfkls.hikkei.provider.*;
 import dev.tfkls.hikkei.server.routing.CommentRouteHandler;
@@ -47,9 +46,7 @@ public class MainVerticle extends VerticleBase {
     CommentDataProvider commentDataProvider = new JDBCCommentDataProvider(connection);
     VersionProvider versionProvider = new FileVersionProvider(file_dir);
 
-    UserManager userManager = new UserManager(userDataProvider);
-
-    UserRouteHandler userRoute = new UserRouteHandler(userManager);
+    UserRouteHandler userRoute = new UserRouteHandler(userDataProvider);
     PageRouteHandler pageRoute = new PageRouteHandler(pageDataProvider, versionProvider);
     RevisionRouteHandler revisionRoute =
         new RevisionRouteHandler(revisionDataProvider, versionProvider);

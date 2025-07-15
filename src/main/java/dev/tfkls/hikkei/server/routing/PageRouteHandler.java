@@ -103,7 +103,7 @@ public class PageRouteHandler implements RouteHandler {
 
       response.setStatusCode(200);
       response.end(new JsonObject().put("content", data).encode());
-    } catch (InternalErrorException e) {
+    } catch (InternalErrorException | BadDataException e) {
       throwError(500, e.getMessage(), response);
     }
   }

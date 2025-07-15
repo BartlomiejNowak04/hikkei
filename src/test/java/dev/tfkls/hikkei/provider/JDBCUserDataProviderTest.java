@@ -3,13 +3,12 @@ package dev.tfkls.hikkei.provider;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import dev.tfkls.hikkei.model.exceptions.BadHandleException;
+import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.user.AuthData;
 import dev.tfkls.hikkei.model.user.UserData;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +27,7 @@ public class JDBCUserDataProviderTest {
   }
 
   @Test
-  void mockUserExistsWhenExists() throws SQLException {
+  void mockUserExistsWhenExists() throws SQLException, InternalErrorException {
     when(connection.prepareStatement(any())).thenReturn(statement);
     when(statement.executeQuery()).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(true);
@@ -40,7 +39,7 @@ public class JDBCUserDataProviderTest {
   }
 
   @Test
-  void mockUserNoExistWhenNoExists() throws SQLException {
+  void mockUserNoExistWhenNoExists() throws SQLException, InternalErrorException {
     when(connection.prepareStatement(any())).thenReturn(statement);
     when(statement.executeQuery()).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(true);
@@ -52,28 +51,28 @@ public class JDBCUserDataProviderTest {
   }
 
   @Test
-  void mockGetUserByAuth() throws SQLException {
+  void mockGetUserByAuth() throws SQLException, InternalErrorException {
     when(connection.prepareStatement(any())).thenReturn(statement);
     when(statement.executeQuery()).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(true);
     when(resultSet.getInt(1)).thenReturn(1);
 
-    Optional<Integer> userId = provider.getUserByAuth(new AuthData("", ""));
-    assertTrue(userId.isPresent() && userId.get() == 1);
+    Integer userId = provider.getUserByAuth(new AuthData("", ""));
+    assertEquals(1, (int) userId);
   }
 
   @Test
-  void mockGetUserByAuthFail() throws SQLException {
+  void mockGetUserByAuthFail() throws SQLException, InternalErrorException {
     when(connection.prepareStatement(any())).thenReturn(statement);
     when(statement.executeQuery()).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(false);
 
-    Optional<Integer> userId = provider.getUserByAuth(new AuthData("", ""));
-    assertTrue(userId.isEmpty());
+    Integer userId = provider.getUserByAuth(new AuthData("", ""));
+    assertNull(userId);
   }
 
   @Test
-  void mockGetUserData() throws SQLException {
+  void mockGetUserData() throws SQLException, InternalErrorException {
     when(connection.prepareStatement(any())).thenReturn(statement);
     when(statement.executeQuery()).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(true);
@@ -91,16 +90,16 @@ public class JDBCUserDataProviderTest {
   }
 
   @Test
-  void mockGetUserDataFail() throws SQLException {
+  void mockGetUserDataFail() throws SQLException, InternalErrorException {
     when(connection.prepareStatement(any())).thenReturn(statement);
     when(statement.executeQuery()).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(false);
 
-    assertThrows(BadHandleException.class, () -> provider.getUserData(1));
+    assertNull(provider.getUserData(1));
   }
 
   @Test
-  void mockGetUserRoles() throws SQLException {
+  void mockGetUserRoles() throws SQLException, InternalErrorException {
     when(connection.prepareStatement(any())).thenReturn(statement);
     when(statement.executeQuery()).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(true).thenReturn(true).thenReturn(false);
@@ -112,17 +111,17 @@ public class JDBCUserDataProviderTest {
   }
 
   @Test
-  void mockGetUserRolesFail() throws SQLException {
+  void mockGetUserRolesFail() throws SQLException, InternalErrorException {
     when(connection.prepareStatement(any())).thenReturn(statement);
     when(statement.executeQuery()).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(true);
     when(resultSet.getInt(1)).thenReturn(0);
 
-    assertThrows(BadHandleException.class, () -> provider.getUserRoles(1));
+    assertNull(provider.getUserRoles(1));
   }
 
   @Test
-  void mockGetUserAuthMethods() throws SQLException {
+  void mockGetUserAuthMethods() throws SQLException, InternalErrorException {
     when(connection.prepareStatement(any())).thenReturn(statement);
     when(statement.executeQuery()).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(true).thenReturn(true).thenReturn(false);
@@ -137,12 +136,12 @@ public class JDBCUserDataProviderTest {
   }
 
   @Test
-  void mockGetUserAuthMethodsFail() throws SQLException {
+  void mockGetUserAuthMethodsFail() throws SQLException, InternalErrorException {
     when(connection.prepareStatement(any())).thenReturn(statement);
     when(statement.executeQuery()).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(true);
     when(resultSet.getInt(1)).thenReturn(0);
 
-    assertThrows(BadHandleException.class, () -> provider.getUserAuthMethods(1));
+    assertNull(provider.getUserAuthMethods(1));
   }
 }

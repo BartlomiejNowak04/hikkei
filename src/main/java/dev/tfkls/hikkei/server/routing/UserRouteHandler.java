@@ -1,13 +1,13 @@
 package dev.tfkls.hikkei.server.routing;
 
-import dev.tfkls.hikkei.model.user.UserManager;
+import dev.tfkls.hikkei.model.user.UserDataProvider;
 import io.vertx.ext.web.Router;
 
 public class UserRouteHandler implements RouteHandler {
-  private final UserManager userManager;
+  private final UserDataProvider userProvider;
 
-  public UserRouteHandler(UserManager manager) {
-    userManager = manager;
+  public UserRouteHandler(UserDataProvider userProvider) {
+    this.userProvider = userProvider;
   }
 
   @Override
