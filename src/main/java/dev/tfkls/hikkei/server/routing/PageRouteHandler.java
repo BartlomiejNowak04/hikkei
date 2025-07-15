@@ -178,6 +178,36 @@ public class PageRouteHandler implements RouteHandler {
     }
   }
 
+  private void updateCategory(RoutingContext ctx) {
+    HttpServerResponse response = ctx.response();
+    JsonObject body = ctx.body().asJsonObject();
+
+    Integer category = body.getInteger("category");
+    Integer id = body.getInteger("id");
+    try {
+      pageProvider.updatePageCategory(id, category);
+    } catch (InternalErrorException e) {
+      throwError(500, e.getMessage(), response);
+    } catch (BadDataException e) {
+      throwError(400, e.getMessage(), response);
+    }
+  }
+
+  private void toggleArchive(RoutingContext ctx) {
+    HttpServerResponse response = ctx.response();
+    JsonObject body = ctx.body().asJsonObject();
+
+    Boolean val = body.getBoolean("value");
+    Integer id = body.getInteger("id");
+    try {
+      pageProvider.toggleArchive(id, val);
+    } catch (InternalErrorException e) {
+      throwError(500, e.getMessage(), response);
+    } catch (BadDataException e) {
+      throwError(400, e.getMessage(), response);
+    }
+  }
+
   @Override
   public void addRoutes(Router router, String url) {
     router.route(url + "/*").handler(BodyHandler.create());
@@ -212,5 +242,15 @@ public class PageRouteHandler implements RouteHandler {
         .post(url + "/update_title")
         .handler(new ArgumentCheckHandler(Map.of("title", String.class, "id", Integer.class)));
     router.post(url + "/update_title").handler(this::updateTitle);
+
+    router
+        .post(url + "/update_category")
+        .handler(new ArgumentCheckHandler(Map.of("category", Integer.class, "id", Integer.class)));
+    router.post(url + "/update_category").handler(this::updateCategory);
+
+    router
+        .post(url + "/archive")
+        .handler(new ArgumentCheckHandler(Map.of("value", Boolean.class, "id", Integer.class)));
+    router.post(url + "/archive").handler(this::toggleArchive);
   }
 }
