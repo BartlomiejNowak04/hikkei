@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fae4be;
+  --foreground: #271d18;
+
+    --header-bg: #f6a870;
+    --header-text: #59371c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  /*--font-sans: var(--font-geist-sans);*/
+  /*--font-mono: var(--font-geist-mono);*/
+}
+
+/* TEMPORARY: To force theme preview in development, change 'light' below to 'dark' or vice versa. */
+@media (prefers-color-scheme: light) {
+  :root {
+    --background: #271d18;
+    --foreground: #fae4be;
+
+      --header-bg: #59371c;
+      --header-text: #f6a870;
+  }
+}
+
+@font-face {
+    font-family: 'Lorenna';
+    src: url('../../public/fonts/Lorenna.ttf') format('truetype'),
+        url('../../public/fonts/Lorenna.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Poppins';
+    src: url('../../public/fonts/Poppins-Light.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/*!* chyba..... *!*/
+/*.switch.darkBackground {*/
+/*    background-color: #59371c;*/
+/*}*/

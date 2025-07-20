@@ -1,0 +1,78 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--header-bg);
+    padding: 10px 20px;
+}
+
+.leftSection {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 40px;
+    margin-right: 10px;
+    fill: var(--header-text);
+}
+
+.title {
+    font-size: 36px;
+    /*font-weight: bold;*/
+    color: var(--header-text);
+    font-family: 'Lorenna', sans-serif;
+    letter-spacing: 0.05em;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-top: 6px;
+}
+
+.rightSection {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.linksContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-left: 25px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.link {
+    text-decoration: none;
+    color: var(--header-text);
+    margin-right: 10px;
+    font-weight: 500;
+}
+
+.playButton {
+    background-color: var(--background);
+    color: var(--header-text);
+    border: none;
+    border-radius: 10px;
+    padding: 5px 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.iconButton, .toggleButton {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.iconSvg {
+    width: 25px;
+    height: 25px;
+    fill: var(--header-text);
+    transition: fill 0.3s;
+}
