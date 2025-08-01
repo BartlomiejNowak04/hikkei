@@ -169,7 +169,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
     if (!doesPageExist(pageId)) throw new BadDataException(invalid_id);
 
     try (PreparedStatement st =
-        connection.prepareStatement("UPDATE pages SET archive = ? WHERE id = ?")) {
+        connection.prepareStatement("UPDATE pages SET archived = ? WHERE id = ?")) {
       st.setBoolean(1, type);
       st.setInt(2, pageId);
       st.executeUpdate();

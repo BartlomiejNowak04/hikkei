@@ -45,6 +45,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
             "UPDATE revisions SET approved = ? WHERE id = ? AND page_id = ?")) {
       st.setObject(1, state);
       st.setInt(2, revId);
+      st.setInt(3, pageId);
       if (st.executeUpdate() < 1) throw new BadDataException("Invalid revision id");
     } catch (SQLException e) {
       throw new InternalErrorException("Database internal error");
