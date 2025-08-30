@@ -27,18 +27,17 @@ convention, and follow the overall good commit guidelines which are described in
 ## Setup
 The project's configuration is largely contained in the environment variables defined in the `.env` file located in the project root directory. The variables are as follows (their meaning is explained in appropriate sections):
 ```bash
-# Database integration testing
 POSTGRES_HOST=[hostname]:[port]
 POSTGRES_NAME=[database_name]
 POSTGRES_USER=[username]
 POSTGRES_PASS=[password]
-FILE_DIRECTORY=/directory/ending/with/slash/
+FILE_DIRECTORY=/directory/ending/with/a/slash/
 ```
 
 ### Database
 The project uses PostgreSQL as it's main database. It requires a PostgreSQL database named `[POSTGRES_NAME]` running at the address `[POSTGRES_HOST]`. The user `[POSTGRES_USER]` with password `[POSTGRES_PASS]` needs permissions to access and modify the database. All of this can be achieved e.g. using the following commands:
-```bash
-sudo -u postgres psql postgres # Log into psql as superuser
+```sql
+sudo -u postgres psql postgres -- Log into psql as superuser
 CREATE USER [POSTGRES_USER] WITH PASSWORD [POSTGRES_PASS];
 CREATE DATABASE [POSTGRES_NAME] OWNER [POSTGRES_USER];
 ```
