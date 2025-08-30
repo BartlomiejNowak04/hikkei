@@ -16,7 +16,6 @@ public class JDBCPageDataProvider implements PageDataProvider {
   private final String internal_error = "Database internal error";
   private final String invalid_category = "The provided category is invalid";
   private final String invalid_id = "The provided page id is invalid";
-  private final String invalid_comment = "The provided comment id is invalid";
   private final String taken_title = "This title is already taken";
 
   public JDBCPageDataProvider(Connection conn) {
