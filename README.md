@@ -4,7 +4,38 @@
 *A minimalistic yet feature-full wiki software*
 
 ## Features
-- *tbd*
+#### Users
+- [ ] create user accounts authenticated with Github
+- [ ] display user's comments, pages and other data on their profile page
+- [ ] change your username or profile picture
+- [ ] delete user accounts
+#### Pages
+- [ ] display page's content and category
+- [ ] comment on a page (or delete a comment) and display the comments
+- [ ] change your page's category and title
+- [ ] archive and de-archive your page
+#### Editing
+- [ ] list all revisions and display them (with plain-text or preview)
+- [ ] accept or reject a revision
+- [ ] write a revision draft and save it to edit later
+- [ ] submit a revision
+- [ ] preview your revision
+#### Categories
+- [ ] list all categories (with search)
+- [ ] create a category
+- [ ] change category's name
+- [ ] list pages in a category (with search)
+- [ ] create a page within a category
+- [ ] assign permissions to roles within a category
+#### Roles
+- [ ] display all roles (with search)
+- [ ] create and delete roles
+- [ ] change role's name
+- [ ] grant and revoke permissions by modifying user's roles
+#### Main Page
+- [ ] search for page by its title
+- [ ] display a random article
+- [ ] play the [Wiki Game](https://en.wikipedia.org/wiki/Wikipedia:Wiki_Game)
 
 ## Contributing
 The project's development is in large part organized via the GitHub
