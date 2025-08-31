@@ -23,8 +23,9 @@ public class CommentController {
       Integer id = body.getInteger("id");
       String content = body.getString("content");
 
-      commentProvider.addComment(new CommentData(null, id, content, null, null));
-      ctx.response().setStatusCode(201).end();
+      int idc = commentProvider.addComment(new CommentData(null, id, content, null, null));
+      ctx.response().setStatusCode(201);
+      ctx.json(new JsonObject().put("id", idc));
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }

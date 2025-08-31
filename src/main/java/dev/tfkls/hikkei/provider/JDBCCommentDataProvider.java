@@ -17,7 +17,7 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
   }
 
   @Override
-  public Integer addComment(CommentData data) throws BadDataException, InternalErrorException {
+  public int addComment(CommentData data) throws BadDataException, InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO comments (page_id, content) VALUES (?, ?)",

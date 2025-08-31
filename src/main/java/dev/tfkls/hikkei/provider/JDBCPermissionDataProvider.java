@@ -15,7 +15,7 @@ public class JDBCPermissionDataProvider implements PermissionDataProvider {
   }
 
   @Override
-  public Integer createRole(String role) throws InternalErrorException {
+  public int createRole(String role) throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO roles (name) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
@@ -32,7 +32,7 @@ public class JDBCPermissionDataProvider implements PermissionDataProvider {
   }
 
   @Override
-  public Integer createCategory(String category) throws InternalErrorException {
+  public int createCategory(String category) throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO categories (name) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS)) {

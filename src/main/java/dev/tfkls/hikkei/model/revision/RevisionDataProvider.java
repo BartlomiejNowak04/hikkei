@@ -4,7 +4,7 @@ import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 
 public interface RevisionDataProvider {
-  Integer createRevision(RevisionData data) throws BadDataException, InternalErrorException;
+  int createRevision(RevisionData data) throws BadDataException, InternalErrorException;
 
   void changeState(int revId, int pageId, Boolean state)
       throws BadDataException, InternalErrorException;

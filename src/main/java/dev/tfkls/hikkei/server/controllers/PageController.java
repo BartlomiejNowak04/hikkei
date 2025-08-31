@@ -133,8 +133,9 @@ public class PageController {
       String title = body.getString("title");
       Integer category = body.getInteger("category");
 
-      pageProvider.createPage(new PageData(null, title, category, null));
-      ctx.response().setStatusCode(201).end();
+      int id = pageProvider.createPage(new PageData(null, title, category, null));
+      ctx.response().setStatusCode(201);
+      ctx.json(new JsonObject().put("id", id));
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }

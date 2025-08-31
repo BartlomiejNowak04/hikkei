@@ -17,7 +17,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
   }
 
   @Override
-  public Integer createRevision(RevisionData data) throws BadDataException, InternalErrorException {
+  public int createRevision(RevisionData data) throws BadDataException, InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO revisions (page_id, filename) VALUES (?, ?)",

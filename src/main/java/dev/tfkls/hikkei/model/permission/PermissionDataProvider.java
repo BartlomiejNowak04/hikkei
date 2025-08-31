@@ -4,7 +4,7 @@ import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 
 public interface PermissionDataProvider {
 
-  Integer createRole(String role) throws InternalErrorException;
+  int createRole(String role) throws InternalErrorException;
 
-  Integer createCategory(String category) throws InternalErrorException;
+  int createCategory(String category) throws InternalErrorException;
 }

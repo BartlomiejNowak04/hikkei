@@ -101,7 +101,7 @@ public class JDBCUserDataProvider implements UserDataProvider {
   }
 
   @Override
-  public Integer createUser(UserData data) throws BadDataException, InternalErrorException {
+  public int createUser(UserData data) throws BadDataException, InternalErrorException {
     // NOTE: decided not to allow join date other than default, nor to add deleted user accounts
     try (PreparedStatement st =
         connection.prepareStatement(

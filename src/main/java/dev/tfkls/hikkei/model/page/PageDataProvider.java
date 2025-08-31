@@ -19,7 +19,7 @@ public interface PageDataProvider {
 
   PageData getPageByTitle(String title) throws InternalErrorException;
 
-  Integer createPage(PageData data) throws BadDataException, InternalErrorException;
+  int createPage(PageData data) throws BadDataException, InternalErrorException;
 
   void updatePageTitle(int pageId, String title) throws BadDataException, InternalErrorException;
 

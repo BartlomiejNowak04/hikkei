@@ -17,8 +17,7 @@ public interface UserDataProvider {
 
   List<AuthData> getUserAuthMethods(int userId) throws InternalErrorException;
 
-  // Modify the user by their handle
-  Integer createUser(UserData data) throws BadDataException, InternalErrorException;
+  int createUser(UserData data) throws BadDataException, InternalErrorException;
 
   void updateUsername(int userId, String username) throws BadDataException, InternalErrorException;
 

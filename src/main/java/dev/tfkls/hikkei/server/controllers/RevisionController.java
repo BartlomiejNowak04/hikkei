@@ -30,8 +30,9 @@ public class RevisionController {
       String content = body.getString("content");
 
       UUID filename = versionProvider.storeContent(content);
-      revisionProvider.createRevision(new RevisionData(null, id, filename, null, null));
-      ctx.response().setStatusCode(201).end();
+      int idr = revisionProvider.createRevision(new RevisionData(null, id, filename, null, null));
+      ctx.response().setStatusCode(201);
+      ctx.json(new JsonObject().put("id", idr));
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }

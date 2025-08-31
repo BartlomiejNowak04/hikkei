@@ -106,7 +106,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
   }
 
   @Override
-  public Integer createPage(PageData data) throws BadDataException, InternalErrorException {
+  public int createPage(PageData data) throws BadDataException, InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO pages (title, category) VALUES (?, ?)",
