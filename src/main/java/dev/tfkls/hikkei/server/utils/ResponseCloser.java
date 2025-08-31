@@ -1,4 +1,4 @@
-package dev.tfkls.hikkei.server.util;
+package dev.tfkls.hikkei.server.utils;
 
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;

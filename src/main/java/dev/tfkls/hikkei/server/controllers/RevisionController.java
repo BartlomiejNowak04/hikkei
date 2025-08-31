@@ -1,24 +1,23 @@
 package dev.tfkls.hikkei.server.controllers;
 
-import dev.tfkls.hikkei.model.exceptions.BadDataException;
-import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import static dev.tfkls.hikkei.server.controllers.Utils.exceptionToCode;
+import static dev.tfkls.hikkei.server.utils.ResponseCloser.endWithStatus;
+import static dev.tfkls.hikkei.server.utils.ResponseCloser.throwError;
+
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.version.VersionProvider;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
-
 import java.util.UUID;
-
-import static dev.tfkls.hikkei.server.util.ResponseCloser.endWithStatus;
-import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
 
 public class RevisionController {
   private final RevisionDataProvider revisionProvider;
   private final VersionProvider versionProvider;
 
-  public RevisionController(RevisionDataProvider revisionProvider, VersionProvider versionProvider) {
+  public RevisionController(
+      RevisionDataProvider revisionProvider, VersionProvider versionProvider) {
     this.revisionProvider = revisionProvider;
     this.versionProvider = versionProvider;
   }
@@ -33,10 +32,8 @@ public class RevisionController {
       UUID filename = versionProvider.storeContent(content);
       revisionProvider.createRevision(new RevisionData(null, id, filename, null, null));
       endWithStatus(201, response);
-    } catch (BadDataException e) {
-      throwError(400, e.getMessage(), response);
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
     }
   }
 
@@ -60,10 +57,8 @@ public class RevisionController {
 
     try {
       revisionProvider.changeState(id, pageId, st);
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
-    } catch (BadDataException e) {
-      throwError(400, e.getMessage(), response);
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
     }
   }
 }

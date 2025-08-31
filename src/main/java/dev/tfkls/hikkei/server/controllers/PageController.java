@@ -1,8 +1,10 @@
 package dev.tfkls.hikkei.server.controllers;
 
+import static dev.tfkls.hikkei.server.controllers.Utils.exceptionToCode;
+import static dev.tfkls.hikkei.server.utils.Jsonifier.*;
+import static dev.tfkls.hikkei.server.utils.ResponseCloser.throwError;
+
 import dev.tfkls.hikkei.model.comment.CommentData;
-import dev.tfkls.hikkei.model.exceptions.BadDataException;
-import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionData;
@@ -11,11 +13,7 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
-
 import java.util.List;
-
-import static dev.tfkls.hikkei.server.util.Jsonifier.*;
-import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
 
 public class PageController {
   private final PageDataProvider pageProvider;
@@ -35,8 +33,8 @@ public class PageController {
         response.setStatusCode(200);
         response.end(pageToJson(data).encode());
       }
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
     }
   }
 
@@ -52,8 +50,8 @@ public class PageController {
 
       response.setStatusCode(200);
       response.end(items.encode());
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
     }
   }
 
@@ -73,8 +71,8 @@ public class PageController {
 
       response.setStatusCode(200);
       response.end(items.encode());
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
     }
   }
 
@@ -99,8 +97,8 @@ public class PageController {
 
       response.setStatusCode(200);
       response.end(new JsonObject().put("content", data).encode());
-    } catch (InternalErrorException | BadDataException e) {
-      throwError(500, e.getMessage(), response);
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
     }
   }
 
@@ -120,8 +118,8 @@ public class PageController {
 
       response.setStatusCode(200);
       response.end(items.encode());
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
     }
   }
 
@@ -139,8 +137,8 @@ public class PageController {
         response.setStatusCode(200);
         response.end(pageToJson(data).encode());
       }
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
     }
   }
 
@@ -152,10 +150,8 @@ public class PageController {
     Integer category = body.getInteger("category");
     try {
       pageProvider.createPage(new PageData(null, title, category, null));
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
-    } catch (BadDataException e) {
-      throwError(400, e.getMessage(), response);
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
     }
   }
 
@@ -167,10 +163,8 @@ public class PageController {
     Integer id = body.getInteger("id");
     try {
       pageProvider.updatePageTitle(id, title);
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
-    } catch (BadDataException e) {
-      throwError(400, e.getMessage(), response);
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
     }
   }
 
@@ -182,10 +176,8 @@ public class PageController {
     Integer id = body.getInteger("id");
     try {
       pageProvider.updatePageCategory(id, category);
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
-    } catch (BadDataException e) {
-      throwError(400, e.getMessage(), response);
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
     }
   }
 
@@ -197,10 +189,8 @@ public class PageController {
     Integer id = body.getInteger("id");
     try {
       pageProvider.toggleArchive(id, val);
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
-    } catch (BadDataException e) {
-      throwError(400, e.getMessage(), response);
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
     }
   }
 }

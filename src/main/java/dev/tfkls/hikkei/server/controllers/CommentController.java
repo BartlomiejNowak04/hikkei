@@ -1,15 +1,13 @@
 package dev.tfkls.hikkei.server.controllers;
 
+import static dev.tfkls.hikkei.server.controllers.Utils.exceptionToCode;
+import static dev.tfkls.hikkei.server.utils.ResponseCloser.endWithStatus;
+
 import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
-import dev.tfkls.hikkei.model.exceptions.BadDataException;
-import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
-
-import static dev.tfkls.hikkei.server.util.ResponseCloser.endWithStatus;
-import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
 
 public class CommentController {
   private final CommentDataProvider commentProvider;
@@ -27,10 +25,8 @@ public class CommentController {
     try {
       commentProvider.deleteComment(pageId, id);
       endWithStatus(200, response);
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
-    } catch (BadDataException e) {
-      throwError(400, e.getMessage(), response);
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
     }
   }
 
@@ -43,10 +39,8 @@ public class CommentController {
     try {
       commentProvider.addComment(new CommentData(null, id, content, null, null));
       endWithStatus(201, response);
-    } catch (InternalErrorException e) {
-      throwError(500, e.getMessage(), response);
-    } catch (BadDataException e) {
-      throwError(400, e.getMessage(), response);
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
     }
   }
 }

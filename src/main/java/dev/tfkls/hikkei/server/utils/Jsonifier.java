@@ -1,4 +1,4 @@
-package dev.tfkls.hikkei.server.util;
+package dev.tfkls.hikkei.server.utils;
 
 import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.page.PageData;

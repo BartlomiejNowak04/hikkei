@@ -6,6 +6,7 @@ import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.model.version.VersionProvider;
 import dev.tfkls.hikkei.provider.*;
+import dev.tfkls.hikkei.server.handlers.FailureHandler;
 import dev.tfkls.hikkei.server.routes.CommentRouteHandler;
 import dev.tfkls.hikkei.server.routes.PageRouteHandler;
 import dev.tfkls.hikkei.server.routes.RevisionRouteHandler;
@@ -15,7 +16,6 @@ import io.github.cdimascio.dotenv.DotenvBuilder;
 import io.vertx.core.Future;
 import io.vertx.core.VerticleBase;
 import io.vertx.ext.web.Router;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -54,6 +54,7 @@ public class MainVerticle extends VerticleBase {
     CommentRouteHandler commentRoute = new CommentRouteHandler(vertx, commentDataProvider);
 
     Router router = Router.router(vertx);
+    router.route("/api/*").failureHandler(new FailureHandler());
     router.route("/api/user/*").subRouter(userRoute.getRouter());
     router.route("/api/page/*").subRouter(pageRoute.getRouter());
     router.route("/api/revision/*").subRouter(revisionRoute.getRouter());
