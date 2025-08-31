@@ -2,7 +2,6 @@ package dev.tfkls.hikkei.server.controllers;
 
 import static dev.tfkls.hikkei.server.controllers.Utils.checkBody;
 import static dev.tfkls.hikkei.server.controllers.Utils.exceptionToCode;
-import static dev.tfkls.hikkei.server.utils.Jsonifier.*;
 
 import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
@@ -31,7 +30,7 @@ public class PageController {
       PageData data = pageProvider.getRandomPage();
       if (data == null) throw new InternalErrorException("No pages available");
       ctx.response().setStatusCode(200);
-      ctx.json(pageToJson(data));
+      ctx.json(Utils.pageToJson(data));
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }
@@ -45,7 +44,7 @@ public class PageController {
 
       List<PageData> data = pageProvider.searchPageByTitle(title);
       JsonArray items = new JsonArray();
-      for (PageData item : data) items.add(pageToJson(item));
+      for (PageData item : data) items.add(Utils.pageToJson(item));
       ctx.response().setStatusCode(200);
       ctx.json(items);
     } catch (Exception e) {
@@ -62,7 +61,7 @@ public class PageController {
       List<RevisionData> data = pageProvider.getPageRevisions(id);
       if (data == null) throw new BadDataException("Incorrect parameter value: id");
       JsonArray items = new JsonArray();
-      for (RevisionData item : data) items.add(revisionToJson(item));
+      for (RevisionData item : data) items.add(Utils.revisionToJson(item));
       ctx.response().setStatusCode(200);
       ctx.json(items);
     } catch (Exception e) {
@@ -102,7 +101,7 @@ public class PageController {
       List<CommentData> data = pageProvider.getPageComments(id);
       if (data == null) throw new BadDataException("Incorrect parameter value: id");
       JsonArray items = new JsonArray();
-      for (CommentData item : data) items.add(commentToJson(item));
+      for (CommentData item : data) items.add(Utils.commentToJson(item));
 
       ctx.response().setStatusCode(200);
       ctx.json(items);
@@ -121,7 +120,7 @@ public class PageController {
       PageData data = pageProvider.getPageByTitle(key);
       if (data == null) throw new BadDataException("Invalid page title: " + key);
       ctx.response().setStatusCode(200);
-      ctx.json(pageToJson(data));
+      ctx.json(Utils.pageToJson(data));
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }
