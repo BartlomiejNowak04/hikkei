@@ -1,5 +1,6 @@
-package dev.tfkls.hikkei.server;
+package dev.tfkls.hikkei;
 
+import dev.tfkls.hikkei.server.MainVerticle;
 import io.vertx.core.Vertx;
 
 public class Main {

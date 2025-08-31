@@ -75,5 +75,5 @@ test {
 }
 
 application {
-  mainClass = 'dev.tfkls.hikkei.server.Main'
+  mainClass = 'dev.tfkls.hikkei.Main'
 }

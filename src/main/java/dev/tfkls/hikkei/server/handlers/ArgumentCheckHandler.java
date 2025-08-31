@@ -1,12 +1,13 @@
-package dev.tfkls.hikkei.server.routing.handler;
-
-import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
+package dev.tfkls.hikkei.server.handlers;
 
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+
 import java.util.Map;
+
+import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
 
 public class ArgumentCheckHandler implements Handler<RoutingContext> {
   private final Map<String, Class<?>> arguments;

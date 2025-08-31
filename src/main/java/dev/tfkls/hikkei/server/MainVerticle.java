@@ -6,15 +6,16 @@ import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.model.version.VersionProvider;
 import dev.tfkls.hikkei.provider.*;
-import dev.tfkls.hikkei.server.routing.CommentRouteHandler;
-import dev.tfkls.hikkei.server.routing.PageRouteHandler;
-import dev.tfkls.hikkei.server.routing.RevisionRouteHandler;
-import dev.tfkls.hikkei.server.routing.UserRouteHandler;
+import dev.tfkls.hikkei.server.routes.CommentRouteHandler;
+import dev.tfkls.hikkei.server.routes.PageRouteHandler;
+import dev.tfkls.hikkei.server.routes.RevisionRouteHandler;
+import dev.tfkls.hikkei.server.routes.UserRouteHandler;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvBuilder;
 import io.vertx.core.Future;
 import io.vertx.core.VerticleBase;
 import io.vertx.ext.web.Router;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -46,17 +47,17 @@ public class MainVerticle extends VerticleBase {
     CommentDataProvider commentDataProvider = new JDBCCommentDataProvider(connection);
     VersionProvider versionProvider = new FileVersionProvider(file_dir);
 
-    UserRouteHandler userRoute = new UserRouteHandler(userDataProvider);
-    PageRouteHandler pageRoute = new PageRouteHandler(pageDataProvider, versionProvider);
+    UserRouteHandler userRoute = new UserRouteHandler(vertx, userDataProvider);
+    PageRouteHandler pageRoute = new PageRouteHandler(vertx, pageDataProvider, versionProvider);
     RevisionRouteHandler revisionRoute =
-        new RevisionRouteHandler(revisionDataProvider, versionProvider);
-    CommentRouteHandler commentRoute = new CommentRouteHandler(commentDataProvider);
+        new RevisionRouteHandler(vertx, revisionDataProvider, versionProvider);
+    CommentRouteHandler commentRoute = new CommentRouteHandler(vertx, commentDataProvider);
 
     Router router = Router.router(vertx);
-    userRoute.addRoutes(router, "/api/user");
-    pageRoute.addRoutes(router, "/api/page");
-    revisionRoute.addRoutes(router, "/api/revision");
-    commentRoute.addRoutes(router, "/api/comment");
+    router.route("/api/user/*").subRouter(userRoute.getRouter());
+    router.route("/api/page/*").subRouter(pageRoute.getRouter());
+    router.route("/api/revision/*").subRouter(revisionRoute.getRouter());
+    router.route("/api/comment/*").subRouter(commentRoute.getRouter());
 
     return vertx
         .createHttpServer()

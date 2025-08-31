@@ -1,7 +1,4 @@
-package dev.tfkls.hikkei.server.routing;
-
-import static dev.tfkls.hikkei.server.util.Jsonifier.*;
-import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
+package dev.tfkls.hikkei.server.controllers;
 
 import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
@@ -10,27 +7,26 @@ import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.model.version.VersionProvider;
-import dev.tfkls.hikkei.server.routing.handler.ArgumentCheckHandler;
-import dev.tfkls.hikkei.server.routing.handler.JsonHeaderHandler;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.BodyHandler;
-import java.util.List;
-import java.util.Map;
 
-public class PageRouteHandler implements RouteHandler {
+import java.util.List;
+
+import static dev.tfkls.hikkei.server.util.Jsonifier.*;
+import static dev.tfkls.hikkei.server.util.ResponseCloser.throwError;
+
+public class PageController {
   private final PageDataProvider pageProvider;
   private final VersionProvider versionProvider;
 
-  public PageRouteHandler(PageDataProvider pageProvider, VersionProvider versionProvider) {
+  public PageController(PageDataProvider pageProvider, VersionProvider versionProvider) {
     this.pageProvider = pageProvider;
     this.versionProvider = versionProvider;
   }
 
-  private void getRandomPage(RoutingContext ctx) {
+  public void getRandomPage(RoutingContext ctx) {
     HttpServerResponse response = ctx.response();
     try {
       PageData data = pageProvider.getRandomPage();
@@ -44,7 +40,7 @@ public class PageRouteHandler implements RouteHandler {
     }
   }
 
-  private void searchByTitle(RoutingContext ctx) {
+  public void searchByTitle(RoutingContext ctx) {
     HttpServerResponse response = ctx.response();
     JsonObject body = ctx.body().asJsonObject();
 
@@ -61,7 +57,7 @@ public class PageRouteHandler implements RouteHandler {
     }
   }
 
-  private void getRevisions(RoutingContext ctx) {
+  public void getRevisions(RoutingContext ctx) {
     HttpServerResponse response = ctx.response();
     JsonObject body = ctx.body().asJsonObject();
 
@@ -82,7 +78,7 @@ public class PageRouteHandler implements RouteHandler {
     }
   }
 
-  private void getCurrentContent(RoutingContext ctx) {
+  public void getCurrentContent(RoutingContext ctx) {
     HttpServerResponse response = ctx.response();
     JsonObject body = ctx.body().asJsonObject();
 
@@ -108,7 +104,7 @@ public class PageRouteHandler implements RouteHandler {
     }
   }
 
-  private void getComments(RoutingContext ctx) {
+  public void getComments(RoutingContext ctx) {
     HttpServerResponse response = ctx.response();
     JsonObject body = ctx.body().asJsonObject();
 
@@ -129,7 +125,7 @@ public class PageRouteHandler implements RouteHandler {
     }
   }
 
-  private void getPageByTitle(RoutingContext ctx) {
+  public void getPageByTitle(RoutingContext ctx) {
     HttpServerResponse response = ctx.response();
     JsonObject body = ctx.body().asJsonObject();
 
@@ -148,7 +144,7 @@ public class PageRouteHandler implements RouteHandler {
     }
   }
 
-  private void createPage(RoutingContext ctx) {
+  public void createPage(RoutingContext ctx) {
     HttpServerResponse response = ctx.response();
     JsonObject body = ctx.body().asJsonObject();
 
@@ -163,7 +159,7 @@ public class PageRouteHandler implements RouteHandler {
     }
   }
 
-  private void updateTitle(RoutingContext ctx) {
+  public void updateTitle(RoutingContext ctx) {
     HttpServerResponse response = ctx.response();
     JsonObject body = ctx.body().asJsonObject();
 
@@ -178,7 +174,7 @@ public class PageRouteHandler implements RouteHandler {
     }
   }
 
-  private void updateCategory(RoutingContext ctx) {
+  public void updateCategory(RoutingContext ctx) {
     HttpServerResponse response = ctx.response();
     JsonObject body = ctx.body().asJsonObject();
 
@@ -193,7 +189,7 @@ public class PageRouteHandler implements RouteHandler {
     }
   }
 
-  private void toggleArchive(RoutingContext ctx) {
+  public void toggleArchive(RoutingContext ctx) {
     HttpServerResponse response = ctx.response();
     JsonObject body = ctx.body().asJsonObject();
 
@@ -206,51 +202,5 @@ public class PageRouteHandler implements RouteHandler {
     } catch (BadDataException e) {
       throwError(400, e.getMessage(), response);
     }
-  }
-
-  @Override
-  public void addRoutes(Router router, String url) {
-    router.route(url + "/*").handler(BodyHandler.create());
-    router.route(url + "/*").handler(new JsonHeaderHandler());
-
-    router.get(url + "/random").handler(this::getRandomPage);
-
-    router.post(url + "/search").handler(new ArgumentCheckHandler(Map.of("title", String.class)));
-    router.post(url + "/search").handler(this::searchByTitle);
-
-    router.post(url + "/revisions").handler(new ArgumentCheckHandler(Map.of("id", Integer.class)));
-    router.post(url + "/revisions").handler(this::getRevisions);
-
-    router.post(url + "/current").handler(new ArgumentCheckHandler(Map.of("id", Integer.class)));
-    router.post(url + "/current").handler(this::getCurrentContent);
-
-    router.post(url + "/comments").handler(new ArgumentCheckHandler(Map.of("id", Integer.class)));
-    router.post(url + "/comments").handler(this::getComments);
-
-    router
-        .post(url + "/get")
-        .handler(new ArgumentCheckHandler(Map.of("key", String.class, "url", Boolean.class)));
-    router.post(url + "/get").handler(this::getPageByTitle);
-
-    router
-        .put(url + "/create")
-        .handler(
-            new ArgumentCheckHandler(Map.of("title", String.class, "category", Integer.class)));
-    router.put(url + "/create").handler(this::createPage);
-
-    router
-        .post(url + "/update_title")
-        .handler(new ArgumentCheckHandler(Map.of("title", String.class, "id", Integer.class)));
-    router.post(url + "/update_title").handler(this::updateTitle);
-
-    router
-        .post(url + "/update_category")
-        .handler(new ArgumentCheckHandler(Map.of("category", Integer.class, "id", Integer.class)));
-    router.post(url + "/update_category").handler(this::updateCategory);
-
-    router
-        .post(url + "/archive")
-        .handler(new ArgumentCheckHandler(Map.of("value", Boolean.class, "id", Integer.class)));
-    router.post(url + "/archive").handler(this::toggleArchive);
   }
 }

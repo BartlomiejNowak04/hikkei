@@ -1,4 +1,4 @@
-package dev.tfkls.hikkei.server.routing.handler;
+package dev.tfkls.hikkei.server.handlers;
 
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
