@@ -9,7 +9,7 @@ public class CommentRouteHandler extends RouteHandler {
     super(vertx);
     CommentController controller = new CommentController(commentProvider);
 
-    router.put("/create").handler(controller::addComment);
-    router.delete("/delete").handler(controller::deleteComment);
+    router.put("/create").blockingHandler(controller::addComment);
+    router.delete("/delete").blockingHandler(controller::deleteComment);
   }
 }

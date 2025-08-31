@@ -11,15 +11,15 @@ public class PageRouteHandler extends RouteHandler {
     super(vertx);
     PageController controller = new PageController(pageProvider, versionProvider);
 
-    router.post("/random").handler(controller::getRandomPage);
-    router.post("/search").handler(controller::searchByTitle);
-    router.post("/revisions").handler(controller::getRevisions);
-    router.post("/content").handler(controller::getCurrentContent);
-    router.post("/comments").handler(controller::getComments);
-    router.post("/from_title").handler(controller::getPageByTitle);
-    router.put("/create").handler(controller::createPage);
-    router.put("/update/title").handler(controller::updateTitle);
-    router.put("/update/category").handler(controller::updateCategory);
-    router.post("/archive").handler(controller::toggleArchive);
+    router.post("/random").blockingHandler(controller::getRandomPage);
+    router.post("/search").blockingHandler(controller::searchByTitle);
+    router.post("/revisions").blockingHandler(controller::getRevisions);
+    router.post("/content").blockingHandler(controller::getCurrentContent);
+    router.post("/comments").blockingHandler(controller::getComments);
+    router.post("/from_title").blockingHandler(controller::getPageByTitle);
+    router.put("/create").blockingHandler(controller::createPage);
+    router.put("/update/title").blockingHandler(controller::updateTitle);
+    router.put("/update/category").blockingHandler(controller::updateCategory);
+    router.post("/archive").blockingHandler(controller::toggleArchive);
   }
 }
