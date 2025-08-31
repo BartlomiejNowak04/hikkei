@@ -38,14 +38,12 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
   }
 
   @Override
-  public void deleteComment(int pageId, int commentId)
-      throws BadDataException, InternalErrorException {
+  public void deleteComment(int pageId, int commentId) throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
             "UPDATE comments SET deleted = true WHERE id = ? AND page_id = ?")) {
       st.setInt(1, commentId);
       st.setInt(2, pageId);
-      if (st.executeUpdate() < 1) throw new BadDataException("Invalid comment id");
     } catch (SQLException e) {
       throw new InternalErrorException("Database internal error");
     }

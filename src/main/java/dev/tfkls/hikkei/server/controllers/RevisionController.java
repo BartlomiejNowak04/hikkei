@@ -1,15 +1,15 @@
 package dev.tfkls.hikkei.server.controllers;
 
+import static dev.tfkls.hikkei.server.controllers.Utils.checkBody;
 import static dev.tfkls.hikkei.server.controllers.Utils.exceptionToCode;
-import static dev.tfkls.hikkei.server.utils.ResponseCloser.endWithStatus;
-import static dev.tfkls.hikkei.server.utils.ResponseCloser.throwError;
 
+import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.version.VersionProvider;
-import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import java.util.Map;
 import java.util.UUID;
 
 public class RevisionController {
@@ -23,40 +23,37 @@ public class RevisionController {
   }
 
   public void addRevision(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
-    JsonObject body = ctx.body().asJsonObject();
-
-    Integer id = body.getInteger("id");
-    String content = body.getString("content");
     try {
+      JsonObject body = ctx.body().asJsonObject();
+      checkBody(body, Map.of("id", Integer.class, "content", String.class));
+      Integer id = body.getInteger("id");
+      String content = body.getString("content");
+
       UUID filename = versionProvider.storeContent(content);
       revisionProvider.createRevision(new RevisionData(null, id, filename, null, null));
-      endWithStatus(201, response);
+      ctx.response().setStatusCode(201).end();
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }
   }
 
   public void changeStatus(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
-    JsonObject body = ctx.body().asJsonObject();
-
-    Integer id = body.getInteger("id");
-    Integer pageId = body.getInteger("page_id");
-    Integer status = body.getInteger("status");
-    if (status < 0 || status > 2) {
-      throwError(400, "Invalid revision status", response);
-      return;
-    }
-
-    // 0,1,2 -- rejected,pending,approved
-    Boolean st;
-    if (status == 0) st = false;
-    else if (status == 1) st = null;
-    else st = true;
-
     try {
+      JsonObject body = ctx.body().asJsonObject();
+      checkBody(
+          body, Map.of("id", Integer.class, "status", Integer.class, "page_id", Integer.class));
+      Integer id = body.getInteger("id");
+      Integer pageId = body.getInteger("page_id");
+      Integer status = body.getInteger("status");
+      if (status < 0 || status > 2) throw new BadDataException("Invalid revision status");
+
+      // 0,1,2 -- rejected,pending,approved
+      Boolean st;
+      if (status == 0) st = false;
+      else if (status == 1) st = null;
+      else st = true;
       revisionProvider.changeState(id, pageId, st);
+      ctx.response().setStatusCode(204).end();
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }

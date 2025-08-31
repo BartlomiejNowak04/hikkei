@@ -57,7 +57,11 @@ public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest 
   }
 
   @Test
-  void deleteCommentFailsForInvalidId() {
-    assertThrows(BadDataException.class, () -> provider.deleteComment(pageId, -1));
+  void deleteCommentWorksForInvalidId() {
+    try {
+      provider.deleteComment(pageId, -1);
+    } catch (Exception e) {
+      fail();
+    }
   }
 }

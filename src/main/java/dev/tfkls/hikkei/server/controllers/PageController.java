@@ -1,19 +1,21 @@
 package dev.tfkls.hikkei.server.controllers;
 
+import static dev.tfkls.hikkei.server.controllers.Utils.checkBody;
 import static dev.tfkls.hikkei.server.controllers.Utils.exceptionToCode;
 import static dev.tfkls.hikkei.server.utils.Jsonifier.*;
-import static dev.tfkls.hikkei.server.utils.ResponseCloser.throwError;
 
 import dev.tfkls.hikkei.model.comment.CommentData;
+import dev.tfkls.hikkei.model.exceptions.BadDataException;
+import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.model.version.VersionProvider;
-import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import java.util.List;
+import java.util.Map;
 
 public class PageController {
   private final PageDataProvider pageProvider;
@@ -25,170 +27,157 @@ public class PageController {
   }
 
   public void getRandomPage(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
     try {
       PageData data = pageProvider.getRandomPage();
-      if (data == null) throwError(404, "No pages available", response);
-      else {
-        response.setStatusCode(200);
-        response.end(pageToJson(data).encode());
-      }
+      if (data == null) throw new InternalErrorException("No pages available");
+      ctx.response().setStatusCode(200);
+      ctx.json(pageToJson(data));
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }
   }
 
   public void searchByTitle(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
-    JsonObject body = ctx.body().asJsonObject();
-
-    String title = body.getString("title");
     try {
+      JsonObject body = ctx.body().asJsonObject();
+      checkBody(body, Map.of("title", String.class));
+      String title = body.getString("title");
+
       List<PageData> data = pageProvider.searchPageByTitle(title);
       JsonArray items = new JsonArray();
       for (PageData item : data) items.add(pageToJson(item));
-
-      response.setStatusCode(200);
-      response.end(items.encode());
+      ctx.response().setStatusCode(200);
+      ctx.json(items);
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }
   }
 
   public void getRevisions(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
-    JsonObject body = ctx.body().asJsonObject();
-
-    Integer id = body.getInteger("id");
     try {
+      JsonObject body = ctx.body().asJsonObject();
+      checkBody(body, Map.of("id", Integer.class));
+      Integer id = body.getInteger("id");
+
       List<RevisionData> data = pageProvider.getPageRevisions(id);
-      if (data == null) {
-        throwError(400, "Incorrect parameter value: id", response);
-        return;
-      }
+      if (data == null) throw new BadDataException("Incorrect parameter value: id");
       JsonArray items = new JsonArray();
       for (RevisionData item : data) items.add(revisionToJson(item));
-
-      response.setStatusCode(200);
-      response.end(items.encode());
+      ctx.response().setStatusCode(200);
+      ctx.json(items);
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }
   }
 
   public void getCurrentContent(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
-    JsonObject body = ctx.body().asJsonObject();
-
-    Integer id = body.getInteger("id");
     try {
+      JsonObject body = ctx.body().asJsonObject();
+      checkBody(body, Map.of("id", Integer.class));
+      Integer id = body.getInteger("id");
+
       List<RevisionData> revisions = pageProvider.getPageRevisions(id);
       revisions.removeIf(rev -> rev.approved() == null || !rev.approved());
-      if (revisions.isEmpty()) {
-        throwError(404, "No content found for page " + id, response);
-        return;
-      }
 
-      String data = versionProvider.getContent(revisions.getFirst().filename());
-      if (data == null) {
-        throwError(404, "Couldn't retrieve content for page " + id, response);
-        return;
+      String data = "";
+      if (!revisions.isEmpty()) {
+        data = versionProvider.getContent(revisions.getFirst().filename());
+        if (data == null)
+          throw new InternalErrorException("Couldn't retrieve content for page " + id);
       }
-
-      response.setStatusCode(200);
-      response.end(new JsonObject().put("content", data).encode());
+      ctx.response().setStatusCode(200);
+      // TODO: transform the data appropriately
+      ctx.json(new JsonObject().put("content", data));
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }
   }
 
   public void getComments(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
-    JsonObject body = ctx.body().asJsonObject();
-
-    Integer id = body.getInteger("id");
     try {
+      JsonObject body = ctx.body().asJsonObject();
+      checkBody(body, Map.of("id", Integer.class));
+      Integer id = body.getInteger("id");
+
       List<CommentData> data = pageProvider.getPageComments(id);
-      if (data == null) {
-        throwError(400, "Incorrect parameter value: id", response);
-        return;
-      }
+      if (data == null) throw new BadDataException("Incorrect parameter value: id");
       JsonArray items = new JsonArray();
       for (CommentData item : data) items.add(commentToJson(item));
 
-      response.setStatusCode(200);
-      response.end(items.encode());
+      ctx.response().setStatusCode(200);
+      ctx.json(items);
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }
   }
 
   public void getPageByTitle(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
-    JsonObject body = ctx.body().asJsonObject();
-
-    String key = body.getString("key");
-    if (body.getBoolean("url")) key = key.replace("_", " ");
-
     try {
+      JsonObject body = ctx.body().asJsonObject();
+      checkBody(body, Map.of("key", String.class, "url", Boolean.class));
+      String key = body.getString("key");
+      if (body.getBoolean("url")) key = key.replace("_", " ");
+
       PageData data = pageProvider.getPageByTitle(key);
-      if (data == null) throwError(404, "Invalid page title: " + key, response);
-      else {
-        response.setStatusCode(200);
-        response.end(pageToJson(data).encode());
-      }
+      if (data == null) throw new BadDataException("Invalid page title: " + key);
+      ctx.response().setStatusCode(200);
+      ctx.json(pageToJson(data));
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }
   }
 
   public void createPage(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
-    JsonObject body = ctx.body().asJsonObject();
-
-    String title = body.getString("title");
-    Integer category = body.getInteger("category");
     try {
+      JsonObject body = ctx.body().asJsonObject();
+      checkBody(body, Map.of("title", String.class, "category", Integer.class));
+      String title = body.getString("title");
+      Integer category = body.getInteger("category");
+
       pageProvider.createPage(new PageData(null, title, category, null));
+      ctx.response().setStatusCode(201).end();
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }
   }
 
   public void updateTitle(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
-    JsonObject body = ctx.body().asJsonObject();
-
-    String title = body.getString("title");
-    Integer id = body.getInteger("id");
     try {
+      JsonObject body = ctx.body().asJsonObject();
+      checkBody(body, Map.of("title", String.class, "id", Integer.class));
+      String title = body.getString("title");
+      Integer id = body.getInteger("id");
+
       pageProvider.updatePageTitle(id, title);
+      ctx.response().setStatusCode(204).end();
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }
   }
 
   public void updateCategory(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
-    JsonObject body = ctx.body().asJsonObject();
-
-    Integer category = body.getInteger("category");
-    Integer id = body.getInteger("id");
     try {
+      JsonObject body = ctx.body().asJsonObject();
+      checkBody(body, Map.of("category", Integer.class, "id", Integer.class));
+      Integer category = body.getInteger("category");
+      Integer id = body.getInteger("id");
+
       pageProvider.updatePageCategory(id, category);
+      ctx.response().setStatusCode(204).end();
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }
   }
 
   public void toggleArchive(RoutingContext ctx) {
-    HttpServerResponse response = ctx.response();
-    JsonObject body = ctx.body().asJsonObject();
-
-    Boolean val = body.getBoolean("value");
-    Integer id = body.getInteger("id");
     try {
+      JsonObject body = ctx.body().asJsonObject();
+      checkBody(body, Map.of("value", Boolean.class, "id", Integer.class));
+      Boolean val = body.getBoolean("value");
+      Integer id = body.getInteger("id");
+
       pageProvider.toggleArchive(id, val);
+      ctx.response().setStatusCode(204).end();
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }

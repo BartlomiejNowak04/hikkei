@@ -16,6 +16,7 @@ import io.github.cdimascio.dotenv.DotenvBuilder;
 import io.vertx.core.Future;
 import io.vertx.core.VerticleBase;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.BodyHandler;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -55,6 +56,7 @@ public class MainVerticle extends VerticleBase {
 
     Router router = Router.router(vertx);
     router.route("/api/*").failureHandler(new FailureHandler());
+    router.route("/api/*").handler(BodyHandler.create());
     router.route("/api/user/*").subRouter(userRoute.getRouter());
     router.route("/api/page/*").subRouter(pageRoute.getRouter());
     router.route("/api/revision/*").subRouter(revisionRoute.getRouter());
