@@ -5,18 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
-import io.vertx.core.json.DecodeException;
 import org.junit.jupiter.api.Test;
 
-public class UtilsTest {
+public class ExceptionToCodeTest {
   @Test
   public void BadDataExceptionTest() {
     assertEquals(400, exceptionToCode(new BadDataException("")));
-  }
-
-  @Test
-  public void DecodeExceptionTest() {
-    assertEquals(400, exceptionToCode(new DecodeException("")));
   }
 
   @Test

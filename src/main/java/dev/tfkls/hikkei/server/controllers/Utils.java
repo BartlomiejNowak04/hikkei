@@ -11,7 +11,7 @@ public class Utils {
   public static int exceptionToCode(Exception e) {
     if (e == null) return 500;
     return switch (e.getClass().getSimpleName()) {
-      case "BadDataException", "DecodeException" -> 400;
+      case "BadDataException" -> 400;
       case "InternalErrorException" -> 500;
       default -> 500;
     };
@@ -49,8 +49,8 @@ public class Utils {
     return new JsonObject()
         .put("id", revision.id())
         .put("page_id", revision.pageId())
-        .put("filename", revision.filename().toString())
-        .put("date", revision.date().toString())
+        .put("filename", revision.filename() == null ? null : revision.filename().toString())
+        .put("date", revision.date() == null ? null : revision.date().toString())
         .put("approved", revision.approved());
   }
 
@@ -59,7 +59,7 @@ public class Utils {
         .put("id", comment.id())
         .put("page_id", comment.pageId())
         .put("content", comment.content())
-        .put("date", comment.date().toString())
+        .put("date", comment.date() == null ? null : comment.date().toString())
         .put("deleted", comment.deleted());
   }
 }
