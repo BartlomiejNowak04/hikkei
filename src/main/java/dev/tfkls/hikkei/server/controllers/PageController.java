@@ -47,15 +47,15 @@ public class PageController {
     }
   }
 
-  public void getPageByTitle(RoutingContext ctx) {
+  public void getPageByTitle(RoutingContext ctx, boolean fromUrl) {
     try {
       JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("key", String.class, "url", Boolean.class));
-      String key = body.getString("key");
-      if (body.getBoolean("url")) key = key.replace("_", " ");
+      checkBody(body, Map.of("title", String.class));
+      String title = body.getString("title");
+      if (fromUrl) title = title.replace("_", " ");
 
-      PageData data = pageProvider.getByTitle(key);
-      if (data == null) throw new BadDataException("Invalid page title: " + key);
+      PageData data = pageProvider.getByTitle(title);
+      if (data == null) throw new BadDataException("Invalid page title: " + title);
       ctx.response().setStatusCode(200);
       ctx.json(Utils.pageToJson(data));
     } catch (Exception e) {

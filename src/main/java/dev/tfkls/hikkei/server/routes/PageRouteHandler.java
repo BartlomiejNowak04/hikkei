@@ -10,8 +10,8 @@ public class PageRouteHandler extends RouteHandler {
     PageController controller = new PageController(pageProvider);
 
     router.post("/random").blockingHandler(controller::getRandomPage);
-    router.post("/bytitle").blockingHandler(controller::getPageByTitle);
-    router.post("byurl").blockingHandler(null);
+    router.post("/bytitle").blockingHandler(ctx -> controller.getPageByTitle(ctx, false));
+    router.post("byurl").blockingHandler(ctx -> controller.getPageByTitle(ctx, true));
     router.post("/search").blockingHandler(controller::searchByTitle);
     router.post("/category").blockingHandler(null);
 
