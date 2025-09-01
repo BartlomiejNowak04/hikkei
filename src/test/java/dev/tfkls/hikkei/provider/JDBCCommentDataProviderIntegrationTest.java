@@ -9,12 +9,14 @@ import dev.tfkls.hikkei.model.page.PageData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest {
   private JDBCCommentDataProvider provider;
   private int pageId;
+  private int noCommentsId;
 
   @BeforeAll
   void init() throws BadDataException, InternalErrorException {
@@ -29,13 +31,21 @@ public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest 
     }
 
     pageId = pageProvider.createPage(new PageData(null, "test-page", 1, false));
+    noCommentsId = pageProvider.createPage(new PageData(null, "no-comments", 1, false));
+  }
+
+  @Test
+  void pageWithNoCommentsReturnsEmptyList() throws InternalErrorException {
+    List<CommentData> comments = provider.getByPage(noCommentsId);
+    assertNotNull(comments);
+    assertTrue(comments.isEmpty());
   }
 
   @Test
   void addCommentSuccess() throws BadDataException, InternalErrorException {
     CommentData comment =
         new CommentData(-1, pageId, "This is a test comment", LocalDateTime.now(), false);
-    Integer commentId = provider.addComment(comment);
+    int commentId = provider.addComment(comment);
 
     assertNotNull(commentId);
     assertTrue(commentId > 0);

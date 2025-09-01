@@ -3,13 +3,10 @@ package dev.tfkls.hikkei.server.controllers;
 import static dev.tfkls.hikkei.server.controllers.Utils.checkBody;
 import static dev.tfkls.hikkei.server.controllers.Utils.exceptionToCode;
 
-import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
-import dev.tfkls.hikkei.model.revision.RevisionData;
-import dev.tfkls.hikkei.model.version.VersionProvider;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -18,11 +15,9 @@ import java.util.Map;
 
 public class PageController {
   private final PageDataProvider pageProvider;
-  private final VersionProvider versionProvider;
 
-  public PageController(PageDataProvider pageProvider, VersionProvider versionProvider) {
+  public PageController(PageDataProvider pageProvider) {
     this.pageProvider = pageProvider;
-    this.versionProvider = versionProvider;
   }
 
   public void getRandomPage(RoutingContext ctx) {
@@ -42,67 +37,9 @@ public class PageController {
       checkBody(body, Map.of("title", String.class));
       String title = body.getString("title");
 
-      List<PageData> data = pageProvider.searchPageByTitle(title);
+      List<PageData> data = pageProvider.searchByTitle(title);
       JsonArray items = new JsonArray();
       for (PageData item : data) items.add(Utils.pageToJson(item));
-      ctx.response().setStatusCode(200);
-      ctx.json(items);
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
-  }
-
-  public void getRevisions(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class));
-      Integer id = body.getInteger("id");
-
-      List<RevisionData> data = pageProvider.getPageRevisions(id);
-      if (data == null) throw new BadDataException("Incorrect parameter value: id");
-      JsonArray items = new JsonArray();
-      for (RevisionData item : data) items.add(Utils.revisionToJson(item));
-      ctx.response().setStatusCode(200);
-      ctx.json(items);
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
-  }
-
-  public void getCurrentContent(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class));
-      Integer id = body.getInteger("id");
-
-      List<RevisionData> revisions = pageProvider.getPageRevisions(id);
-      revisions.removeIf(rev -> rev.approved() == null || !rev.approved());
-
-      String data = "";
-      if (!revisions.isEmpty()) {
-        data = versionProvider.getContent(revisions.getFirst().filename());
-        if (data == null)
-          throw new InternalErrorException("Couldn't retrieve content for page " + id);
-      }
-      ctx.response().setStatusCode(200);
-      // TODO: transform the data appropriately
-      ctx.json(new JsonObject().put("content", data));
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
-  }
-
-  public void getComments(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class));
-      Integer id = body.getInteger("id");
-
-      List<CommentData> data = pageProvider.getPageComments(id);
-      if (data == null) throw new BadDataException("Incorrect parameter value: id");
-      JsonArray items = new JsonArray();
-      for (CommentData item : data) items.add(Utils.commentToJson(item));
-
       ctx.response().setStatusCode(200);
       ctx.json(items);
     } catch (Exception e) {
@@ -117,7 +54,7 @@ public class PageController {
       String key = body.getString("key");
       if (body.getBoolean("url")) key = key.replace("_", " ");
 
-      PageData data = pageProvider.getPageByTitle(key);
+      PageData data = pageProvider.getByTitle(key);
       if (data == null) throw new BadDataException("Invalid page title: " + key);
       ctx.response().setStatusCode(200);
       ctx.json(Utils.pageToJson(data));

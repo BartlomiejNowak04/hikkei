@@ -1,23 +1,24 @@
 package dev.tfkls.hikkei.model.page;
 
-import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
-import dev.tfkls.hikkei.model.revision.RevisionData;
 import java.util.List;
 
 public interface PageDataProvider {
 
   // check existence
+  // NOTE: do we actually need it?
   boolean doesPageExist(int pageId) throws InternalErrorException;
 
   PageData getRandomPage() throws InternalErrorException;
 
-  List<PageData> searchPageByTitle(String title) throws InternalErrorException;
+  List<PageData> searchByTitle(String title) throws InternalErrorException;
 
-  PageData getPageData(int pageId) throws InternalErrorException;
+  PageData getById(int pageId) throws InternalErrorException;
 
-  PageData getPageByTitle(String title) throws InternalErrorException;
+  PageData getByTitle(String title) throws InternalErrorException;
+
+  List<PageData> getByCategory(int categoryId) throws InternalErrorException;
 
   int createPage(PageData data) throws BadDataException, InternalErrorException;
 
@@ -27,8 +28,4 @@ public interface PageDataProvider {
       throws BadDataException, InternalErrorException;
 
   void toggleArchive(int pageId, boolean type) throws BadDataException, InternalErrorException;
-
-  List<RevisionData> getPageRevisions(int pageId) throws InternalErrorException;
-
-  List<CommentData> getPageComments(int pageId) throws InternalErrorException;
 }

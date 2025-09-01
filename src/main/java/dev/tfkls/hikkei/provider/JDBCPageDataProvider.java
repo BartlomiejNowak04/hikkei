@@ -1,15 +1,12 @@
 package dev.tfkls.hikkei.provider;
 
-import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
-import dev.tfkls.hikkei.model.revision.RevisionData;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class JDBCPageDataProvider implements PageDataProvider {
   private final Connection connection;
@@ -53,7 +50,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
   }
 
   @Override
-  public List<PageData> searchPageByTitle(String title) throws InternalErrorException {
+  public List<PageData> searchByTitle(String title) throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement("SELECT * FROM pages WHERE title ILIKE ?")) {
       st.setString(1, "%" + title + "%");
@@ -75,7 +72,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
   }
 
   @Override
-  public PageData getPageData(int pageId) throws InternalErrorException {
+  public PageData getById(int pageId) throws InternalErrorException {
     try (PreparedStatement st = connection.prepareStatement("SELECT * FROM pages WHERE id = ?")) {
       st.setInt(1, pageId);
       try (ResultSet rs = st.executeQuery()) {
@@ -92,7 +89,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
   }
 
   @Override
-  public PageData getPageByTitle(String title) throws InternalErrorException {
+  public PageData getByTitle(String title) throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement("SELECT * FROM pages WHERE title = ?")) {
       st.setString(1, title);
@@ -103,6 +100,11 @@ public class JDBCPageDataProvider implements PageDataProvider {
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
     }
+  }
+
+  @Override
+  public List<PageData> getByCategory(int categoryId) throws InternalErrorException {
+    return List.of();
   }
 
   @Override
@@ -172,56 +174,6 @@ public class JDBCPageDataProvider implements PageDataProvider {
       st.setBoolean(1, type);
       st.setInt(2, pageId);
       st.executeUpdate();
-    } catch (SQLException e) {
-      throw new InternalErrorException(internal_error);
-    }
-  }
-
-  @Override
-  public List<RevisionData> getPageRevisions(int pageId) throws InternalErrorException {
-    if (!doesPageExist(pageId)) return null;
-
-    try (PreparedStatement st =
-        connection.prepareStatement(
-            "SELECT * FROM revisions WHERE page_id = ? ORDER BY date DESC")) {
-      st.setInt(1, pageId);
-      try (ResultSet rs = st.executeQuery()) {
-        ArrayList<RevisionData> res = new ArrayList<>();
-        while (rs.next())
-          res.add(
-              new RevisionData(
-                  rs.getInt(1),
-                  rs.getInt(2),
-                  rs.getObject(3, UUID.class),
-                  rs.getTimestamp(4).toLocalDateTime(),
-                  rs.getObject(5, Boolean.class)));
-        return res;
-      }
-    } catch (SQLException e) {
-      throw new InternalErrorException(internal_error);
-    }
-  }
-
-  @Override
-  public List<CommentData> getPageComments(int pageId) throws InternalErrorException {
-    if (!doesPageExist(pageId)) return null;
-
-    try (PreparedStatement st =
-        connection.prepareStatement(
-            "SELECT * FROM comments WHERE page_id = ? ORDER BY date DESC")) {
-      st.setInt(1, pageId);
-      try (ResultSet rs = st.executeQuery()) {
-        ArrayList<CommentData> res = new ArrayList<>();
-        while (rs.next())
-          res.add(
-              new CommentData(
-                  rs.getInt(1),
-                  rs.getInt(2),
-                  rs.getString(3),
-                  rs.getTimestamp(4).toLocalDateTime(),
-                  rs.getBoolean(5)));
-        return res;
-      }
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
     }

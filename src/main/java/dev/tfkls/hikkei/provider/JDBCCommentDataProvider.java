@@ -8,9 +8,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JDBCCommentDataProvider implements CommentDataProvider {
   private final Connection connection;
+  private final String internal_error = "Database internal error";
 
   public JDBCCommentDataProvider(Connection connection) {
     this.connection = connection;
@@ -33,7 +36,7 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
     } catch (SQLException e) {
       String message = e.getMessage();
       if (message.contains("comments_page_id_fkey")) throw new BadDataException("Invalid page id");
-      throw new InternalErrorException("Database internal error");
+      throw new InternalErrorException(internal_error);
     }
   }
 
@@ -45,7 +48,50 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
       st.setInt(1, commentId);
       st.setInt(2, pageId);
     } catch (SQLException e) {
-      throw new InternalErrorException("Database internal error");
+      throw new InternalErrorException(internal_error);
     }
+  }
+
+  @Override
+  public CommentData getById(int pageId, int commentId) throws InternalErrorException {
+    return null;
+  }
+
+  @Override
+  public List<CommentData> getByPage(int pageId) throws InternalErrorException {
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT COUNT(*) FROM pages WHERE id = ?")) {
+      st.setInt(1, pageId);
+      ResultSet rs = st.executeQuery();
+      rs.next();
+      if (rs.getInt(1) == 0) return null;
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "SELECT * FROM comments WHERE page_id = ? ORDER BY date DESC")) {
+      st.setInt(1, pageId);
+      try (ResultSet rs = st.executeQuery()) {
+        ArrayList<CommentData> res = new ArrayList<>();
+        while (rs.next())
+          res.add(
+              new CommentData(
+                  rs.getInt(1),
+                  rs.getInt(2),
+                  rs.getString(3),
+                  rs.getTimestamp(4).toLocalDateTime(),
+                  rs.getBoolean(5)));
+        return res;
+      }
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+  }
+
+  @Override
+  public List<CommentData> getByUser(int userId) throws InternalErrorException {
+    return List.of();
   }
 }

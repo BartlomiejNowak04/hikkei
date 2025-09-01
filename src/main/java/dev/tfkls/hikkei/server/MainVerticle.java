@@ -49,7 +49,7 @@ public class MainVerticle extends VerticleBase {
     VersionProvider versionProvider = new FileVersionProvider(file_dir);
 
     UserRouteHandler userRoute = new UserRouteHandler(vertx, userDataProvider);
-    PageRouteHandler pageRoute = new PageRouteHandler(vertx, pageDataProvider, versionProvider);
+    PageRouteHandler pageRoute = new PageRouteHandler(vertx, pageDataProvider);
     RevisionRouteHandler revisionRoute =
         new RevisionRouteHandler(vertx, revisionDataProvider, versionProvider);
     CommentRouteHandler commentRoute = new CommentRouteHandler(vertx, commentDataProvider);

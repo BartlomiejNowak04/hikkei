@@ -9,6 +9,7 @@ import dev.tfkls.hikkei.model.revision.RevisionData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 public class JDBCRevisionDataProviderIntegrationTest extends JDBCIntegrationTest {
   private JDBCRevisionDataProvider provider;
   private int pageId;
+  private int noRevisionsId;
 
   @BeforeAll
   void init() throws BadDataException, InternalErrorException {
@@ -30,6 +32,14 @@ public class JDBCRevisionDataProviderIntegrationTest extends JDBCIntegrationTest
 
     JDBCPageDataProvider pageProvider = new JDBCPageDataProvider(connection);
     pageId = pageProvider.createPage(new PageData(null, "test-page1", 1, false));
+    noRevisionsId = pageProvider.createPage(new PageData(null, "no-revisions", 1, false));
+  }
+
+  @Test
+  void pageWithNoRevisionsReturnsEmptyList() throws InternalErrorException {
+    List<RevisionData> revisions = provider.getByPage(noRevisionsId);
+    assertNotNull(revisions);
+    assertTrue(revisions.isEmpty());
   }
 
   @Test
@@ -37,7 +47,7 @@ public class JDBCRevisionDataProviderIntegrationTest extends JDBCIntegrationTest
     RevisionData revision =
         new RevisionData(-1, pageId, UUID.randomUUID(), LocalDateTime.now(), null);
 
-    Integer revId = provider.createRevision(revision);
+    int revId = provider.createRevision(revision);
     assertNotNull(revId);
     assertTrue(revId > 0);
   }
@@ -55,7 +65,7 @@ public class JDBCRevisionDataProviderIntegrationTest extends JDBCIntegrationTest
     RevisionData revision =
         new RevisionData(-1, pageId, UUID.randomUUID(), LocalDateTime.now(), null);
 
-    Integer revId = provider.createRevision(revision);
+    int revId = provider.createRevision(revision);
     assertDoesNotThrow(() -> provider.changeState(revId, pageId, true));
   }
 

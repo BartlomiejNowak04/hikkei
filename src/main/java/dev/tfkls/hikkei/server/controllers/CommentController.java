@@ -5,8 +5,11 @@ import static dev.tfkls.hikkei.server.controllers.Utils.exceptionToCode;
 
 import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
+import dev.tfkls.hikkei.model.exceptions.BadDataException;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import java.util.List;
 import java.util.Map;
 
 public class CommentController {
@@ -40,6 +43,24 @@ public class CommentController {
 
       commentProvider.deleteComment(pageId, id);
       ctx.response().setStatusCode(200).end();
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
+    }
+  }
+
+  public void getByPage(RoutingContext ctx) {
+    try {
+      JsonObject body = ctx.body().asJsonObject();
+      checkBody(body, Map.of("id", Integer.class));
+      Integer id = body.getInteger("id");
+
+      List<CommentData> data = commentProvider.getByPage(id);
+      if (data == null) throw new BadDataException("Incorrect parameter value: id");
+      JsonArray items = new JsonArray();
+      for (CommentData item : data) items.add(Utils.commentToJson(item));
+
+      ctx.response().setStatusCode(200);
+      ctx.json(items);
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }
