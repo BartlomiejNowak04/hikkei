@@ -1,0 +1,301 @@
+package dev.tfkls.hikkei.server.routes;
+
+import static io.restassured.RestAssured.given;
+import static java.lang.Math.max;
+import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.Mockito.verifyNoInteractions;
+
+import io.restassured.http.Method;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+
+public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest {
+
+  private String stringify(Object value) {
+    if (value instanceof String) return "\"" + value + "\"";
+    return value.toString();
+  }
+
+  private void callApi(String endpoint, Method method, String body, String message) {
+    given()
+        .when()
+        .given()
+        .body(body)
+        .when()
+        .request(method, endpoint)
+        .then()
+        .statusCode(400)
+        .body("message", equalTo(message));
+
+    verifyNoInteractions(userProvider);
+    verifyNoInteractions(pageProvider);
+    verifyNoInteractions(revisionProvider);
+    verifyNoInteractions(commentProvider);
+    verifyNoInteractions(categoryProvider);
+    verifyNoInteractions(roleProvider);
+    verifyNoInteractions(versionProvider);
+  }
+
+  private void assertEndpoint(String endpoint, Method method, Map<String, Object> constraints) {
+    String[] args = constraints.keySet().toArray(new String[0]);
+
+    for (String current : args) {
+      StringBuilder correctPayload = new StringBuilder();
+      correctPayload.append("{");
+      for (String arg : args)
+        if (!arg.equals(current)) {
+          correctPayload.append(stringify(arg)).append(": ");
+          correctPayload.append(stringify(constraints.get(arg)));
+          correctPayload.append(", ");
+        }
+
+      String payload = correctPayload.toString();
+      Object value;
+      if (constraints.get(current) instanceof String) value = 0;
+      else value = "invalid";
+
+      callApi(
+          endpoint,
+          method,
+          payload + stringify(current) + ": " + stringify(value) + "}",
+          "Incorrect parameter: " + current);
+      callApi(
+          endpoint,
+          method,
+          payload + stringify(current) + ": null}",
+          "Incorrect parameter: " + current);
+      callApi(
+          endpoint,
+          method,
+          payload.substring(0, max(payload.length() - 2, 1)) + "}",
+          "Missing required parameter: " + current);
+    }
+
+    callApi(endpoint, method, "", "No data provided");
+  }
+
+  // TODO: uncomment when implemented
+  // /api/user
+  //  @Test
+  //  public void apiUserLoginRejectsImproperData() {
+  //    assertEndpoint("/api/user/login", Method.POST, Map.of());
+  //  }
+  //
+  //  @Test
+  //  public void apiUserByidRejectsImproperData() {
+  //    assertEndpoint("/api/user/byid", Method.POST, Map.of("id", 0));
+  //  }
+  //
+  //  @Test
+  //  public void apiUserRoleRejectsImproperData() {
+  //    assertEndpoint("/api/user/role", Method.POST, Map.of("role", 0));
+  //  }
+  //
+  //  @Test
+  //  public void apiUserCreateRejectsImproperData() {
+  //    assertEndpoint("/api/user/create", Method.PUT, Map.of("name", "example", "pfp",
+  // "<picture>"));
+  //  }
+  //
+  //  @Test
+  //  public void apiUserUpdateNameRejectsImproperData() {
+  //    assertEndpoint("/api/user/update/name", Method.PUT, Map.of("id", 0, "name", "newName"));
+  //  }
+  //
+  //  @Test
+  //  public void apiUserUpdatePfpRejectsImproperData() {
+  //    assertEndpoint("/api/user/update/pfp", Method.PUT, Map.of("id", 0, "pfp", "<picture>"));
+  //  }
+  //
+  //  @Test
+  //  public void apiUserUpdateRoleRejectsImproperData() {
+  //    assertEndpoint(
+  //        "/api/user/update/role", Method.PUT, Map.of("id", 0, "role_id", 0, "status", true));
+  //  }
+  //
+  //  @Test
+  //  public void apiUserDeleteRejectsImproperData() {
+  //    assertEndpoint("/api/user/delete", Method.DELETE, Map.of("id", 0));
+  //  }
+
+  // /api/page/
+  @Test
+  public void apiPageBytitleRejectsImproperData() {
+    assertEndpoint("/api/page/bytitle", Method.POST, Map.of("title", "Example Title"));
+  }
+
+  @Test
+  public void apiPageByurlRejectsImproperData() {
+    assertEndpoint("/api/page/byurl", Method.POST, Map.of("url", "http://example.com"));
+  }
+
+  @Test
+  public void apiPageSearchRejectsImproperData() {
+    assertEndpoint("/api/page/search", Method.POST, Map.of("title", "search phrase"));
+  }
+
+  //  @Test
+  //  public void apiPageCategoryRejectsImproperData() {
+  //    assertEndpoint("/api/page/category", Method.POST, Map.of("category", 0));
+  //  }
+
+  @Test
+  public void apiPageCreateRejectsImproperData() {
+    assertEndpoint("/api/page/create", Method.PUT, Map.of("title", "New Page", "category", 0));
+  }
+
+  @Test
+  public void apiPageUpdateTitleRejectsImproperData() {
+    assertEndpoint("/api/page/update/title", Method.PUT, Map.of("id", 0, "title", "Updated Title"));
+  }
+
+  @Test
+  public void apiPageUpdateCategoryRejectsImproperData() {
+    assertEndpoint("/api/page/update/category", Method.PUT, Map.of("id", 0, "category", 0));
+  }
+
+  @Test
+  public void apiPageUpdateArchiveRejectsImproperData() {
+    assertEndpoint("/api/page/update/archive", Method.PUT, Map.of("id", 0, "value", true));
+  }
+
+  // /api/revision/
+  @Test
+  public void apiRevisionUserRejectsImproperData() {
+    assertEndpoint("/api/revision/user", Method.POST, Map.of("user", 0));
+  }
+
+  @Test
+  public void apiRevisionPageRejectsImproperData() {
+    assertEndpoint("/api/revision/page", Method.POST, Map.of("page", 0));
+  }
+
+  //  @Test
+  //  public void apiRevisionRenderRejectsImproperData() {
+  //    assertEndpoint("/api/revision/render", Method.POST, Map.of("content", "Sample content"));
+  //  }
+
+  @Test
+  public void apiRevisionContentRejectsImproperData() {
+    assertEndpoint("/api/revision/content", Method.POST, Map.of("id", 0));
+  }
+
+  @Test
+  public void apiRevisionByidRejectsImproperData() {
+    assertEndpoint("/api/revision/byid", Method.POST, Map.of("id", 0, "page_id", 0));
+  }
+
+  //  @Test
+  //  public void apiRevisionDraftRejectsImproperData() {
+  //    assertEndpoint("/api/revision/draft", Method.POST, Map.of("page_id", 0, "user_id", 0));
+  //  }
+
+  @Test
+  public void apiRevisionCreateRejectsImproperData() {
+    assertEndpoint(
+        "/api/revision/create", Method.PUT, Map.of("id", 0, "content", "New revision content"));
+  }
+
+  @Test
+  public void apiRevisionUpdateStatusRejectsImproperData() {
+    assertEndpoint(
+        "/api/revision/update/status", Method.PUT, Map.of("id", 0, "page_id", 0, "status", true));
+  }
+
+  //  @Test
+  //  public void apiRevisionDraftSaveRejectsImproperData() {
+  //    assertEndpoint("/api/revision/draft/save", Method.PUT, Map.of("page_id", 0, "user_id", 0,
+  // "content", "Draft content"));
+  //  }
+
+  //  @Test
+  //  public void apiRevisionDraftDeleteRejectsImproperData() {
+  //    assertEndpoint("/api/revision/draft/delete", Method.DELETE, Map.of("page_id", 0, "user_id",
+  // 0));
+  //  }
+
+  // /api/comment/
+  @Test
+  public void apiCommentUserRejectsImproperData() {
+    assertEndpoint("/api/comment/user", Method.POST, Map.of("user", 0));
+  }
+
+  @Test
+  public void apiCommentPageRejectsImproperData() {
+    assertEndpoint("/api/comment/page", Method.POST, Map.of("page", 0));
+  }
+
+  @Test
+  public void apiCommentByidRejectsImproperData() {
+    assertEndpoint("/api/comment/byid", Method.POST, Map.of("id", 0, "page_id", 0));
+  }
+
+  @Test
+  public void apiCommentCreateRejectsImproperData() {
+    assertEndpoint("/api/comment/create", Method.PUT, Map.of("id", 0, "content", "Comment text"));
+  }
+
+  @Test
+  public void apiCommentDeleteRejectsImproperData() {
+    assertEndpoint("/api/comment/delete", Method.DELETE, Map.of("id", 0, "page_id", 0));
+  }
+
+  // /api/category/
+  //  @Test
+  //  public void apiCategoryAllRejectsImproperData() {
+  //    assertEndpoint("/api/category/", Method.POST, Map.of());
+  //  }
+  //
+  //  @Test
+  //  public void apiCategoryByidRejectsImproperData() {
+  //    assertEndpoint("/api/category/byid", Method.POST, Map.of("id", 0));
+  //  }
+  //
+  //  @Test
+  //  public void apiCategoryPermissionRejectsImproperData() {
+  //    assertEndpoint("/api/category/permission", Method.POST, Map.of()); // unspecified params
+  //  }
+  //
+  //  @Test
+  //  public void apiCategoryCreateRejectsImproperData() {
+  //    assertEndpoint("/api/category/create", Method.PUT, Map.of("name", "New Category"));
+  //  }
+  //
+  //  @Test
+  //  public void apiCategoryUpdateNameRejectsImproperData() {
+  //    assertEndpoint(
+  //        "/api/category/update/name", Method.PUT, Map.of("id", 0, "name", "Updated Category"));
+  //  }
+
+  // /api/role/
+  //  @Test
+  //  public void apiRoleAllRejectsImproperData() {
+  //    assertEndpoint("/api/role/", Method.POST, Map.of());
+  //  }
+  //
+  //  @Test
+  //  public void apiRoleByidRejectsImproperData() {
+  //    assertEndpoint("/api/role/byid", Method.POST, Map.of("id", 0));
+  //  }
+  //
+  //  @Test
+  //  public void apiRoleUserRejectsImproperData() {
+  //    assertEndpoint("/api/role/user", Method.POST, Map.of("user", 0));
+  //  }
+  //
+  //  @Test
+  //  public void apiRoleCreateRejectsImproperData() {
+  //    assertEndpoint("/api/role/create", Method.PUT, Map.of("name", "New Role"));
+  //  }
+  //
+  //  @Test
+  //  public void apiRoleUpdateNameRejectsImproperData() {
+  //    assertEndpoint("/api/role/update/name", Method.PUT, Map.of("id", 0, "name", "Updated
+  // Role"));
+  //  }
+  //
+  //  @Test
+  //  public void apiRoleDeleteRejectsImproperData() {
+  //    assertEndpoint("/api/role/delete", Method.DELETE, Map.of("id", 0));
+  //  }
+}

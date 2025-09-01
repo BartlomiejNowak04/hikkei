@@ -13,7 +13,7 @@ public class RevisionRouteHandler extends RouteHandler {
 
     router.post("/user").blockingHandler(controller::getByUser);
     router.post("/page").blockingHandler(controller::getByPage);
-    router.post("/render").blockingHandler(controller::Render);
+    //    router.post("/render").blockingHandler(controller::Render);
     router.post("/content").blockingHandler(controller::getCurrentContent);
     router.post("/byid").blockingHandler(controller::getById);
     //    router.post("/draft").blockingHandler(null);

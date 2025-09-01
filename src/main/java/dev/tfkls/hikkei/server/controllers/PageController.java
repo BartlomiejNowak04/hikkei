@@ -50,7 +50,7 @@ public class PageController {
   public void getPageByTitle(RoutingContext ctx, boolean fromUrl) {
     try {
       JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("title", String.class));
+      checkBody(body, Map.of(fromUrl ? "url" : "title", String.class));
       String title = body.getString("title");
       if (fromUrl) title = title.replace("_", " ");
 
