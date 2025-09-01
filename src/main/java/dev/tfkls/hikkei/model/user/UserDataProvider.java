@@ -15,6 +15,8 @@ public interface UserDataProvider {
 
   List<Integer> getUserRoles(int userId) throws InternalErrorException;
 
+  List<UserData> getByRole(int roleId) throws InternalErrorException;
+
   List<AuthData> getUserAuthMethods(int userId) throws InternalErrorException;
 
   int createUser(UserData data) throws BadDataException, InternalErrorException;

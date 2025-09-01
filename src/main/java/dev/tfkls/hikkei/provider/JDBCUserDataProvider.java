@@ -84,6 +84,11 @@ public class JDBCUserDataProvider implements UserDataProvider {
   }
 
   @Override
+  public List<UserData> getByRole(int roleId) throws InternalErrorException {
+    return List.of();
+  }
+
+  @Override
   public List<AuthData> getUserAuthMethods(int userId) throws InternalErrorException {
     if (!doesUserExist(userId)) return null;
 

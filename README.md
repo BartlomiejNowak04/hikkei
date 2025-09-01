@@ -103,6 +103,7 @@ The frontend application communicates with the backend server through an API. Be
 - `/api/role/`:
     - POST `/`: get all roles
     - POST `byid`: get role by id, params: Integer id
+    - POST `user`: get user's roles, params: Integer user
     - PUT `create`: create a role, params: String name
     - PUT `update/name`: update role name, params: Integer id, String name
     - DELETE `delete`: delete a role, params: Integer id

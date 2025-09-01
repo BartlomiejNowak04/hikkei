@@ -8,6 +8,7 @@ public class RoleRouteHandler extends RouteHandler {
 
     router.post("/").blockingHandler(null);
     router.post("/byid").blockingHandler(null);
+    router.post("/user").blockingHandler(null);
 
     router.put("/create").blockingHandler(null);
     router.put("/update/name").blockingHandler(null);

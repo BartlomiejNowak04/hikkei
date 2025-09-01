@@ -100,6 +100,11 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
   }
 
   @Override
+  public UUID getDraft(int userId, int pageId) throws InternalErrorException {
+    return null;
+  }
+
+  @Override
   public void saveDraft(int userId, int pageId, UUID file)
       throws InternalErrorException, BadDataException {}
 
