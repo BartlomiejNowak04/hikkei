@@ -1,7 +1,6 @@
 package dev.tfkls.hikkei.server.controllers;
 
-import static dev.tfkls.hikkei.server.controllers.Utils.checkBody;
-import static dev.tfkls.hikkei.server.controllers.Utils.exceptionToCode;
+import static dev.tfkls.hikkei.server.controllers.Utils.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
@@ -57,22 +56,35 @@ public class RevisionController {
     }
   }
 
-  public void getByPage(RoutingContext ctx) {
+  private void getList(RoutingContext ctx, String type) {
     try {
       JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class));
-      Integer id = body.getInteger("id");
+      checkBody(body, Map.of(type, Integer.class));
+      Integer id = body.getInteger(type);
 
-      List<RevisionData> data = revisionProvider.getByPage(id);
+      List<RevisionData> data =
+          type.equals("page") ? revisionProvider.getByPage(id) : revisionProvider.getByUser(id);
       if (data == null) throw new BadDataException("Incorrect parameter value: id");
       JsonArray items = new JsonArray();
-      for (RevisionData item : data) items.add(Utils.revisionToJson(item));
+      for (RevisionData item : data) items.add(revisionToJson(item));
+
       ctx.response().setStatusCode(200);
       ctx.json(items);
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }
   }
+
+  public void getByPage(RoutingContext ctx) {
+    getList(ctx, "page");
+  }
+
+  public void getByUser(RoutingContext ctx) {
+    getList(ctx, "user");
+  }
+
+  // TODO: do the rendering
+  public void Render(RoutingContext ctx) {}
 
   public void getCurrentContent(RoutingContext ctx) {
     try {
@@ -92,6 +104,22 @@ public class RevisionController {
       ctx.response().setStatusCode(200);
       // TODO: transform the data appropriately
       ctx.json(new JsonObject().put("content", data));
+    } catch (Exception e) {
+      ctx.fail(exceptionToCode(e), e);
+    }
+  }
+
+  public void getById(RoutingContext ctx) {
+    try {
+      JsonObject body = ctx.body().asJsonObject();
+      checkBody(body, Map.of("id", Integer.class, "page_id", Integer.class));
+      Integer id = body.getInteger("id");
+      Integer pageId = body.getInteger("page_id");
+
+      RevisionData data = revisionProvider.getById(pageId, id);
+      if (data == null) throw new BadDataException("Incorrect parameter value: id");
+      ctx.response().setStatusCode(200);
+      ctx.json(revisionToJson(data));
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
     }

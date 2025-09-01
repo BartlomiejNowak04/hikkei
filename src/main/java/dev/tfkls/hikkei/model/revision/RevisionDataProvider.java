@@ -15,7 +15,7 @@ public interface RevisionDataProvider {
 
   List<RevisionData> getByUser(int userId) throws InternalErrorException;
 
-  RevisionData getById(int id) throws InternalErrorException;
+  RevisionData getById(int pageId, int id) throws InternalErrorException;
 
   void saveDraft(int userId, int pageId, UUID file) throws InternalErrorException, BadDataException;
 

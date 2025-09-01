@@ -95,7 +95,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
   }
 
   @Override
-  public RevisionData getById(int id) throws InternalErrorException {
+  public RevisionData getById(int pageId, int id) throws InternalErrorException {
     return null;
   }
 

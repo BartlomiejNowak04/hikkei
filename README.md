@@ -79,17 +79,18 @@ The frontend application communicates with the backend server through an API. Be
     - PUT `update/archive`: archive or de-archive page, params: Integer id, Boolean value
 - `/api/revision/`:
     - POST `user`: get user's revisions, params: Integer user
-    - POST `page`: get page's revisions, params: Integer id
+    - POST `page`: get page's revisions, params: Integer page
     - POST `render`: render passed content, params: String content
     - POST `content`: get current content for a page, params: Integer id
     - POST `byid`: get revision by id, params: Integer id, Integer page_id
+    - POST `draft`: get user's draft revision for a page, params: Integer page_id, Integer user_id
     - PUT `create`: create a revision, params: Integer id (page's id), String content
     - PUT `update/status`: approve or reject a revision, params: Integer id, Integer page_id, Boolean status
     - PUT `draft/save`: save a draft revision, params: Integer page_id, Integer user_id, String content
     - DELETE `draft/delete`: delete a draft revision, params: Integer page_id, Integer user_id
 - `/api/comment/`:
     - POST `user`: get user's comments, params: Integer user
-    - POST `page`: get page's comments, params: Integer id
+    - POST `page`: get page's comments, params: Integer page
     - POST `byid`: get comment by id, params: Integer id, Integer page_id
     - PUT `create`: create a comment, params: Integer id (page's id), String content
     - DELETE `delete`: delete a comment, params: Integer id, Integer page_id
