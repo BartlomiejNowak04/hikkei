@@ -11,7 +11,16 @@ public class RevisionRouteHandler extends RouteHandler {
     super(vertx);
     RevisionController controller = new RevisionController(revisionProvider, versionProvider);
 
+    router.post("/user").blockingHandler(null);
+    router.post("/page").blockingHandler(controller::getByPage);
+    router.post("/render").blockingHandler(null);
+    router.post("/content").blockingHandler(controller::getCurrentContent);
+    router.post("/byid").blockingHandler(null);
+
     router.put("/create").blockingHandler(controller::addRevision);
-    router.put("/status").blockingHandler(controller::changeStatus);
+    router.put("/update/status").blockingHandler(controller::changeStatus);
+    router.put("/draft/save").blockingHandler(null);
+
+    router.delete("/draft/delete").blockingHandler(null);
   }
 }
