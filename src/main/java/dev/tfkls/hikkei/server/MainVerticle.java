@@ -5,51 +5,44 @@ import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.model.version.VersionProvider;
-import dev.tfkls.hikkei.provider.*;
 import dev.tfkls.hikkei.server.handlers.FailureHandler;
 import dev.tfkls.hikkei.server.routes.*;
-import io.github.cdimascio.dotenv.Dotenv;
-import io.github.cdimascio.dotenv.DotenvBuilder;
 import io.vertx.core.Future;
 import io.vertx.core.VerticleBase;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
 public class MainVerticle extends VerticleBase {
+  private final UserDataProvider userProvider;
+  private final PageDataProvider pageProvider;
+  private final RevisionDataProvider revisionProvider;
+  private final CommentDataProvider commentProvider;
+  private final VersionProvider versionProvider;
+  private final Integer port;
+
+  public MainVerticle(
+      UserDataProvider userProvider,
+      PageDataProvider pageProvider,
+      RevisionDataProvider revisionProvider,
+      CommentDataProvider commentProvider,
+      VersionProvider versionProvider,
+      Integer port) {
+    super();
+    this.userProvider = userProvider;
+    this.pageProvider = pageProvider;
+    this.revisionProvider = revisionProvider;
+    this.commentProvider = commentProvider;
+    this.versionProvider = versionProvider;
+    this.port = port;
+  }
 
   @Override
   public Future<?> start() {
-    Dotenv dotenv = new DotenvBuilder().filename(".env").load();
-    String db_host = dotenv.get("POSTGRES_HOST");
-    String db_name = dotenv.get("POSTGRES_NAME");
-    String db_user = dotenv.get("POSTGRES_USER");
-    String db_password = dotenv.get("POSTGRES_PASS");
-
-    Connection connection;
-    try {
-      connection =
-          DriverManager.getConnection(
-              "jdbc:postgresql://" + db_host + "/" + db_name, db_user, db_password);
-    } catch (SQLException e) {
-      throw new RuntimeException(e.getMessage());
-    }
-
-    String file_dir = dotenv.get("FILE_DIRECTORY");
-
-    UserDataProvider userDataProvider = new JDBCUserDataProvider(connection);
-    PageDataProvider pageDataProvider = new JDBCPageDataProvider(connection);
-    RevisionDataProvider revisionDataProvider = new JDBCRevisionDataProvider(connection);
-    CommentDataProvider commentDataProvider = new JDBCCommentDataProvider(connection);
-    VersionProvider versionProvider = new FileVersionProvider(file_dir);
-
-    UserRouteHandler userRoute = new UserRouteHandler(vertx, userDataProvider);
-    PageRouteHandler pageRoute = new PageRouteHandler(vertx, pageDataProvider);
+    UserRouteHandler userRoute = new UserRouteHandler(vertx, userProvider);
+    PageRouteHandler pageRoute = new PageRouteHandler(vertx, pageProvider);
     RevisionRouteHandler revisionRoute =
-        new RevisionRouteHandler(vertx, revisionDataProvider, versionProvider);
-    CommentRouteHandler commentRoute = new CommentRouteHandler(vertx, commentDataProvider);
+        new RevisionRouteHandler(vertx, revisionProvider, versionProvider);
+    CommentRouteHandler commentRoute = new CommentRouteHandler(vertx, commentProvider);
     CategoryRouteHandler categoryRoute = new CategoryRouteHandler(vertx);
     RoleRouteHandler roleRoute = new RoleRouteHandler(vertx);
 
@@ -66,7 +59,7 @@ public class MainVerticle extends VerticleBase {
     return vertx
         .createHttpServer()
         .requestHandler(router)
-        .listen(8888)
+        .listen(port)
         .onSuccess(
             server -> System.out.println("HTTP server started on port " + server.actualPort()))
         .onFailure(Throwable::printStackTrace);

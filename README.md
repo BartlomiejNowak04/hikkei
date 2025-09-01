@@ -117,6 +117,7 @@ POSTGRES_NAME=[database_name]
 POSTGRES_USER=[username]
 POSTGRES_PASS=[password]
 FILE_DIRECTORY=/directory/ending/with/a/slash/
+PORT=[port_number]
 ```
 
 ### Database
@@ -129,6 +130,9 @@ CREATE DATABASE [POSTGRES_NAME] OWNER [POSTGRES_USER];
 
 ### Version Control
 All of the version-control-related files are kept in the `[FILE_DIRECTORY]` directory, to which the user running the backend application needs read and write permissions.
+
+### API Server
+The project uses Vert.x to create an asynchronous HTTP API. It is run locally, on port `[PORT]`.
 
 ## Testing
 Running integration tests requires appropriate environment variables to be defined in the `.test-env` file located in the project root directory. The variables are the same as in the `.env` file and have the same semantics. The integration tests will be skipped unless all necessary variables are properly defined.
