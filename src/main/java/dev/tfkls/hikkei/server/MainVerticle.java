@@ -1,8 +1,10 @@
 package dev.tfkls.hikkei.server;
 
+import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
+import dev.tfkls.hikkei.model.role.RoleDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.model.version.VersionProvider;
 import dev.tfkls.hikkei.server.handlers.FailureHandler;
@@ -17,6 +19,8 @@ public class MainVerticle extends VerticleBase {
   private final PageDataProvider pageProvider;
   private final RevisionDataProvider revisionProvider;
   private final CommentDataProvider commentProvider;
+  private final CategoryDataProvider categoryProvider;
+  private final RoleDataProvider roleProvider;
   private final VersionProvider versionProvider;
   private final Integer port;
 
@@ -25,6 +29,8 @@ public class MainVerticle extends VerticleBase {
       PageDataProvider pageProvider,
       RevisionDataProvider revisionProvider,
       CommentDataProvider commentProvider,
+      CategoryDataProvider categoryProvider,
+      RoleDataProvider roleProvider,
       VersionProvider versionProvider,
       Integer port) {
     super();
@@ -32,6 +38,8 @@ public class MainVerticle extends VerticleBase {
     this.pageProvider = pageProvider;
     this.revisionProvider = revisionProvider;
     this.commentProvider = commentProvider;
+    this.categoryProvider = categoryProvider;
+    this.roleProvider = roleProvider;
     this.versionProvider = versionProvider;
     this.port = port;
   }
@@ -43,8 +51,8 @@ public class MainVerticle extends VerticleBase {
     RevisionRouteHandler revisionRoute =
         new RevisionRouteHandler(vertx, revisionProvider, versionProvider);
     CommentRouteHandler commentRoute = new CommentRouteHandler(vertx, commentProvider);
-    CategoryRouteHandler categoryRoute = new CategoryRouteHandler(vertx);
-    RoleRouteHandler roleRoute = new RoleRouteHandler(vertx);
+    CategoryRouteHandler categoryRoute = new CategoryRouteHandler(vertx, categoryProvider);
+    RoleRouteHandler roleRoute = new RoleRouteHandler(vertx, roleProvider);
 
     Router router = Router.router(vertx);
     router.route("/api/*").failureHandler(new FailureHandler());
