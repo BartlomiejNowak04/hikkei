@@ -93,6 +93,18 @@ The frontend application communicates with the backend server through an API. Be
     - POST `byid`: get comment by id, params: Integer id, Integer page_id
     - PUT `create`: create a comment, params: Integer id (page's id), String content
     - DELETE `delete`: delete a comment, params: Integer id, Integer page_id
+- `/api/category/`:
+    - POST `/`: get all categories
+    - POST `byid`: get category by id, params: Integer id
+    - POST `permission`: modify role's permissions to given category
+    - PUT `create`: create a category, params: String name
+    - PUT `update/name`: update category name, params: Integer id, String name
+- `/api/role/`:
+    - POST `/`: get all roles
+    - POST `byid`: get role by id, params: Integer id
+    - PUT `create`: create a role, params: String name
+    - PUT `update/name`: update role name, params: Integer id, String name
+    - DELETE `delete`: delete a role, params: Integer id
 
 
 ## Setup

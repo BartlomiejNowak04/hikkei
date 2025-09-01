@@ -7,10 +7,7 @@ import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.model.version.VersionProvider;
 import dev.tfkls.hikkei.provider.*;
 import dev.tfkls.hikkei.server.handlers.FailureHandler;
-import dev.tfkls.hikkei.server.routes.CommentRouteHandler;
-import dev.tfkls.hikkei.server.routes.PageRouteHandler;
-import dev.tfkls.hikkei.server.routes.RevisionRouteHandler;
-import dev.tfkls.hikkei.server.routes.UserRouteHandler;
+import dev.tfkls.hikkei.server.routes.*;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvBuilder;
 import io.vertx.core.Future;
@@ -53,6 +50,8 @@ public class MainVerticle extends VerticleBase {
     RevisionRouteHandler revisionRoute =
         new RevisionRouteHandler(vertx, revisionDataProvider, versionProvider);
     CommentRouteHandler commentRoute = new CommentRouteHandler(vertx, commentDataProvider);
+    CategoryRouteHandler categoryRoute = new CategoryRouteHandler(vertx);
+    RoleRouteHandler roleRoute = new RoleRouteHandler(vertx);
 
     Router router = Router.router(vertx);
     router.route("/api/*").failureHandler(new FailureHandler());
@@ -61,6 +60,8 @@ public class MainVerticle extends VerticleBase {
     router.route("/api/page/*").subRouter(pageRoute.getRouter());
     router.route("/api/revision/*").subRouter(revisionRoute.getRouter());
     router.route("/api/comment/*").subRouter(commentRoute.getRouter());
+    router.route("/api/category/*").subRouter(categoryRoute.getRouter());
+    router.route("/api/role/*").subRouter(roleRoute.getRouter());
 
     return vertx
         .createHttpServer()
