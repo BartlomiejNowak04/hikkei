@@ -30,6 +30,7 @@
 #### Roles
 - [ ] display all roles (with search)
 - [ ] create and delete roles
+- [ ] list users with a given role
 - [ ] change role's name
 - [ ] grant and revoke permissions by modifying user's roles
 #### Main Page
@@ -54,6 +55,45 @@ Commits to this repository shall be named in accordance to the
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 convention, and follow the overall good commit guidelines which are described in
 [this blog post](http://who-t.blogspot.com/2009/12/on-commit-messages.html).
+
+## Backend API
+The frontend application communicates with the backend server through an API. Below is the description of available endpoints.
+- `/api/user/`:
+    - POST `login`: log a user in
+    - POST `byid`: get user by id, params: Integer id
+    - POST `role`: get users with a role, params: Integer role
+    - PUT `create`: create a user, params: String name, Picture pfp (optional)
+    - PUT `update/name`: update username, params: Integer id, String name
+    - PUT `update/pfp`: update profile picture, params: Integer id, Picture pfp
+    - PUT `update/role`: alter role, params: Integer id, Integer role_id, Boolean status
+    - DELETE `delete`: delete a user, params: Integer id
+- `/api/page/`:
+    - POST `random`: get a random page
+    - POST `bytitle`: get page with a given title, params: String title
+    - POST `byurl`: get page with a given url, params: String url
+    - POST `search`: search for pages with a phrase in title, params: String title
+    - POST `category`: get pages within a category, params: Integer category
+    - PUT `create`: create a page, params: String title, Integer category
+    - PUT `update/title`: update page title, params: Integer id, String title
+    - PUT `update/category`: update page category, params: Integer id, Integer category
+    - PUT `update/archive`: archive or de-archive page, params: Integer id, Boolean value
+- `/api/revision/`:
+    - POST `user`: get user's revisions, params: Integer user
+    - POST `page`: get page's revisions, params: Integer id
+    - POST `render`: render passed content, params: String content
+    - POST `content`: get current content for a page, params: Integer id
+    - POST `byid`: get revision by id, params: Integer id, Integer page_id
+    - PUT `create`: create a revision, params: Integer id (page's id), String content
+    - PUT `update/status`: approve or reject a revision, params: Integer id, Integer page_id, Boolean status
+    - PUT `draft/save`: save a draft revision, params: Integer page_id, Integer user_id, String content
+    - DELETE `draft/delete`: delete a draft revision, params: Integer page_id, Integer user_id
+- `/api/comment/`:
+    - POST `user`: get user's comments, params: Integer user
+    - POST `page`: get page's comments, params: Integer id
+    - POST `byid`: get comment by id, params: Integer id, Integer page_id
+    - PUT `create`: create a comment, params: Integer id (page's id), String content
+    - DELETE `delete`: delete a comment, params: Integer id, Integer page_id
+
 
 ## Setup
 The project's configuration is largely contained in the environment variables defined in the `.env` file located in the project root directory. The variables are as follows (their meaning is explained in appropriate sections):
