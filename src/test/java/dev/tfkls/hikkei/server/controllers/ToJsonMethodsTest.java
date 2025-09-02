@@ -43,12 +43,13 @@ class ToJsonMethodsTest {
   @Test
   void commentToJsonShouldMapCorrectly() {
     LocalDateTime now = LocalDateTime.now();
-    CommentData comment = new CommentData(10, 1, "Hello world", now, false);
+    CommentData comment = new CommentData(10, 1, 1, "Hello world", now, false);
 
     JsonObject json = commentToJson(comment);
 
     assertEquals(10, json.getInteger("id"));
     assertEquals(1, json.getInteger("page_id"));
+    assertEquals(1, json.getInteger("user_id"));
     assertEquals("Hello world", json.getString("content"));
     assertEquals(now, LocalDateTime.parse(json.getString("date")));
     assertFalse(json.getBoolean("deleted"));
@@ -90,7 +91,7 @@ class ToJsonMethodsTest {
 
   @Test
   void commentToJsonHandlesNullFields() {
-    CommentData comment = new CommentData(null, null, null, null, null);
+    CommentData comment = new CommentData(null, null, null, null, null, null);
 
     JsonObject json = commentToJson(comment);
 
@@ -98,6 +99,8 @@ class ToJsonMethodsTest {
     assertNull(json.getValue("id"));
     assertTrue(json.containsKey("page_id"));
     assertNull(json.getValue("page_id"));
+    assertTrue(json.containsKey("user_id"));
+    assertNull(json.getValue("user_id"));
     assertTrue(json.containsKey("content"));
     assertNull(json.getValue("content"));
     assertTrue(json.containsKey("date"));

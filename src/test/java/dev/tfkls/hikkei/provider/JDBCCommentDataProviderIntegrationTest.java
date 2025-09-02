@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
-import dev.tfkls.hikkei.model.page.PageData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -16,27 +15,68 @@ import org.junit.jupiter.api.Test;
 public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest {
   private JDBCCommentDataProvider provider;
   private int pageId;
-  private int noCommentsId;
+  private int userId;
 
   @BeforeAll
-  void init() throws BadDataException, InternalErrorException {
+  void init() throws SQLException {
     provider = new JDBCCommentDataProvider(connection);
-    JDBCPageDataProvider pageProvider = new JDBCPageDataProvider(connection);
 
-    try (PreparedStatement st =
-        connection.prepareStatement("INSERT INTO categories (name) VALUES (?)")) {
-      st.setString(1, "test-category");
-      st.executeUpdate();
-    } catch (SQLException ignored) {
-    }
+    PreparedStatement stCat =
+        connection.prepareStatement("INSERT INTO categories (name) VALUES (?)");
+    stCat.setString(1, "test-category");
+    stCat.executeUpdate();
 
-    pageId = pageProvider.createPage(new PageData(null, "test-page", 1, false));
-    noCommentsId = pageProvider.createPage(new PageData(null, "no-comments", 1, false));
+    PreparedStatement stPage =
+        connection.prepareStatement(
+            "INSERT INTO pages (title, category) VALUES (?, ?)",
+            PreparedStatement.RETURN_GENERATED_KEYS);
+    stPage.setString(1, "test-page");
+    stPage.setInt(2, 1);
+    stPage.executeUpdate();
+
+    stPage.getGeneratedKeys().next();
+    pageId = stPage.getGeneratedKeys().getInt(1);
+
+    PreparedStatement stUser =
+        connection.prepareStatement(
+            "INSERT INTO users (username) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS);
+    stUser.setString(1, "testname");
+    stUser.executeUpdate();
+
+    stUser.getGeneratedKeys().next();
+    userId = stUser.getGeneratedKeys().getInt(1);
   }
 
   @Test
-  void pageWithNoCommentsReturnsEmptyList() throws InternalErrorException {
+  void pageWithNoCommentsReturnsEmptyList() throws InternalErrorException, SQLException {
+    PreparedStatement st =
+        connection.prepareStatement(
+            "INSERT INTO pages (title, category) VALUES (?, ?)",
+            PreparedStatement.RETURN_GENERATED_KEYS);
+    st.setString(1, "no-comments");
+    st.setInt(2, 1);
+    st.executeUpdate();
+
+    st.getGeneratedKeys().next();
+    int noCommentsId = st.getGeneratedKeys().getInt(1);
+
     List<CommentData> comments = provider.getByPage(noCommentsId);
+    assertNotNull(comments);
+    assertTrue(comments.isEmpty());
+  }
+
+  @Test
+  void userWithNoCommentsReturnsEmptyList() throws InternalErrorException, SQLException {
+    PreparedStatement st =
+        connection.prepareStatement(
+            "INSERT INTO users (username) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS);
+    st.setString(1, "no-comments");
+    st.executeUpdate();
+
+    st.getGeneratedKeys().next();
+    userId = st.getGeneratedKeys().getInt(1);
+
+    List<CommentData> comments = provider.getByUser(userId);
     assertNotNull(comments);
     assertTrue(comments.isEmpty());
   }
@@ -44,23 +84,23 @@ public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest 
   @Test
   void addCommentSuccess() throws BadDataException, InternalErrorException {
     CommentData comment =
-        new CommentData(-1, pageId, "This is a test comment", LocalDateTime.now(), false);
+        new CommentData(-1, pageId, userId, "This is a test comment", LocalDateTime.now(), false);
     int commentId = provider.addComment(comment);
 
-    assertNotNull(commentId);
     assertTrue(commentId > 0);
   }
 
   @Test
   void addCommentFailsWithInvalidPage() {
     CommentData comment =
-        new CommentData(-1, -9999, "Invalid page comment", LocalDateTime.now(), false);
+        new CommentData(-1, -9999, userId, "Invalid page comment", LocalDateTime.now(), false);
     assertThrows(BadDataException.class, () -> provider.addComment(comment));
   }
 
   @Test
   void deleteCommentSuccess() throws BadDataException, InternalErrorException {
-    CommentData comment = new CommentData(-1, pageId, "To be deleted", LocalDateTime.now(), false);
+    CommentData comment =
+        new CommentData(-1, pageId, userId, "To be deleted", LocalDateTime.now(), false);
     int commentId = provider.addComment(comment);
 
     assertDoesNotThrow(() -> provider.deleteComment(pageId, commentId));

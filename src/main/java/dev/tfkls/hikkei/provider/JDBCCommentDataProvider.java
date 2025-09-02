@@ -74,16 +74,7 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
             "SELECT * FROM comments WHERE page_id = ? ORDER BY date DESC")) {
       st.setInt(1, pageId);
       try (ResultSet rs = st.executeQuery()) {
-        ArrayList<CommentData> res = new ArrayList<>();
-        while (rs.next())
-          res.add(
-              new CommentData(
-                  rs.getInt(1),
-                  rs.getInt(2),
-                  rs.getString(3),
-                  rs.getTimestamp(4).toLocalDateTime(),
-                  rs.getBoolean(5)));
-        return res;
+        return getCommentDataFromResultSet(rs);
       }
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
@@ -92,6 +83,39 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
 
   @Override
   public List<CommentData> getByUser(int userId) throws InternalErrorException {
-    return List.of();
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT COUNT(*) FROM users WHERE id = ?")) {
+      st.setInt(1, userId);
+      ResultSet rs = st.executeQuery();
+      rs.next();
+      if (rs.getInt(1) == 0) return null;
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "SELECT * FROM comments WHERE user_id = ? ORDER BY date DESC")) {
+      st.setInt(1, userId);
+      try (ResultSet rs = st.executeQuery()) {
+        return getCommentDataFromResultSet(rs);
+      }
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+  }
+
+  private List<CommentData> getCommentDataFromResultSet(ResultSet rs) throws SQLException {
+    ArrayList<CommentData> res = new ArrayList<>();
+    while (rs.next())
+      res.add(
+          new CommentData(
+              rs.getInt(1),
+              rs.getInt(2),
+              rs.getInt(3),
+              rs.getString(4),
+              rs.getTimestamp(5).toLocalDateTime(),
+              rs.getBoolean(6)));
+    return res;
   }
 }

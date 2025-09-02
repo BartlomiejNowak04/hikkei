@@ -21,11 +21,13 @@ public class CommentController {
   public void addComment(RoutingContext ctx) {
     try {
       JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class, "content", String.class));
+      checkBody(
+          body, Map.of("id", Integer.class, "user_id", Integer.class, "content", String.class));
       Integer id = body.getInteger("id");
+      Integer userId = body.getInteger("user_id");
       String content = body.getString("content");
 
-      int idc = commentProvider.addComment(new CommentData(null, id, content, null, null));
+      int idc = commentProvider.addComment(new CommentData(null, id, userId, content, null, null));
       ctx.response().setStatusCode(201);
       ctx.json(new JsonObject().put("id", idc));
     } catch (Exception e) {

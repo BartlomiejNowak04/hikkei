@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
-import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -20,7 +19,7 @@ public class JDBCRevisionDataProviderIntegrationTest extends JDBCIntegrationTest
   private int noRevisionsId;
 
   @BeforeAll
-  void init() throws BadDataException, InternalErrorException {
+  void init() throws SQLException {
     provider = new JDBCRevisionDataProvider(connection);
 
     try (PreparedStatement st =
@@ -30,9 +29,27 @@ public class JDBCRevisionDataProviderIntegrationTest extends JDBCIntegrationTest
     } catch (SQLException ignored) {
     }
 
-    JDBCPageDataProvider pageProvider = new JDBCPageDataProvider(connection);
-    pageId = pageProvider.createPage(new PageData(null, "test-page1", 1, false));
-    noRevisionsId = pageProvider.createPage(new PageData(null, "no-revisions", 1, false));
+    PreparedStatement st1 =
+        connection.prepareStatement(
+            "INSERT INTO pages (title, category) VALUES (?, ?)",
+            PreparedStatement.RETURN_GENERATED_KEYS);
+    st1.setString(1, "test-page1");
+    st1.setInt(2, 1);
+    st1.executeUpdate();
+
+    st1.getGeneratedKeys().next();
+    pageId = st1.getGeneratedKeys().getInt(1);
+
+    PreparedStatement st2 =
+        connection.prepareStatement(
+            "INSERT INTO pages (title, category) VALUES (?, ?)",
+            PreparedStatement.RETURN_GENERATED_KEYS);
+    st2.setString(1, "no-revisions");
+    st2.setInt(2, 1);
+    st2.executeUpdate();
+
+    st2.getGeneratedKeys().next();
+    noRevisionsId = st2.getGeneratedKeys().getInt(1);
   }
 
   @Test
@@ -48,7 +65,6 @@ public class JDBCRevisionDataProviderIntegrationTest extends JDBCIntegrationTest
         new RevisionData(-1, pageId, UUID.randomUUID(), LocalDateTime.now(), null);
 
     int revId = provider.createRevision(revision);
-    assertNotNull(revId);
     assertTrue(revId > 0);
   }
 

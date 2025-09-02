@@ -63,6 +63,7 @@ CREATE TABLE comments (
     id SERIAL,
     page_id INTEGER REFERENCES pages(id),
     PRIMARY KEY (page_id, id),
+    user_id INTEGER REFERENCES users(id),
     content TEXT NOT NULL,
     date TIMESTAMP NOT NULL DEFAULT NOW(),
     deleted BOOLEAN NOT NULL DEFAULT FALSE
