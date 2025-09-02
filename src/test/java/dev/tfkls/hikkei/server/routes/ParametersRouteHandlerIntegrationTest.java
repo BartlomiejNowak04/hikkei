@@ -1,27 +1,19 @@
 package dev.tfkls.hikkei.server.routes;
 
 import static io.restassured.RestAssured.given;
-import static java.lang.Math.max;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import io.restassured.http.Method;
+import io.vertx.core.json.JsonObject;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest {
-
-  private String stringify(Object value) {
-    if (value instanceof String) return "\"" + value + "\"";
-    return value.toString();
-  }
-
   private void callApi(String endpoint, Method method, String body, String message) {
     given()
         .when()
-        .given()
         .body(body)
-        .when()
         .request(method, endpoint)
         .then()
         .statusCode(400)
@@ -40,35 +32,19 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     String[] args = constraints.keySet().toArray(new String[0]);
 
     for (String current : args) {
-      StringBuilder correctPayload = new StringBuilder();
-      correctPayload.append("{");
-      for (String arg : args)
-        if (!arg.equals(current)) {
-          correctPayload.append(stringify(arg)).append(": ");
-          correctPayload.append(stringify(constraints.get(arg)));
-          correctPayload.append(", ");
-        }
+      JsonObject json = new JsonObject();
+      for (String arg : args) if (!arg.equals(current)) json.put(arg, constraints.get(arg));
 
-      String payload = correctPayload.toString();
       Object value;
       if (constraints.get(current) instanceof String) value = 0;
       else value = "invalid";
 
       callApi(
-          endpoint,
-          method,
-          payload + stringify(current) + ": " + stringify(value) + "}",
-          "Incorrect parameter: " + current);
+          endpoint, method, json.put(current, value).toString(), "Incorrect parameter: " + current);
       callApi(
-          endpoint,
-          method,
-          payload + stringify(current) + ": null}",
-          "Incorrect parameter: " + current);
-      callApi(
-          endpoint,
-          method,
-          payload.substring(0, max(payload.length() - 2, 1)) + "}",
-          "Missing required parameter: " + current);
+          endpoint, method, json.putNull(current).toString(), "Incorrect parameter: " + current);
+      json.remove(current);
+      callApi(endpoint, method, json.toString(), "Missing required parameter: " + current);
     }
 
     callApi(endpoint, method, "", "No data provided");
