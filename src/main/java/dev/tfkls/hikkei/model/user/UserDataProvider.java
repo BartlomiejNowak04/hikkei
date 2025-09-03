@@ -8,12 +8,10 @@ public interface UserDataProvider {
   // Find a user by their properties
   boolean doesUserExist(int userId) throws InternalErrorException;
 
-  Integer getUserByAuth(AuthData auth) throws InternalErrorException;
+  UserData getUserByAuth(AuthData auth) throws InternalErrorException;
 
   // Get the user properties by their handle
   UserData getUserData(int userId) throws InternalErrorException;
-
-  List<Integer> getUserRoles(int userId) throws InternalErrorException;
 
   List<UserData> getByRole(int roleId) throws InternalErrorException;
 

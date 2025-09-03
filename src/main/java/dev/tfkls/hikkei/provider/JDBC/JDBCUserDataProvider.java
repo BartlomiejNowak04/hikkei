@@ -34,14 +34,15 @@ public class JDBCUserDataProvider implements UserDataProvider {
   }
 
   @Override
-  public Integer getUserByAuth(AuthData auth) throws InternalErrorException {
+  public UserData getUserByAuth(AuthData auth) throws InternalErrorException {
     try (PreparedStatement st =
-        connection.prepareStatement("SELECT user_id FROM auth WHERE type = ? AND token = ?")) {
+        connection.prepareStatement(
+            "SELECT * FROM auth JOIN users_with_data dt ON dt.id=auth.user_id WHERE type = ? AND token = ?")) {
       st.setString(1, auth.type());
       st.setString(2, auth.token());
       try (ResultSet rs = st.executeQuery()) {
         if (!rs.next()) return null;
-        else return rs.getInt(1);
+        else return getData(rs);
       }
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
@@ -55,27 +56,7 @@ public class JDBCUserDataProvider implements UserDataProvider {
       st.setInt(1, userId);
       try (ResultSet rs = st.executeQuery()) {
         if (!rs.next()) return null;
-        return new UserData(
-            rs.getString("username"),
-            rs.getBytes("picture"),
-            rs.getTimestamp("joined").toLocalDateTime());
-      }
-    } catch (SQLException e) {
-      throw new InternalErrorException(internal_error);
-    }
-  }
-
-  @Override
-  public List<Integer> getUserRoles(int userId) throws InternalErrorException {
-    if (!doesUserExist(userId)) return null;
-
-    try (PreparedStatement st =
-        connection.prepareStatement("SELECT role_id FROM user_role_current WHERE user_id = ?")) {
-      st.setInt(1, userId);
-      try (ResultSet rs = st.executeQuery()) {
-        ArrayList<Integer> res = new ArrayList<>();
-        while (rs.next()) res.add(rs.getInt(1));
-        return res;
+        return getData(rs);
       }
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
@@ -230,5 +211,13 @@ public class JDBCUserDataProvider implements UserDataProvider {
       if (message.contains("user_role_user_id_fkey")) throw new BadDataException(user_id);
       throw new InternalErrorException(internal_error);
     }
+  }
+
+  private UserData getData(ResultSet rs) throws SQLException {
+    return new UserData(
+        rs.getInt("id"),
+        rs.getString("username"),
+        rs.getBytes("picture"),
+        rs.getTimestamp("joined").toLocalDateTime());
   }
 }

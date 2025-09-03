@@ -9,7 +9,6 @@ import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.provider.JDBC.JDBCUserDataProvider;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +39,7 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
 
   @Test
   void freshlyAddedUserExists() throws InternalErrorException, BadDataException {
-    UserData user = new UserData("tt", null, LocalDateTime.now());
+    UserData user = new UserData("tt");
     int userId = provider.createUser(user);
     assertTrue(userId > 0);
     assertTrue(provider.doesUserExist(userId));
@@ -48,7 +47,7 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
 
   @Test
   void basicAuthTest() throws InternalErrorException, BadDataException {
-    UserData user = new UserData("auth", null, LocalDateTime.now());
+    UserData user = new UserData("auth");
     int userId = provider.createUser(user);
     AuthData auth = new AuthData("google", "abc");
     assertNull(provider.getUserByAuth(auth));
@@ -63,7 +62,7 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     assertNull(provider.getUserAuthMethods(-1));
     assertThrows(BadDataException.class, () -> provider.removeUserAuthMethod(-1, ""));
 
-    UserData user = new UserData("authmethods", null, LocalDateTime.now());
+    UserData user = new UserData("authmethods");
     int userId = provider.createUser(user);
     assertTrue(provider.getUserAuthMethods(userId).isEmpty());
     AuthData auth = new AuthData("google", "abcd");
@@ -79,25 +78,12 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
 
     assertNull(provider.getUserData(-1));
 
-    UserData user = new UserData("userdata", null, LocalDateTime.now());
+    UserData user = new UserData("userdata");
     int userId = provider.createUser(user);
     UserData userData = provider.getUserData(userId);
     assertNotNull(userData);
     assertEquals(user.username(), userData.username());
     assertEquals(user.picture(), userData.picture());
-  }
-
-  @Test
-  void basicUserRolesTest() throws InternalErrorException, BadDataException {
-
-    assertNull(provider.getUserRoles(-1));
-    assertThrows(BadDataException.class, () -> provider.alterUserRole(-1, 1, true));
-
-    UserData user = new UserData("roles", null, LocalDateTime.now());
-    int userId = provider.createUser(user);
-    assertTrue(provider.getUserRoles(userId).isEmpty());
-    assertTrue(provider.alterUserRole(userId, 1, true));
-    assertFalse(provider.getUserRoles(userId).isEmpty());
   }
 
   @Test
@@ -107,10 +93,10 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     assertThrows(BadDataException.class, () -> provider.updateUserPicture(-1, new byte[] {}));
     assertThrows(BadDataException.class, () -> provider.deleteUser(-1));
 
-    UserData user = new UserData("mod", null, LocalDateTime.now());
+    UserData user = new UserData("mod");
     int userId = provider.createUser(user);
 
-    UserData tmp = new UserData("tmp", null, LocalDateTime.now());
+    UserData tmp = new UserData("tmp");
     provider.createUser(tmp);
     assertThrows(BadDataException.class, () -> provider.updateUsername(userId, "tmp"));
 

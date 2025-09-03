@@ -8,6 +8,7 @@ import dev.tfkls.hikkei.model.user.AuthData;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.provider.JDBC.JDBCUserDataProvider;
 import java.sql.*;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,10 +57,11 @@ public class JDBCUserDataProviderTest {
     when(connection.prepareStatement(any())).thenReturn(statement);
     when(statement.executeQuery()).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(true);
-    when(resultSet.getInt(1)).thenReturn(1);
+    when(resultSet.getInt("id")).thenReturn(1);
+    when(resultSet.getTimestamp("joined")).thenReturn(Timestamp.from(Instant.now()));
 
-    Integer userId = provider.getUserByAuth(new AuthData("", ""));
-    assertEquals(1, (int) userId);
+    UserData user = provider.getUserByAuth(new AuthData("", ""));
+    assertEquals(1, user.id());
   }
 
   @Test
@@ -68,7 +70,7 @@ public class JDBCUserDataProviderTest {
     when(statement.executeQuery()).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(false);
 
-    Integer userId = provider.getUserByAuth(new AuthData("", ""));
+    UserData userId = provider.getUserByAuth(new AuthData("", ""));
     assertNull(userId);
   }
 
@@ -95,28 +97,6 @@ public class JDBCUserDataProviderTest {
     when(resultSet.next()).thenReturn(false);
 
     assertNull(provider.getUserData(1));
-  }
-
-  @Test
-  void mockGetUserRoles() throws SQLException, InternalErrorException {
-    when(connection.prepareStatement(any())).thenReturn(statement);
-    when(statement.executeQuery()).thenReturn(resultSet);
-    when(resultSet.next()).thenReturn(true).thenReturn(true).thenReturn(false);
-    when(resultSet.getInt(1)).thenReturn(1).thenReturn(5);
-
-    List<Integer> roles = provider.getUserRoles(1);
-    assertEquals(1, roles.size());
-    assertEquals(5, roles.getFirst());
-  }
-
-  @Test
-  void mockGetUserRolesFail() throws SQLException, InternalErrorException {
-    when(connection.prepareStatement(any())).thenReturn(statement);
-    when(statement.executeQuery()).thenReturn(resultSet);
-    when(resultSet.next()).thenReturn(true);
-    when(resultSet.getInt(1)).thenReturn(0);
-
-    assertNull(provider.getUserRoles(1));
   }
 
   @Test
