@@ -8,14 +8,13 @@ import java.util.UUID;
 public interface RevisionDataProvider {
   int createRevision(RevisionData data) throws BadDataException, InternalErrorException;
 
-  void changeState(int revId, int pageId, boolean state)
-      throws BadDataException, InternalErrorException;
+  void changeState(int id, boolean state) throws BadDataException, InternalErrorException;
 
   List<RevisionData> getByPage(int pageId) throws InternalErrorException;
 
   List<RevisionData> getByUser(int userId) throws InternalErrorException;
 
-  RevisionData getById(int pageId, int id) throws InternalErrorException;
+  RevisionData getById(int id) throws InternalErrorException;
 
   UUID getDraft(int userId, int pageId) throws InternalErrorException;
 

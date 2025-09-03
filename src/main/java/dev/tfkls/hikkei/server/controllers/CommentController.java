@@ -27,7 +27,7 @@ public class CommentController {
       Integer userId = body.getInteger("user_id");
       String content = body.getString("content");
 
-      int idc = commentProvider.addComment(new CommentData(null, id, userId, content, null, null));
+      int idc = commentProvider.addComment(new CommentData(null, id, userId, content, null));
       ctx.response().setStatusCode(201);
       ctx.json(new JsonObject().put("id", idc));
     } catch (Exception e) {
@@ -42,7 +42,7 @@ public class CommentController {
       Integer id = body.getInteger("id");
       Integer pageId = body.getInteger("page_id");
 
-      commentProvider.deleteComment(pageId, id);
+      commentProvider.deleteComment(id);
       ctx.response().setStatusCode(200).end();
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
@@ -83,7 +83,7 @@ public class CommentController {
       Integer id = body.getInteger("id");
       Integer pageId = body.getInteger("page_id");
 
-      CommentData data = commentProvider.getById(pageId, id);
+      CommentData data = commentProvider.getById(id);
       if (data == null) throw new BadDataException("Incorrect parameter value: id");
       ctx.response().setStatusCode(200);
       ctx.json(commentToJson(data));

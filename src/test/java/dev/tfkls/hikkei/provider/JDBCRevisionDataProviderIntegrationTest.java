@@ -9,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -61,8 +60,7 @@ public class JDBCRevisionDataProviderIntegrationTest extends JDBCIntegrationTest
 
   @Test
   void createRevisionSuccess() throws BadDataException, InternalErrorException {
-    RevisionData revision =
-        new RevisionData(-1, pageId, UUID.randomUUID(), LocalDateTime.now(), null);
+    RevisionData revision = new RevisionData(-1, pageId, null, null, LocalDateTime.now(), null);
 
     int revId = provider.createRevision(revision);
     assertTrue(revId > 0);
@@ -70,16 +68,14 @@ public class JDBCRevisionDataProviderIntegrationTest extends JDBCIntegrationTest
 
   @Test
   void createRevisionFailsWithInvalidPage() {
-    RevisionData revision =
-        new RevisionData(-1, -9999, UUID.randomUUID(), LocalDateTime.now(), null);
+    RevisionData revision = new RevisionData(-1, -9999, null, null, LocalDateTime.now(), null);
 
     assertThrows(BadDataException.class, () -> provider.createRevision(revision));
   }
 
   @Test
   void changeStateSuccess() throws BadDataException, InternalErrorException {
-    RevisionData revision =
-        new RevisionData(-1, pageId, UUID.randomUUID(), LocalDateTime.now(), null);
+    RevisionData revision = new RevisionData(-1, pageId, null, null, LocalDateTime.now(), null);
 
     int revId = provider.createRevision(revision);
     assertDoesNotThrow(() -> provider.changeState(revId, pageId, true));

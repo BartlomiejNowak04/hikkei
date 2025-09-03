@@ -49,7 +49,7 @@ public class Utils {
     return new JsonObject()
         .put("id", revision.id())
         .put("page_id", revision.pageId())
-        .put("filename", revision.filename() == null ? null : revision.filename().toString())
+        .put("filename", revision.file())
         .put("date", revision.date() == null ? null : revision.date().toString())
         .put("approved", revision.approved());
   }
@@ -59,7 +59,6 @@ public class Utils {
         .put("id", comment.id())
         .put("page_id", comment.pageId())
         .put("content", comment.content())
-        .put("date", comment.date() == null ? null : comment.date().toString())
-        .put("deleted", comment.deleted());
+        .put("date", comment.date() == null ? null : comment.date().toString());
   }
 }

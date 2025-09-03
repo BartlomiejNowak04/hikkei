@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 public class CommentRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest {
   @Test
   void testGetByUserReturnsComments() throws Exception {
-    CommentData comment1 = new CommentData(1, 10, 1, "First comment", null, false);
-    CommentData comment2 = new CommentData(2, 10, 1, "Second comment", null, false);
+    CommentData comment1 = new CommentData(1, 10, 1, "First comment", null);
+    CommentData comment2 = new CommentData(2, 10, 1, "Second comment", null);
 
     when(commentProvider.getByUser(42)).thenReturn(List.of(comment1, comment2));
 

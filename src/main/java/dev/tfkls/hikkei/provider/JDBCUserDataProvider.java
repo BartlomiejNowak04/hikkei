@@ -8,7 +8,6 @@ import dev.tfkls.hikkei.model.user.UserDataProvider;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class JDBCUserDataProvider implements UserDataProvider {
   private final Connection connection;
@@ -51,15 +50,15 @@ public class JDBCUserDataProvider implements UserDataProvider {
 
   @Override
   public UserData getUserData(int userId) throws InternalErrorException {
-    try (PreparedStatement st = connection.prepareStatement("SELECT * FROM users WHERE id = ?")) {
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT * FROM users_with_data WHERE id = ?")) {
       st.setInt(1, userId);
       try (ResultSet rs = st.executeQuery()) {
         if (!rs.next()) return null;
         return new UserData(
-            rs.getString(2),
-            rs.getBytes(3) != null ? Optional.of(rs.getBytes(3)) : Optional.empty(),
-            rs.getTimestamp(4).toLocalDateTime(),
-            rs.getBoolean(5));
+            rs.getString("username"),
+            rs.getBytes("picture"),
+            rs.getTimestamp("joined").toLocalDateTime());
       }
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
@@ -71,7 +70,7 @@ public class JDBCUserDataProvider implements UserDataProvider {
     if (!doesUserExist(userId)) return null;
 
     try (PreparedStatement st =
-        connection.prepareStatement("SELECT role_id FROM user_role WHERE user_id = ?")) {
+        connection.prepareStatement("SELECT role_id FROM user_role_current WHERE user_id = ?")) {
       st.setInt(1, userId);
       try (ResultSet rs = st.executeQuery()) {
         ArrayList<Integer> res = new ArrayList<>();
@@ -110,10 +109,10 @@ public class JDBCUserDataProvider implements UserDataProvider {
     // NOTE: decided not to allow join date other than default, nor to add deleted user accounts
     try (PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO users (username, picture) VALUES (?, ?)",
+            "INSERT INTO users_with_data (username, picture) VALUES (?, ?)",
             Statement.RETURN_GENERATED_KEYS)) {
       st.setString(1, data.username());
-      st.setBytes(2, data.picture().orElse(null));
+      st.setBytes(2, data.picture());
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
@@ -122,7 +121,7 @@ public class JDBCUserDataProvider implements UserDataProvider {
       }
     } catch (SQLException e) {
       String message = e.getMessage();
-      if (message.contains("users_username_key")) throw new BadDataException(name_taken);
+      if (message.contains("already taken")) throw new BadDataException(name_taken);
       throw new InternalErrorException(internal_error);
     }
   }
@@ -133,13 +132,13 @@ public class JDBCUserDataProvider implements UserDataProvider {
     if (!doesUserExist(userId)) throw new BadDataException(user_id);
 
     try (PreparedStatement st =
-        connection.prepareStatement("UPDATE users SET username = ? WHERE id = ?")) {
+        connection.prepareStatement("INSERT INTO user_name (username,user_id) VALUES (?, ?)")) {
       st.setString(1, username);
       st.setInt(2, userId);
       st.executeUpdate();
     } catch (SQLException e) {
       String message = e.getMessage();
-      if (message.contains("users_username_key")) throw new BadDataException(name_taken);
+      if (message.contains("already taken")) throw new BadDataException(name_taken);
       throw new InternalErrorException(internal_error);
     }
   }
@@ -150,7 +149,7 @@ public class JDBCUserDataProvider implements UserDataProvider {
     if (!doesUserExist(userId)) throw new BadDataException(user_id);
 
     try (PreparedStatement st =
-        connection.prepareStatement("UPDATE users SET picture = ? WHERE id = ?")) {
+        connection.prepareStatement("INSERT INTO user_picture (picture,user_id) VALUES (?, ?)")) {
       st.setBytes(1, picture);
       st.setInt(2, userId);
       st.executeUpdate();
@@ -164,7 +163,8 @@ public class JDBCUserDataProvider implements UserDataProvider {
     if (!doesUserExist(userId)) throw new BadDataException(user_id);
 
     try (PreparedStatement st =
-        connection.prepareStatement("UPDATE users SET deleted = ? WHERE id = ?")) {
+        connection.prepareStatement(
+            "UPDATE users SET deleted = ?, date_deleted=now() WHERE id = ?")) {
       st.setBoolean(1, true);
       st.setInt(2, userId);
       st.executeUpdate();
@@ -217,30 +217,18 @@ public class JDBCUserDataProvider implements UserDataProvider {
       throws BadDataException, InternalErrorException {
     if (!doesUserExist(userId)) throw new BadDataException(user_id);
 
-    if (value) {
-      try (PreparedStatement st =
-          connection.prepareStatement("INSERT INTO user_role (user_id, role_id) VALUES (?, ?)")) {
-        st.setInt(1, userId);
-        st.setInt(2, roleId);
-        return st.executeUpdate() > 0;
-      } catch (SQLException e) {
-        String message = e.getMessage();
-        if (message.contains("user_role_pkey"))
-          throw new BadDataException("The user already has this role");
-        if (message.contains("user_role_role_id_fkey"))
-          throw new BadDataException("Invalid role id");
-        if (message.contains("user_role_user_id_fkey")) throw new BadDataException(user_id);
-        throw new InternalErrorException(internal_error);
-      }
-    } else {
-      try (PreparedStatement st =
-          connection.prepareStatement("DELETE FROM user_role WHERE user_id = ? AND role_id = ?")) {
-        st.setInt(1, userId);
-        st.setInt(2, roleId);
-        return st.executeUpdate() > 0;
-      } catch (SQLException e) {
-        throw new InternalErrorException(internal_error);
-      }
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "INSERT INTO user_role (user_id, role_id, set) VALUES (?, ?, ?)")) {
+      st.setInt(1, userId);
+      st.setInt(2, roleId);
+      st.setBoolean(3, value);
+      return st.executeUpdate() > 0;
+    } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("user_role_role_id_fkey")) throw new BadDataException("Invalid role id");
+      if (message.contains("user_role_user_id_fkey")) throw new BadDataException(user_id);
+      throw new InternalErrorException(internal_error);
     }
   }
 }

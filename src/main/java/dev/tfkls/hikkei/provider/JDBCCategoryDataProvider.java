@@ -22,7 +22,8 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
     if (data.name() == null) throw new BadDataException("Category name is required");
     try (PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO categories (name) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
+            "INSERT INTO categories_with_data (name) VALUES (?)",
+            PreparedStatement.RETURN_GENERATED_KEYS)) {
       st.setString(1, data.name());
       st.executeUpdate();
 

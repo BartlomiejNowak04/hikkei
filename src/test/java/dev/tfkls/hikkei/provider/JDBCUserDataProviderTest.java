@@ -83,10 +83,9 @@ public class JDBCUserDataProviderTest {
 
     UserData data = provider.getUserData(1);
     assertSame("test", data.username());
-    assertTrue(data.picture().isPresent());
-    assertArrayEquals(data.picture().get(), new byte[] {1, 2, 3});
+    assertNotNull(data.picture());
+    assertArrayEquals(new byte[] {1, 2, 3}, data.picture());
     assertTrue(data.joinedAt().isBefore(LocalDateTime.now()));
-    assertFalse(data.deleted());
   }
 
   @Test

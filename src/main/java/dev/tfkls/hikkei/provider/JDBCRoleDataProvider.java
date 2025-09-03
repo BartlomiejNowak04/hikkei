@@ -22,7 +22,8 @@ public class JDBCRoleDataProvider implements RoleDataProvider {
     if (data.name() == null) throw new BadDataException("Role name is required");
     try (PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO roles (name) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
+            "INSERT INTO roles_with_data (name) VALUES (?)",
+            PreparedStatement.RETURN_GENERATED_KEYS)) {
       st.setString(1, data.name());
       st.executeUpdate();
 

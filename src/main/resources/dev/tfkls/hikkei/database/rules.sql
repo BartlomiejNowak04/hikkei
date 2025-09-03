@@ -5,7 +5,6 @@ BEGIN
     FOREACH name in ARRAY $arr$
         { user_name,
         user_picture,
-        auth,
         role_name,
         user_role,
         category_name,
@@ -33,7 +32,6 @@ DO $$
         FOREACH name in ARRAY $arr$
         { user_name,
         user_picture,
-        auth,
         role_name,
         user_role,
         category_name,

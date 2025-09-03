@@ -69,7 +69,7 @@ CREATE TABLE category_role (
     category_id INTEGER REFERENCES categories(id),
     role_id INTEGER REFERENCES roles(id),
     permission_name VARCHAR(125) NOT NULL,
-    permission_status BOOLEAN NOT NULL,
+    permission_status BOOLEAN,
     date TIMESTAMP NOT NULL DEFAULT now(),
     PRIMARY KEY (category_id, role_id, permission_name, date)
 );

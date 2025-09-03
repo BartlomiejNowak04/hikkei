@@ -34,7 +34,7 @@ public class JDBCPageDataProviderIntegrationTest extends JDBCIntegrationTest {
 
   @Test
   void createAndRetrievePage() throws InternalErrorException, BadDataException {
-    PageData page = new PageData(null, "Test Title", 1, false);
+    PageData page = new PageData(null, null, "Test Title", 1, false, null);
     int pageId = provider.createPage(page);
     assertNotNull(pageId);
     assertTrue(provider.doesPageExist(pageId));
@@ -48,7 +48,7 @@ public class JDBCPageDataProviderIntegrationTest extends JDBCIntegrationTest {
   @Test
   void getPageByTitleAndSearch() throws InternalErrorException, BadDataException {
     String title = "UniqueTitle123";
-    PageData page = new PageData(null, title, 1, false);
+    PageData page = new PageData(null, null, title, 1, false, null);
     provider.createPage(page);
 
     PageData byTitle = provider.getByTitle(title);
@@ -62,7 +62,7 @@ public class JDBCPageDataProviderIntegrationTest extends JDBCIntegrationTest {
 
   @Test
   void updateTitleAndCategory() throws InternalErrorException, BadDataException {
-    PageData page = new PageData(null, "OldTitle", 1, false);
+    PageData page = new PageData(null, null, "OldTitle", 1, false, null);
     int pageId = provider.createPage(page);
 
     provider.updatePageTitle(pageId, "NewTitle");
@@ -74,7 +74,7 @@ public class JDBCPageDataProviderIntegrationTest extends JDBCIntegrationTest {
 
   @Test
   void toggleArchiveState() throws InternalErrorException, BadDataException {
-    PageData page = new PageData(null, "Archivable", 1, false);
+    PageData page = new PageData(null, null, "Archivable", 1, false, null);
     int pageId = provider.createPage(page);
 
     provider.toggleArchive(pageId, true);
@@ -86,7 +86,7 @@ public class JDBCPageDataProviderIntegrationTest extends JDBCIntegrationTest {
 
   @Test
   void getRandomPageReturnsNonNull() throws InternalErrorException, BadDataException {
-    provider.createPage(new PageData(null, "RandomTestPage", 1, false));
+    provider.createPage(new PageData(null, null, "RandomTestPage", 1, false, null));
     assertNotNull(provider.getRandomPage());
   }
 
@@ -99,14 +99,14 @@ public class JDBCPageDataProviderIntegrationTest extends JDBCIntegrationTest {
 
   @Test
   void duplicateTitleThrows() throws InternalErrorException, BadDataException {
-    PageData page = new PageData(null, "DuplicateTitle", 1, false);
+    PageData page = new PageData(null, null, "DuplicateTitle", 1, false, null);
     provider.createPage(page);
     assertThrows(BadDataException.class, () -> provider.createPage(page));
   }
 
   @Test
   void invalidCategoryThrows() {
-    PageData page = new PageData(null, "BadCategory", -1, false);
+    PageData page = new PageData(null, null, "BadCategory", -1, false, null);
     assertThrows(BadDataException.class, () -> provider.createPage(page));
   }
 }

@@ -100,3 +100,33 @@ LEFT JOIN LATERAL (
     ORDER BY date DESC
     LIMIT 1
 ) ra ON true;
+
+CREATE VIEW user_role_current AS
+SELECT ur.user_id,
+       ur.role_id
+FROM user_role ur
+JOIN (
+    SELECT user_id, role_id, MAX(date) AS max_date
+    FROM user_role
+    GROUP BY user_id, role_id
+) latest
+ON ur.user_id = latest.user_id
+AND ur.role_id = latest.role_id
+AND ur.date = latest.max_date
+WHERE ur.set = true;
+
+CREATE VIEW category_role_current AS
+SELECT cr.category_id,
+       cr.role_id,
+       cr.permission_name,
+       cr.permission_status
+FROM category_role cr
+         JOIN (
+    SELECT category_id, role_id, permission_name, MAX(date) AS max_date
+    FROM category_role
+    GROUP BY category_id, role_id, permission_name
+) latest
+ON cr.category_id = latest.category_id
+AND cr.role_id = latest.role_id
+AND cr.permission_name = latest.permission_name
+AND cr.date = latest.max_date;

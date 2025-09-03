@@ -41,19 +41,18 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
   }
 
   @Override
-  public void deleteComment(int pageId, int commentId) throws InternalErrorException {
+  public void deleteComment(int id) throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
-            "UPDATE comments SET deleted = true WHERE id = ? AND page_id = ?")) {
-      st.setInt(1, commentId);
-      st.setInt(2, pageId);
+            "UPDATE comments SET deleted=true, date_deleted=now() WHERE id = ? AND page_id = ?")) {
+      st.setInt(1, id);
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
     }
   }
 
   @Override
-  public CommentData getById(int pageId, int commentId) throws InternalErrorException {
+  public CommentData getById(int id) throws InternalErrorException {
     return null;
   }
 
@@ -110,12 +109,11 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
     while (rs.next())
       res.add(
           new CommentData(
-              rs.getInt(1),
-              rs.getInt(2),
-              rs.getInt(3),
-              rs.getString(4),
-              rs.getTimestamp(5).toLocalDateTime(),
-              rs.getBoolean(6)));
+              rs.getInt("id"),
+              rs.getInt("page_id"),
+              rs.getInt("user_id"),
+              rs.getString("content"),
+              rs.getTimestamp("date").toLocalDateTime()));
     return res;
   }
 }

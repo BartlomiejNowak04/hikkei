@@ -55,8 +55,12 @@ FOR EACH ROW EXECUTE FUNCTION unique_title();
 CREATE FUNCTION deleted_has_date()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF (NEW.deleted=true AND NEW.date_deleted IS NULL) OR (NEW.deleted=false AND NEW.date_deleted IS NOT NULL) THEN
+    IF (NEW.deleted=true AND NEW.date_deleted IS NULL) THEN
         RAISE EXCEPTION 'No date provided for deletion';
+    END IF;
+
+    IF NEW.deleted=false AND NEW.date_deleted IS NOT NULL THEN
+        RAISE EXCEPTION 'Deletion date provided without deletion';
     END IF;
     RETURN NEW;
 END;
@@ -92,6 +96,12 @@ BEGIN
     INSERT INTO user_name (user_id, username)
     VALUES (new_user_id, NEW.username);
 
+    IF NEW.picture IS NOT NULL THEN
+        INSERT INTO user_picture (user_id, picture)
+        VALUES (new_user_id, NEW.picture);
+    END IF;
+
+    NEW.id = new_user_id;
     return NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -132,6 +142,7 @@ BEGIN
     INSERT INTO role_name (role_id, name)
     VALUES (new_role_id, NEW.name);
 
+    NEW.id = new_role_id;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -172,6 +183,7 @@ BEGIN
     INSERT INTO category_name (category_id, name)
     VALUES (new_category_id, NEW.name);
 
+    NEW.id = new_category_id;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -218,6 +230,7 @@ BEGIN
     INSERT INTO page_archived (page_id, archived)
     VALUES (new_page_id, false);
 
+    NEW.id = new_page_id;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -268,9 +281,12 @@ BEGIN
     VALUES (NEW.page_id, NEW.user_id, NEW.file)
     RETURNING id INTO new_revision_id;
 
-    INSERT INTO revision_approved (revision_id, approved)
-    VALUES (new_revision_id, NEW.approved);
+    IF NEW.approved IS NOT NULL THEN
+        INSERT INTO revision_approved (revision_id, approved)
+        VALUES (new_revision_id, NEW.approved);
+    END IF;
 
+    NEW.id = new_revision_id;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -279,21 +295,3 @@ CREATE TRIGGER trg_insert_revision_with_data
 INSTEAD OF INSERT ON revisions_with_data
 FOR EACH ROW
 EXECUTE FUNCTION insert_revision_with_data();
-
-
-CREATE FUNCTION inserted_revision_has_data()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM revision_approved WHERE revision_id = NEW.id
-    ) THEN
-        RAISE EXCEPTION 'No approval status defined for revision %', NEW.id;
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE CONSTRAINT TRIGGER trg_inserted_revision_has_data
-AFTER INSERT ON revisions
-DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
-EXECUTE FUNCTION inserted_revision_has_data();

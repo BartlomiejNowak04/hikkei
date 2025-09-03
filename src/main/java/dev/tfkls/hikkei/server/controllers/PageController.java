@@ -70,7 +70,7 @@ public class PageController {
       String title = body.getString("title");
       Integer category = body.getInteger("category");
 
-      int id = pageProvider.createPage(new PageData(null, title, category, null));
+      int id = pageProvider.createPage(new PageData(null, null, title, category, null, null));
       ctx.response().setStatusCode(201);
       ctx.json(new JsonObject().put("id", id));
     } catch (Exception e) {

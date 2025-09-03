@@ -24,10 +24,11 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
   public int createRevision(RevisionData data) throws BadDataException, InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO revisions (page_id, filename) VALUES (?, ?)",
+            "INSERT INTO revisions_with_data (page_id, user_id, file) VALUES (?, ?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
       st.setInt(1, data.pageId());
-      st.setObject(2, data.filename());
+      st.setInt(2, data.userId());
+      st.setObject(2, data.file());
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
@@ -42,14 +43,12 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
   }
 
   @Override
-  public void changeState(int revId, int pageId, boolean state)
-      throws BadDataException, InternalErrorException {
+  public void changeState(int id, boolean state) throws BadDataException, InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
-            "UPDATE revisions SET approved = ? WHERE id = ? AND page_id = ?")) {
-      st.setObject(1, state);
-      st.setInt(2, revId);
-      st.setInt(3, pageId);
+            "INSERT INTO revision_approved (approved, revision_id) values (?, ?)")) {
+      st.setBoolean(1, state);
+      st.setInt(2, id);
       if (st.executeUpdate() < 1) throw new BadDataException("Invalid revision id");
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
@@ -70,18 +69,11 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
 
     try (PreparedStatement st =
         connection.prepareStatement(
-            "SELECT * FROM revisions WHERE page_id = ? ORDER BY date DESC")) {
+            "SELECT * FROM revisions_with_data WHERE page_id = ? ORDER BY date DESC")) {
       st.setInt(1, pageId);
       try (ResultSet rs = st.executeQuery()) {
         ArrayList<RevisionData> res = new ArrayList<>();
-        while (rs.next())
-          res.add(
-              new RevisionData(
-                  rs.getInt(1),
-                  rs.getInt(2),
-                  rs.getObject(3, UUID.class),
-                  rs.getTimestamp(4).toLocalDateTime(),
-                  rs.getObject(5, Boolean.class)));
+        while (rs.next()) res.add(getRevisionData(rs));
         return res;
       }
     } catch (SQLException e) {
@@ -95,7 +87,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
   }
 
   @Override
-  public RevisionData getById(int pageId, int id) throws InternalErrorException {
+  public RevisionData getById(int id) throws InternalErrorException {
     return null;
   }
 
@@ -111,5 +103,15 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
   @Override
   public UUID deleteDraft(int userId, int pageId) throws InternalErrorException, BadDataException {
     return null;
+  }
+
+  private RevisionData getRevisionData(ResultSet rs) throws SQLException {
+    return new RevisionData(
+        rs.getInt("id"),
+        rs.getInt("page_id"),
+        rs.getInt("user_id"),
+        rs.getBytes("file"),
+        rs.getTimestamp("date").toLocalDateTime(),
+        rs.getObject("approved", Boolean.class));
   }
 }

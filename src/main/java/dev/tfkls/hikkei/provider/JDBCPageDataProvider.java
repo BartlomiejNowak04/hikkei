@@ -36,13 +36,10 @@ public class JDBCPageDataProvider implements PageDataProvider {
   @Override
   public PageData getRandomPage() throws InternalErrorException {
     try (Statement st = connection.createStatement()) {
-      try (ResultSet rs = st.executeQuery("SELECT * FROM pages ORDER BY RANDOM() LIMIT 1")) {
+      try (ResultSet rs =
+          st.executeQuery("SELECT * FROM pages_with_data ORDER BY RANDOM() LIMIT 1")) {
         if (!rs.next()) return null;
-        return new PageData(
-            rs.getInt("id"),
-            rs.getString("title"),
-            rs.getInt("category"),
-            rs.getBoolean("archived"));
+        return getPageData(rs);
       }
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
@@ -52,18 +49,11 @@ public class JDBCPageDataProvider implements PageDataProvider {
   @Override
   public List<PageData> searchByTitle(String title) throws InternalErrorException {
     try (PreparedStatement st =
-        connection.prepareStatement("SELECT * FROM pages WHERE title ILIKE ?")) {
+        connection.prepareStatement("SELECT * FROM pages_with_data WHERE title ILIKE ?")) {
       st.setString(1, "%" + title + "%");
       try (ResultSet rs = st.executeQuery()) {
         ArrayList<PageData> res = new ArrayList<>();
-        while (rs.next()) {
-          res.add(
-              new PageData(
-                  rs.getInt("id"),
-                  rs.getString("title"),
-                  rs.getInt("category"),
-                  rs.getBoolean("archived")));
-        }
+        while (rs.next()) res.add(getPageData(rs));
         return res;
       }
     } catch (SQLException e) {
@@ -73,15 +63,12 @@ public class JDBCPageDataProvider implements PageDataProvider {
 
   @Override
   public PageData getById(int pageId) throws InternalErrorException {
-    try (PreparedStatement st = connection.prepareStatement("SELECT * FROM pages WHERE id = ?")) {
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT * FROM pages_with_data WHERE id = ?")) {
       st.setInt(1, pageId);
       try (ResultSet rs = st.executeQuery()) {
         if (!rs.next()) return null;
-        return new PageData(
-            rs.getInt("id"),
-            rs.getString("title"),
-            rs.getInt("category"),
-            rs.getBoolean("archived"));
+        return getPageData(rs);
       }
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
@@ -91,11 +78,11 @@ public class JDBCPageDataProvider implements PageDataProvider {
   @Override
   public PageData getByTitle(String title) throws InternalErrorException {
     try (PreparedStatement st =
-        connection.prepareStatement("SELECT * FROM pages WHERE title = ?")) {
+        connection.prepareStatement("SELECT * FROM pages_with_data WHERE title = ?")) {
       st.setString(1, title);
       try (ResultSet rs = st.executeQuery()) {
         if (!rs.next()) return null;
-        else return new PageData(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getBoolean(4));
+        else return getPageData(rs);
       }
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
@@ -111,10 +98,11 @@ public class JDBCPageDataProvider implements PageDataProvider {
   public int createPage(PageData data) throws BadDataException, InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO pages (title, category) VALUES (?, ?)",
+            "INSERT INTO pages_with_data (user_id, title, category) VALUES (?, ?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
-      st.setString(1, data.title());
-      st.setInt(2, data.category());
+      st.setInt(3, data.userId());
+      st.setString(2, data.title());
+      st.setInt(3, data.category());
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
@@ -124,7 +112,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
       }
     } catch (SQLException e) {
       String message = e.getMessage();
-      if (message.contains("pages_title_key")) throw new BadDataException(taken_title);
+      if (message.contains("already taken")) throw new BadDataException(taken_title);
       if (message.contains("pages_category_fkey")) throw new BadDataException(invalid_category);
       throw new InternalErrorException(internal_error);
     }
@@ -136,13 +124,13 @@ public class JDBCPageDataProvider implements PageDataProvider {
     if (!doesPageExist(pageId)) throw new BadDataException(invalid_id);
 
     try (PreparedStatement st =
-        connection.prepareStatement("UPDATE pages SET title = ? WHERE id = ?")) {
+        connection.prepareStatement("INSERT INTO page_title (title, page_id) values (?, ?)")) {
       st.setString(1, title);
       st.setInt(2, pageId);
       st.executeUpdate();
     } catch (SQLException e) {
       String message = e.getMessage();
-      if (message.contains("pages_title_key")) throw new BadDataException(taken_title);
+      if (message.contains("already taken")) throw new BadDataException(taken_title);
       throw new InternalErrorException(internal_error);
     }
   }
@@ -153,7 +141,8 @@ public class JDBCPageDataProvider implements PageDataProvider {
     if (!doesPageExist(pageId)) throw new BadDataException(invalid_id);
 
     try (PreparedStatement st =
-        connection.prepareStatement("UPDATE pages SET category = ? WHERE id = ?")) {
+        connection.prepareStatement(
+            "INSERT INTO page_category (category, page_id) values (?, ?)")) {
       st.setInt(1, categoryId);
       st.setInt(2, pageId);
       st.executeUpdate();
@@ -170,12 +159,23 @@ public class JDBCPageDataProvider implements PageDataProvider {
     if (!doesPageExist(pageId)) throw new BadDataException(invalid_id);
 
     try (PreparedStatement st =
-        connection.prepareStatement("UPDATE pages SET archived = ? WHERE id = ?")) {
+        connection.prepareStatement(
+            "INSERT INTO page_archived (archived, page_id) values (?, ?)")) {
       st.setBoolean(1, type);
       st.setInt(2, pageId);
       st.executeUpdate();
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
     }
+  }
+
+  private PageData getPageData(ResultSet rs) throws SQLException {
+    return new PageData(
+        rs.getInt("id"),
+        rs.getInt("user_id"),
+        rs.getString("title"),
+        rs.getInt("category"),
+        rs.getBoolean("archived"),
+        rs.getTimestamp("created").toLocalDateTime());
   }
 }

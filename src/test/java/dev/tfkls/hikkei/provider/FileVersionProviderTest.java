@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.*;
 import java.util.UUID;
 import org.junit.jupiter.api.*;
@@ -33,10 +34,14 @@ public class FileVersionProviderTest {
   @Test
   void storeContentCreatesFileAndReturnsUUID() throws InternalErrorException, IOException {
     String content = "Hello, world!";
-    UUID id = provider.storeContent(content);
+    byte[] id = provider.storeContent(content);
+    ByteBuffer buffer = ByteBuffer.wrap(id);
+    long high = buffer.getLong();
+    long low = buffer.getLong();
+    UUID uuid = new UUID(high, low);
 
     assertNotNull(id);
-    Path storedFile = tempDir.resolve(id.toString());
+    Path storedFile = tempDir.resolve(uuid.toString());
     assertTrue(Files.exists(storedFile));
     assertEquals(content, Files.readString(storedFile));
   }
@@ -44,7 +49,7 @@ public class FileVersionProviderTest {
   @Test
   void getContentReadsStoredContent() throws InternalErrorException, BadDataException {
     String content = "Versioned content test";
-    UUID id = provider.storeContent(content);
+    byte[] id = provider.storeContent(content);
 
     String readContent = provider.getContent(id);
     assertEquals(content, readContent);
@@ -57,7 +62,7 @@ public class FileVersionProviderTest {
 
   @Test
   void getContentThrowsBadDataExceptionForNonexistentFile() {
-    UUID fakeId = UUID.randomUUID();
+    byte[] fakeId = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
     assertThrows(BadDataException.class, () -> provider.getContent(fakeId));
   }
 }

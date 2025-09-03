@@ -9,7 +9,6 @@ import dev.tfkls.hikkei.model.user.UserData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -35,15 +34,15 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
 
   @Test
   void freshlyAddedUserExists() throws InternalErrorException, BadDataException {
-    UserData user = new UserData("testname", Optional.empty(), LocalDateTime.now(), false);
-    Integer userId = provider.createUser(user);
+    UserData user = new UserData("testname", null, LocalDateTime.now());
+    int userId = provider.createUser(user);
     assertTrue(userId > 0);
     assertTrue(provider.doesUserExist(userId));
   }
 
   @Test
   void basicAuthTest() throws InternalErrorException, BadDataException {
-    UserData user = new UserData("auth", Optional.empty(), LocalDateTime.now(), false);
+    UserData user = new UserData("auth", null, LocalDateTime.now());
     Integer userId = provider.createUser(user);
     AuthData auth = new AuthData("google", "abc");
     assertNull(provider.getUserByAuth(auth));
@@ -58,7 +57,7 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     assertNull(provider.getUserAuthMethods(-1));
     assertThrows(BadDataException.class, () -> provider.removeUserAuthMethod(-1, ""));
 
-    UserData user = new UserData("authmethods", Optional.empty(), LocalDateTime.now(), false);
+    UserData user = new UserData("authmethods", null, LocalDateTime.now());
     Integer userId = provider.createUser(user);
     assertTrue(provider.getUserAuthMethods(userId).isEmpty());
     AuthData auth = new AuthData("google", "abcd");
@@ -74,13 +73,12 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
 
     assertNull(provider.getUserData(-1));
 
-    UserData user = new UserData("userdata", Optional.empty(), LocalDateTime.now(), false);
-    Integer userId = provider.createUser(user);
+    UserData user = new UserData("userdata", null, LocalDateTime.now());
+    int userId = provider.createUser(user);
     UserData userData = provider.getUserData(userId);
     assertNotNull(userData);
     assertEquals(user.username(), userData.username());
     assertEquals(user.picture(), userData.picture());
-    assertFalse(userData.deleted());
   }
 
   @Test
@@ -89,8 +87,8 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     assertNull(provider.getUserRoles(-1));
     assertThrows(BadDataException.class, () -> provider.alterUserRole(-1, 1, true));
 
-    UserData user = new UserData("roles", Optional.empty(), LocalDateTime.now(), false);
-    Integer userId = provider.createUser(user);
+    UserData user = new UserData("roles", null, LocalDateTime.now());
+    int userId = provider.createUser(user);
     assertTrue(provider.getUserRoles(userId).isEmpty());
     assertFalse(provider.alterUserRole(userId, 1, false));
     assertTrue(provider.alterUserRole(userId, 1, true));
@@ -104,10 +102,10 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     assertThrows(BadDataException.class, () -> provider.updateUserPicture(-1, new byte[] {}));
     assertThrows(BadDataException.class, () -> provider.deleteUser(-1));
 
-    UserData user = new UserData("mod", Optional.empty(), LocalDateTime.now(), false);
+    UserData user = new UserData("mod", null, LocalDateTime.now());
     Integer userId = provider.createUser(user);
 
-    UserData tmp = new UserData("tmp", Optional.empty(), LocalDateTime.now(), false);
+    UserData tmp = new UserData("tmp", null, LocalDateTime.now());
     provider.createUser(tmp);
     assertThrows(BadDataException.class, () -> provider.updateUsername(userId, "tmp"));
 
@@ -115,10 +113,9 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     assertEquals("mod1", provider.getUserData(userId).username());
 
     provider.updateUserPicture(userId, new byte[] {0});
-    assertTrue(provider.getUserData(userId).picture().isPresent());
-    assertArrayEquals(new byte[] {0}, provider.getUserData(userId).picture().get());
+    assertNotNull(provider.getUserData(userId).picture());
+    assertArrayEquals(new byte[] {0}, provider.getUserData(userId).picture());
 
     provider.deleteUser(userId);
-    assertTrue(provider.getUserData(userId).deleted());
   }
 }

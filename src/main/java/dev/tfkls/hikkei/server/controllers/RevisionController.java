@@ -12,7 +12,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class RevisionController {
   private final RevisionDataProvider revisionProvider;
@@ -31,8 +30,9 @@ public class RevisionController {
       Integer id = body.getInteger("id");
       String content = body.getString("content");
 
-      UUID filename = versionProvider.storeContent(content);
-      int idr = revisionProvider.createRevision(new RevisionData(null, id, filename, null, null));
+      byte[] filename = versionProvider.storeContent(content);
+      int idr =
+          revisionProvider.createRevision(new RevisionData(null, null, id, filename, null, null));
       ctx.response().setStatusCode(201);
       ctx.json(new JsonObject().put("id", idr));
     } catch (Exception e) {
@@ -97,7 +97,7 @@ public class RevisionController {
 
       String data = "";
       if (!revisions.isEmpty()) {
-        data = versionProvider.getContent(revisions.getFirst().filename());
+        data = versionProvider.getContent(revisions.getFirst().file());
         if (data == null)
           throw new InternalErrorException("Couldn't retrieve content for page " + id);
       }
@@ -116,7 +116,7 @@ public class RevisionController {
       Integer id = body.getInteger("id");
       Integer pageId = body.getInteger("page_id");
 
-      RevisionData data = revisionProvider.getById(pageId, id);
+      RevisionData data = revisionProvider.getById(id);
       if (data == null) throw new BadDataException("Incorrect parameter value: id");
       ctx.response().setStatusCode(200);
       ctx.json(revisionToJson(data));

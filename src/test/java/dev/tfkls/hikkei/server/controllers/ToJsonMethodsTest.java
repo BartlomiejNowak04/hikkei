@@ -15,7 +15,7 @@ class ToJsonMethodsTest {
 
   @Test
   void pageToJsonShouldMapCorrectly() {
-    PageData page = new PageData(1, "Test Page", 42, false);
+    PageData page = new PageData(1, 2, "Test Page", 42, false, null);
 
     JsonObject json = pageToJson(page);
 
@@ -29,7 +29,7 @@ class ToJsonMethodsTest {
   void revisionToJsonShouldMapCorrectly() {
     LocalDateTime now = LocalDateTime.now();
     UUID fileId = UUID.randomUUID();
-    RevisionData revision = new RevisionData(5, 1, fileId, now, true);
+    RevisionData revision = new RevisionData(5, 2, 1, null, now, true);
 
     JsonObject json = revisionToJson(revision);
 
@@ -43,7 +43,7 @@ class ToJsonMethodsTest {
   @Test
   void commentToJsonShouldMapCorrectly() {
     LocalDateTime now = LocalDateTime.now();
-    CommentData comment = new CommentData(10, 1, 1, "Hello world", now, false);
+    CommentData comment = new CommentData(10, 1, 1, "Hello world", now);
 
     JsonObject json = commentToJson(comment);
 
@@ -57,7 +57,7 @@ class ToJsonMethodsTest {
 
   @Test
   void pageToJsonHandlesNullFields() {
-    PageData page = new PageData(null, null, null, null);
+    PageData page = new PageData(null, null, null, null, null, null);
 
     JsonObject json = pageToJson(page);
 
@@ -73,7 +73,7 @@ class ToJsonMethodsTest {
 
   @Test
   void revisionToJsonHandlesNullFields() {
-    RevisionData revision = new RevisionData(null, null, null, null, null);
+    RevisionData revision = new RevisionData(null, null, null, null, null, null);
 
     JsonObject json = revisionToJson(revision);
 
@@ -91,7 +91,7 @@ class ToJsonMethodsTest {
 
   @Test
   void commentToJsonHandlesNullFields() {
-    CommentData comment = new CommentData(null, null, null, null, null, null);
+    CommentData comment = new CommentData(null, null, null, null, null);
 
     JsonObject json = commentToJson(comment);
 
