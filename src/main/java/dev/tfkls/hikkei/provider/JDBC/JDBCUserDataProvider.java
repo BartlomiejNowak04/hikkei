@@ -140,9 +140,7 @@ public class JDBCUserDataProvider implements UserDataProvider {
   }
 
   @Override
-  public void deleteUser(int userId) throws BadDataException, InternalErrorException {
-    if (!doesUserExist(userId)) throw new BadDataException(user_id);
-
+  public void deleteUser(int userId) throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
             "UPDATE users SET deleted = ?, date_deleted=now() WHERE id = ?")) {
@@ -155,7 +153,7 @@ public class JDBCUserDataProvider implements UserDataProvider {
   }
 
   @Override
-  public boolean addUserAuthMethod(int userId, AuthData auth)
+  public void addUserAuthMethod(int userId, AuthData auth)
       throws BadDataException, InternalErrorException {
     if (!doesUserExist(userId)) throw new BadDataException(user_id);
 
@@ -164,7 +162,6 @@ public class JDBCUserDataProvider implements UserDataProvider {
       st.setInt(1, userId);
       st.setString(2, auth.type());
       st.setString(3, auth.token());
-      return st.executeUpdate() > 0;
     } catch (SQLException e) {
       String message = e.getMessage();
       if (message.contains("auth_pkey"))
@@ -179,7 +176,7 @@ public class JDBCUserDataProvider implements UserDataProvider {
   }
 
   @Override
-  public boolean removeUserAuthMethod(int userId, String authType)
+  public void removeUserAuthMethod(int userId, String authType)
       throws BadDataException, InternalErrorException {
     if (!doesUserExist(userId)) throw new BadDataException(user_id);
 
@@ -187,14 +184,13 @@ public class JDBCUserDataProvider implements UserDataProvider {
         connection.prepareStatement("DELETE FROM auth WHERE user_id = ? AND type = ?")) {
       st.setInt(1, userId);
       st.setString(2, authType);
-      return st.executeUpdate() > 0;
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
     }
   }
 
   @Override
-  public boolean alterUserRole(int userId, int roleId, boolean value)
+  public void alterUserRole(int userId, int roleId, boolean value)
       throws BadDataException, InternalErrorException {
     if (!doesUserExist(userId)) throw new BadDataException(user_id);
 
@@ -204,7 +200,6 @@ public class JDBCUserDataProvider implements UserDataProvider {
       st.setInt(1, userId);
       st.setInt(2, roleId);
       st.setBoolean(3, value);
-      return st.executeUpdate() > 0;
     } catch (SQLException e) {
       String message = e.getMessage();
       if (message.contains("user_role_role_id_fkey")) throw new BadDataException("Invalid role id");

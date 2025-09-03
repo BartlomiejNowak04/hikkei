@@ -5,12 +5,10 @@ import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import java.util.List;
 
 public interface UserDataProvider {
-  // Find a user by their properties
   boolean doesUserExist(int userId) throws InternalErrorException;
 
   UserData getUserByAuth(AuthData auth) throws InternalErrorException;
 
-  // Get the user properties by their handle
   UserData getUserData(int userId) throws InternalErrorException;
 
   List<UserData> getByRole(int roleId) throws InternalErrorException;
@@ -24,14 +22,13 @@ public interface UserDataProvider {
   void updateUserPicture(int userId, byte[] picture)
       throws BadDataException, InternalErrorException;
 
-  void deleteUser(int userId) throws BadDataException, InternalErrorException;
+  void deleteUser(int userId) throws InternalErrorException;
 
-  boolean addUserAuthMethod(int userId, AuthData auth)
+  void addUserAuthMethod(int userId, AuthData auth) throws BadDataException, InternalErrorException;
+
+  void removeUserAuthMethod(int userId, String authType)
       throws BadDataException, InternalErrorException;
 
-  boolean removeUserAuthMethod(int userId, String authType)
-      throws BadDataException, InternalErrorException;
-
-  boolean alterUserRole(int userId, int roleId, boolean value)
+  void alterUserRole(int userId, int roleId, boolean value)
       throws BadDataException, InternalErrorException;
 }

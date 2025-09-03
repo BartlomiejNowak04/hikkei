@@ -6,9 +6,11 @@ import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.user.AuthData;
 import dev.tfkls.hikkei.model.user.UserData;
+import dev.tfkls.hikkei.provider.JDBC.Config;
 import dev.tfkls.hikkei.provider.JDBC.JDBCUserDataProvider;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.ResultSet;
+import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -16,20 +18,8 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
   private JDBCUserDataProvider provider;
 
   @BeforeAll
-  void initProvider() throws SQLException {
+  void initProvider() {
     provider = new JDBCUserDataProvider(connection);
-
-    try (PreparedStatement st =
-        connection.prepareStatement("INSERT INTO roles_with_data (name) VALUES (?)")) {
-      st.setString(1, "test");
-      st.executeUpdate();
-    }
-
-    try (PreparedStatement st =
-        connection.prepareStatement("INSERT INTO users_with_data (username) VALUES (?)")) {
-      st.setString(1, "testname");
-      st.executeUpdate();
-    }
   }
 
   @Test
@@ -38,75 +28,253 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
   }
 
   @Test
-  void freshlyAddedUserExists() throws InternalErrorException, BadDataException {
+  void deletedUserDoesNotExist() throws Exception {
+    int n = create_user("deleted", null);
+    delete("user", n);
+    assertFalse(provider.doesUserExist(n));
+  }
+
+  @Test
+  void existingUserExists() throws Exception {
+    int n = create_user("exists", null);
+    assertTrue(provider.doesUserExist(n));
+  }
+
+  @Test
+  void getUserByAuthTest() throws Exception {
+    AuthData auth = new AuthData("google", "abc");
+    assertNull(provider.getUserByAuth(auth));
+    int id = create_user("at", null);
+    try (PreparedStatement st =
+        connection.prepareStatement("insert into auth (user_id, type, token) values (?, ?, ?)")) {
+      st.setInt(1, id);
+      st.setString(2, auth.type());
+      st.setString(3, auth.token());
+      st.executeUpdate();
+    }
+    UserData user = provider.getUserByAuth(auth);
+    assertEquals(id, user.id());
+    assertEquals("st", user.username());
+  }
+
+  @Test
+  void getUserDataTest() throws Exception {
+    assertNull(provider.getUserData(-1));
+    int userId = create_user("datatest", null);
+    UserData userData = provider.getUserData(userId);
+    assertNotNull(userData);
+    assertEquals("datatest", userData.username());
+    assertEquals(userId, userData.id());
+  }
+
+  @Test
+  void getByRoleTest() throws Exception {
+    assertNull(provider.getByRole(-1));
+    int id = create_role("role1");
+    assertTrue(provider.getByRole(id).isEmpty());
+
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "insert into user_role (user_id, role_id, set) values (?, ?, true)")) {
+      int uid = create_user("roletest", null);
+      st.setInt(1, uid);
+      st.setInt(2, id);
+      st.executeUpdate();
+      List<UserData> users = provider.getByRole(uid);
+      assertEquals(1, users.size());
+      assertEquals(uid, users.getFirst().id());
+      assertEquals("roletest", users.getFirst().username());
+
+      int u2id = create_user("roletest2", null);
+      st.setInt(1, u2id);
+      st.setInt(2, id);
+      st.executeUpdate();
+      users = provider.getByRole(uid);
+      assertEquals(2, users.size());
+      assertEquals(uid, users.getFirst().id());
+      assertEquals(u2id, users.get(1).id());
+      assertEquals("roletest2", users.get(1).username());
+    }
+  }
+
+  @Test
+  void getUserAuthMethodsTest() throws Exception {
+    assertNull(provider.getUserAuthMethods(-1));
+    int id = create_user("getauth", null);
+    assertTrue(provider.getUserAuthMethods(id).isEmpty());
+
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "insert into auth (user_id, type, token) values (?, 'a', 'b')")) {
+      st.setInt(1, id);
+      st.executeUpdate();
+      List<AuthData> lst = provider.getUserAuthMethods(id);
+      assertEquals(1, lst.size());
+      assertEquals("a", lst.getFirst().type());
+      assertEquals("b", lst.getFirst().token());
+    }
+  }
+
+  @Test
+  void freshlyAddedUserExists() throws Exception {
     UserData user = new UserData("tt");
     int userId = provider.createUser(user);
     assertTrue(userId > 0);
-    assertTrue(provider.doesUserExist(userId));
+
+    try (PreparedStatement st = connection.prepareStatement("select 1 from users where id = ?")) {
+      st.setInt(1, userId);
+      ResultSet rs = st.executeQuery();
+      assertTrue(rs.next());
+    }
   }
 
   @Test
-  void basicAuthTest() throws InternalErrorException, BadDataException {
-    UserData user = new UserData("auth");
-    int userId = provider.createUser(user);
-    AuthData auth = new AuthData("google", "abc");
-    assertNull(provider.getUserByAuth(auth));
-    assertThrows(BadDataException.class, () -> provider.addUserAuthMethod(-1, auth));
-    assertTrue(provider.addUserAuthMethod(userId, auth));
-    assertNotNull(provider.getUserByAuth(auth));
+  void noDuplicateUsernames() throws Exception {
+    int id = create_user("taken", null);
+    BadDataException e =
+        assertThrows(BadDataException.class, () -> provider.createUser(new UserData("taken")));
+    assertEquals(Config.taken_name, e.getMessage());
+
+    delete("user", id);
+    id = provider.createUser(new UserData("taken"));
+    try (PreparedStatement st =
+        connection.prepareStatement("select * from users_with_data where id = ?")) {
+      st.setInt(1, id);
+      ResultSet rs = st.executeQuery();
+      assertTrue(rs.next());
+      assertEquals("taken", rs.getString("username"));
+    }
   }
 
   @Test
-  void getUserAuthMethodsTest() throws InternalErrorException, BadDataException {
+  void updateUsernameTest() throws Exception {
+    BadDataException e =
+        assertThrows(BadDataException.class, () -> provider.updateUsername(-1, "dfdsfd"));
+    assertEquals(Config.invalid_user, e.getMessage());
 
-    assertNull(provider.getUserAuthMethods(-1));
-    assertThrows(BadDataException.class, () -> provider.removeUserAuthMethod(-1, ""));
+    int id = create_user("tobechanged", null);
+    provider.updateUsername(id, "different");
+    try (PreparedStatement st =
+        connection.prepareStatement("select * from users_with_data where id = ?")) {
+      st.setInt(1, id);
+      ResultSet rs = st.executeQuery();
+      assertTrue(rs.next());
+      assertEquals("different", rs.getString("username"));
+    }
 
-    UserData user = new UserData("authmethods");
-    int userId = provider.createUser(user);
-    assertTrue(provider.getUserAuthMethods(userId).isEmpty());
-    AuthData auth = new AuthData("google", "abcd");
-    assertFalse(provider.removeUserAuthMethod(userId, auth.type()));
-    provider.addUserAuthMethod(userId, auth);
-    assertFalse(provider.getUserAuthMethods(userId).isEmpty());
-    assertTrue(provider.removeUserAuthMethod(userId, auth.type()));
-    assertTrue(provider.getUserAuthMethods(userId).isEmpty());
+    int idd = create_user("secondupdate", null);
+    BadDataException ex =
+        assertThrows(BadDataException.class, () -> provider.updateUsername(idd, "different"));
+    assertEquals(Config.taken_name, ex.getMessage());
   }
 
   @Test
-  void getUserDataTest() throws InternalErrorException, BadDataException {
+  void updateUserPicture() throws Exception {
+    BadDataException e =
+        assertThrows(BadDataException.class, () -> provider.updateUserPicture(-1, new byte[] {}));
+    assertEquals(Config.invalid_user, e.getMessage());
 
-    assertNull(provider.getUserData(-1));
-
-    UserData user = new UserData("userdata");
-    int userId = provider.createUser(user);
-    UserData userData = provider.getUserData(userId);
-    assertNotNull(userData);
-    assertEquals(user.username(), userData.username());
-    assertEquals(user.picture(), userData.picture());
+    int id = create_user("changepicture", null);
+    provider.updateUserPicture(id, new byte[] {1, 2, 3});
+    try (PreparedStatement st =
+        connection.prepareStatement("select * from users_with_data where id = ?")) {
+      st.setInt(1, id);
+      ResultSet rs = st.executeQuery();
+      assertTrue(rs.next());
+      assertArrayEquals(new byte[] {1, 2, 3}, rs.getBytes("picture"));
+    }
   }
 
   @Test
-  void userModificationsTest() throws InternalErrorException, BadDataException {
+  void deleteUserTest() throws Exception {
+    int id = create_user("todelete", null);
+    provider.deleteUser(id);
+    try (PreparedStatement st =
+        connection.prepareStatement("select * from users_with_data where id = ?")) {
+      st.setInt(1, id);
+      ResultSet rs = st.executeQuery();
+      assertTrue(rs.next());
+      assertTrue(rs.getBoolean("deleted"));
+    }
+  }
 
-    assertThrows(BadDataException.class, () -> provider.updateUsername(-1, ""));
-    assertThrows(BadDataException.class, () -> provider.updateUserPicture(-1, new byte[] {}));
-    assertThrows(BadDataException.class, () -> provider.deleteUser(-1));
+  @Test
+  void addUserAuthMethodTest() throws Exception {
+    BadDataException e =
+        assertThrows(
+            BadDataException.class, () -> provider.addUserAuthMethod(-1, new AuthData("a", "b")));
+    assertEquals(Config.invalid_user, e.getMessage());
 
-    UserData user = new UserData("mod");
-    int userId = provider.createUser(user);
+    int id = create_user("toaddauth", null);
+    provider.addUserAuthMethod(id, new AuthData("a", "b"));
+    try (PreparedStatement st =
+        connection.prepareStatement("select * from auth where user_id = ?")) {
+      st.setInt(1, id);
+      ResultSet rs = st.executeQuery();
+      assertTrue(rs.next());
+      assertEquals("a", rs.getString("type"));
+      assertEquals("b", rs.getString("token"));
+      assertFalse(rs.next());
+    }
 
-    UserData tmp = new UserData("tmp");
-    provider.createUser(tmp);
-    assertThrows(BadDataException.class, () -> provider.updateUsername(userId, "tmp"));
+    BadDataException ex =
+        assertThrows(
+            BadDataException.class, () -> provider.addUserAuthMethod(id, new AuthData("a", "c")));
+    assertEquals(Config.taken_type, ex.getMessage());
+  }
 
-    provider.updateUsername(userId, "mod1");
-    assertEquals("mod1", provider.getUserData(userId).username());
+  @Test
+  void removeUserAuthMethodTest() throws Exception {
+    BadDataException e =
+        assertThrows(BadDataException.class, () -> provider.removeUserAuthMethod(-1, "a"));
+    assertEquals(Config.invalid_user, e.getMessage());
 
-    provider.updateUserPicture(userId, new byte[] {0});
-    assertNotNull(provider.getUserData(userId).picture());
-    assertArrayEquals(new byte[] {0}, provider.getUserData(userId).picture());
+    int id = create_user("toaddauth", null);
+    provider.removeUserAuthMethod(id, "a");
 
-    provider.deleteUser(userId);
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "insert into auth (user_id, type, token) values (?, 'a', 'b')")) {
+      st.setInt(1, id);
+      st.executeUpdate();
+    }
+    provider.removeUserAuthMethod(id, "a");
+    try (PreparedStatement st =
+        connection.prepareStatement("select * from auth where user_id = ?")) {
+      st.setInt(1, id);
+      ResultSet rs = st.executeQuery();
+      assertFalse(rs.next());
+    }
+  }
+
+  @Test
+  void alterUserRoleTest() throws Exception {
+    int roleId = create_role("testtole");
+    int userId = create_user("roletestuser", null);
+    BadDataException e =
+        assertThrows(BadDataException.class, () -> provider.alterUserRole(-1, roleId, true));
+    assertEquals(Config.invalid_user, e.getMessage());
+    e = assertThrows(BadDataException.class, () -> provider.alterUserRole(userId, -1, true));
+    assertEquals(Config.invalid_role, e.getMessage());
+
+    provider.alterUserRole(userId, roleId, false);
+    provider.alterUserRole(userId, roleId, true);
+    try (PreparedStatement st =
+        connection.prepareStatement("select * from user_role_current where user_id = ?")) {
+      st.setInt(1, userId);
+      ResultSet rs = st.executeQuery();
+      assertTrue(rs.next());
+      assertEquals(roleId, rs.getInt("role_id"));
+      assertFalse(rs.next());
+    }
+
+    provider.alterUserRole(userId, roleId, true);
+    provider.alterUserRole(userId, roleId, false);
+    try (PreparedStatement st =
+        connection.prepareStatement("select * from user_role_current where user_id = ?")) {
+      st.setInt(1, userId);
+      ResultSet rs = st.executeQuery();
+      assertFalse(rs.next());
+    }
   }
 }
