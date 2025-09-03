@@ -94,6 +94,9 @@ public class JDBCPageDataProvider implements PageDataProvider {
 
   @Override
   public int createPage(PageData data) throws BadDataException, InternalErrorException {
+    if (data == null) throw new BadDataException(invalid_data);
+    if (data.title() == null) throw new BadDataException(invalid_title);
+    if (data.category() == null) throw new BadDataException(invalid_category);
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO pages_with_data (user_id, title, category) VALUES (?, ?, ?)",
@@ -121,6 +124,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
   public void updatePageTitle(int pageId, String title)
       throws BadDataException, InternalErrorException {
     if (!doesPageExist(pageId)) throw new BadDataException(invalid_page);
+    if (title == null) throw new BadDataException(invalid_title);
 
     try (PreparedStatement st =
         connection.prepareStatement("INSERT INTO page_title (title, page_id) values (?, ?)")) {

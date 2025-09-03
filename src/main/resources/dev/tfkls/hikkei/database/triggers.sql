@@ -11,7 +11,7 @@ BEGIN
             ORDER BY un.date DESC
             LIMIT 1
         ) cur ON true
-        WHERE cur.username = NEW.username
+        WHERE cur.username = NEW.username AND u.deleted = FALSE
     ) THEN
         RAISE EXCEPTION 'Username "%" already taken', NEW.username;
     END IF;
@@ -38,7 +38,7 @@ BEGIN
             ORDER BY pt.date DESC
             LIMIT 1
             ) cur ON true
-        WHERE cur.title = NEW.title
+        WHERE cur.title = NEW.title AND p.deleted = FALSE
     ) THEN
         RAISE EXCEPTION 'Title "%" already taken', NEW.title;
     END IF;
@@ -295,3 +295,78 @@ CREATE TRIGGER trg_insert_revision_with_data
 INSTEAD OF INSERT ON revisions_with_data
 FOR EACH ROW
 EXECUTE FUNCTION insert_revision_with_data();
+
+
+CREATE FUNCTION check_not_deleted()
+    RETURNS TRIGGER AS $$
+DECLARE
+    ref_id INT;
+    tmp INT;
+    column_name TEXT := TG_ARGV[0];
+    table_name TEXT := TG_ARGV[1];
+BEGIN
+    EXECUTE format('SELECT ($1).%I', column_name)
+        INTO ref_id
+        USING NEW;
+
+    EXECUTE format(
+            'SELECT 1 FROM %I WHERE id = $1 AND deleted = TRUE',
+            table_name
+            )
+        INTO tmp
+        USING ref_id;
+
+    IF tmp=1 THEN
+        RAISE EXCEPTION
+            'Cannot insert: referenced row % in table % is marked as deleted',
+            ref_id, table_name;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DO $$
+DECLARE
+    name text[];
+    refs text[][] := $arr$
+    { { user_name, user_id, users },
+    { user_picture, user_id, users },
+    { auth, user_id, users },
+    { role_name, role_id, roles },
+    { user_role, user_id, users },
+    { user_role, role_id, roles },
+    { category_name, category_id, categories },
+    { category_role, category_id, categories },
+    { category_role, role_id, roles },
+    { page_title, page_id, pages },
+    { page_category, page_id, pages },
+    { page_category, category, categories },
+    { page_archived, page_id, pages },
+    { revisions, page_id, pages },
+    { revisions, user_id, users },
+    { revision_approved, revision_id, revisions },
+    { comments, page_id, pages },
+    { comments, user_id, users },
+    { drafts, page_id, pages },
+    { drafts, user_id, users }
+    }$arr$;
+BEGIN
+    FOREACH name SLICE 1 in ARRAY refs
+    LOOP
+        EXECUTE format(
+            'CREATE TRIGGER trg_check_not_deleted_%I_%I
+             BEFORE INSERT ON %I
+             FOR EACH ROW
+             EXECUTE FUNCTION check_not_deleted(%L, %L)',
+            name[1],
+            name[3],
+            name[1],
+            name[2],
+            name[3]
+        );
+    END LOOP;
+END$$;
+
+CREATE TRIGGER  trg_check_not_deleted_update_draft_users BEFORE UPDATE on drafts FOR EACH ROW EXECUTE FUNCTION check_not_deleted('user_id', 'users');
+CREATE TRIGGER  trg_check_not_deleted_update_draft_pages BEFORE UPDATE on drafts FOR EACH ROW EXECUTE FUNCTION check_not_deleted('page_id', 'pages');

@@ -54,7 +54,9 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     }
     UserData user = provider.getUserByAuth(auth);
     assertEquals(id, user.id());
-    assertEquals("st", user.username());
+    assertEquals("at", user.username());
+    delete("user", id);
+    assertEquals(UserData.DELETED, provider.getUserByAuth(auth));
   }
 
   @Test
@@ -65,6 +67,8 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     assertNotNull(userData);
     assertEquals("datatest", userData.username());
     assertEquals(userId, userData.id());
+    delete("user", userId);
+    assertEquals(UserData.DELETED, provider.getUserData(userId));
   }
 
   @Test
@@ -80,20 +84,20 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
       st.setInt(1, uid);
       st.setInt(2, id);
       st.executeUpdate();
-      List<UserData> users = provider.getByRole(uid);
+      List<UserData> users = provider.getByRole(id);
       assertEquals(1, users.size());
       assertEquals(uid, users.getFirst().id());
       assertEquals("roletest", users.getFirst().username());
 
+      delete("user", uid);
       int u2id = create_user("roletest2", null);
       st.setInt(1, u2id);
       st.setInt(2, id);
       st.executeUpdate();
-      users = provider.getByRole(uid);
-      assertEquals(2, users.size());
-      assertEquals(uid, users.getFirst().id());
-      assertEquals(u2id, users.get(1).id());
-      assertEquals("roletest2", users.get(1).username());
+      users = provider.getByRole(id);
+      assertEquals(1, users.size());
+      assertEquals(u2id, users.getFirst().id());
+      assertEquals("roletest2", users.getFirst().username());
     }
   }
 
@@ -105,13 +109,13 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
 
     try (PreparedStatement st =
         connection.prepareStatement(
-            "insert into auth (user_id, type, token) values (?, 'a', 'b')")) {
+            "insert into auth (user_id, type, token) values (?, 'a', 'bb')")) {
       st.setInt(1, id);
       st.executeUpdate();
       List<AuthData> lst = provider.getUserAuthMethods(id);
       assertEquals(1, lst.size());
       assertEquals("a", lst.getFirst().type());
-      assertEquals("b", lst.getFirst().token());
+      assertEquals("bb", lst.getFirst().token());
     }
   }
 
@@ -166,6 +170,10 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     BadDataException ex =
         assertThrows(BadDataException.class, () -> provider.updateUsername(idd, "different"));
     assertEquals(Config.taken_name, ex.getMessage());
+
+    delete("user", id);
+    e = assertThrows(BadDataException.class, () -> provider.updateUsername(id, "dfdsfd"));
+    assertEquals(Config.invalid_user, e.getMessage());
   }
 
   @Test
@@ -183,6 +191,10 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
       assertTrue(rs.next());
       assertArrayEquals(new byte[] {1, 2, 3}, rs.getBytes("picture"));
     }
+
+    delete("user", id);
+    e = assertThrows(BadDataException.class, () -> provider.updateUsername(id, "dfdsfd"));
+    assertEquals(Config.invalid_user, e.getMessage());
   }
 
   @Test
@@ -196,6 +208,7 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
       assertTrue(rs.next());
       assertTrue(rs.getBoolean("deleted"));
     }
+    provider.deleteUser(id);
   }
 
   @Test
@@ -221,6 +234,12 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
         assertThrows(
             BadDataException.class, () -> provider.addUserAuthMethod(id, new AuthData("a", "c")));
     assertEquals(Config.taken_type, ex.getMessage());
+
+    delete("user", id);
+    e =
+        assertThrows(
+            BadDataException.class, () -> provider.addUserAuthMethod(-1, new AuthData("a", "b")));
+    assertEquals(Config.invalid_user, e.getMessage());
   }
 
   @Test
@@ -229,12 +248,12 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
         assertThrows(BadDataException.class, () -> provider.removeUserAuthMethod(-1, "a"));
     assertEquals(Config.invalid_user, e.getMessage());
 
-    int id = create_user("toaddauth", null);
+    int id = create_user("toaddauthhh", null);
     provider.removeUserAuthMethod(id, "a");
 
     try (PreparedStatement st =
         connection.prepareStatement(
-            "insert into auth (user_id, type, token) values (?, 'a', 'b')")) {
+            "insert into auth (user_id, type, token) values (?, 'a', 'bbbbb')")) {
       st.setInt(1, id);
       st.executeUpdate();
     }
@@ -245,6 +264,10 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
       ResultSet rs = st.executeQuery();
       assertFalse(rs.next());
     }
+
+    delete("user", id);
+    e = assertThrows(BadDataException.class, () -> provider.removeUserAuthMethod(-1, "a"));
+    assertEquals(Config.invalid_user, e.getMessage());
   }
 
   @Test
@@ -276,5 +299,9 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
       ResultSet rs = st.executeQuery();
       assertFalse(rs.next());
     }
+
+    delete("user", userId);
+    e = assertThrows(BadDataException.class, () -> provider.alterUserRole(-1, roleId, true));
+    assertEquals(Config.invalid_user, e.getMessage());
   }
 }

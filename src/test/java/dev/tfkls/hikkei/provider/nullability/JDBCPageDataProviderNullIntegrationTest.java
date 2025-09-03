@@ -54,9 +54,10 @@ public class JDBCPageDataProviderNullIntegrationTest extends JDBCIntegrationTest
   }
 
   @Test
-  void updatePageTitle_nullTitle_throwsBadDataException() {
+  void updatePageTitle_nullTitle_throwsBadDataException() throws Exception {
+    int id = create_page("aa", create_category("aa"), create_user("kdlsjfkdsjfsd", null));
     BadDataException ex =
-        assertThrows(BadDataException.class, () -> provider.updatePageTitle(1, null));
+        assertThrows(BadDataException.class, () -> provider.updatePageTitle(id, null));
     assertEquals(Config.invalid_title, ex.getMessage());
   }
 }

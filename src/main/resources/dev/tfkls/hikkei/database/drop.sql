@@ -31,5 +31,6 @@ DROP FUNCTION IF EXISTS
     inserted_category_has_data,
     insert_page_with_data,
     inserted_page_has_data,
-    insert_revision_with_data
+    insert_revision_with_data,
+    check_not_deleted
 CASCADE;

@@ -74,3 +74,25 @@ CREATE RULE no_updates_comments AS
 ON UPDATE TO comments
 WHERE NEW.id <> OLD.id OR NEW.page_id <> OLD.page_id OR NEW.user_id <> OLD.user_id OR NEW.content <> OLD.content OR NEW.date <> OLD.date
 DO INSTEAD NOTHING;
+
+CREATE RULE no_updates_drafts AS
+ON UPDATE TO drafts
+WHERE NEW.page_id <> OLD.page_id OR NEW.user_id <> OLD.user_id
+DO INSTEAD NOTHING;
+
+DO $$
+    DECLARE
+        name text;
+    BEGIN
+        FOREACH name in ARRAY $arr$
+        { users,
+        roles,
+        categories,
+        pages,
+        revisions,
+        comments
+        }$arr$::text[]
+            LOOP
+                EXECUTE 'CREATE RULE no_updates_deleted_' || name || ' AS ON UPDATE TO ' || name || ' WHERE OLD.deleted=TRUE DO INSTEAD NOTHING';
+            END LOOP;
+    END$$;

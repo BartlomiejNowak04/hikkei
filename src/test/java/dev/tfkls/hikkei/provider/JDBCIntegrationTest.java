@@ -132,7 +132,7 @@ public abstract class JDBCIntegrationTest extends IntegrationTest {
   protected void delete(String type, int id) throws SQLException {
     try (PreparedStatement st =
         connection.prepareStatement(
-            "UPDATE " + type + " SET deleted=true, date_delete=now() WHERE id=?")) {
+            "UPDATE " + type + "s SET deleted=true, date_deleted=now() WHERE id=?")) {
       st.setInt(1, id);
       st.executeUpdate();
     }

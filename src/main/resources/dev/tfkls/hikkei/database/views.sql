@@ -113,7 +113,9 @@ JOIN (
 ON ur.user_id = latest.user_id
 AND ur.role_id = latest.role_id
 AND ur.date = latest.max_date
-WHERE ur.set = true;
+JOIN users u ON u.id=ur.user_id
+JOIN roles r ON r.id=ur.role_id
+WHERE ur.set = true AND u.deleted = false AND r.deleted = false;
 
 CREATE VIEW category_role_current AS
 SELECT cr.category_id,
@@ -121,7 +123,7 @@ SELECT cr.category_id,
        cr.permission_name,
        cr.permission_status
 FROM category_role cr
-         JOIN (
+JOIN (
     SELECT category_id, role_id, permission_name, MAX(date) AS max_date
     FROM category_role
     GROUP BY category_id, role_id, permission_name
@@ -129,4 +131,7 @@ FROM category_role cr
 ON cr.category_id = latest.category_id
 AND cr.role_id = latest.role_id
 AND cr.permission_name = latest.permission_name
-AND cr.date = latest.max_date;
+AND cr.date = latest.max_date
+JOIN roles r ON r.id = cr.role_id
+JOIN categories c on cr.category_id = c.id
+WHERE r.deleted = false AND c.deleted = false;
