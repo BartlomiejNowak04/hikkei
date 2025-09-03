@@ -54,4 +54,7 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
   @Override
   public void updatePermission(int categoryId, int roleId, String permission, Boolean set)
       throws InternalErrorException, BadDataException {}
+
+  @Override
+  public void deleteCategory(int id) throws InternalErrorException {}
 }

@@ -12,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class JDBCRevisionDataProvider implements RevisionDataProvider {
   private final Connection connection;
@@ -96,7 +95,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
   }
 
   @Override
-  public UUID getDraft(int userId, int pageId) throws InternalErrorException {
+  public byte[] getDraft(int userId, int pageId) throws InternalErrorException {
     return null;
   }
 
@@ -105,9 +104,13 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
       throws InternalErrorException, BadDataException {}
 
   @Override
-  public UUID deleteDraft(int userId, int pageId) throws InternalErrorException, BadDataException {
+  public byte[] deleteDraft(int userId, int pageId)
+      throws InternalErrorException, BadDataException {
     return null;
   }
+
+  @Override
+  public void deleteRevision(int id) throws InternalErrorException {}
 
   private RevisionData getRevisionData(ResultSet rs) throws SQLException {
     return new RevisionData(

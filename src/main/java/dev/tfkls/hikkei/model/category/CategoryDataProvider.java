@@ -15,4 +15,6 @@ public interface CategoryDataProvider {
 
   void updatePermission(int categoryId, int roleId, String permission, Boolean set)
       throws InternalErrorException, BadDataException;
+
+  void deleteCategory(int id) throws InternalErrorException;
 }

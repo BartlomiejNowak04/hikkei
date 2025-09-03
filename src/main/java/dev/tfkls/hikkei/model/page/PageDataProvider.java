@@ -28,4 +28,6 @@ public interface PageDataProvider {
       throws BadDataException, InternalErrorException;
 
   void toggleArchive(int pageId, boolean type) throws BadDataException, InternalErrorException;
+
+  void deletePage(int pageId) throws InternalErrorException;
 }

@@ -168,6 +168,9 @@ public class JDBCPageDataProvider implements PageDataProvider {
     }
   }
 
+  @Override
+  public void deletePage(int pageId) throws InternalErrorException {}
+
   private PageData getPageData(ResultSet rs) throws SQLException {
     return new PageData(
         rs.getInt("id"),

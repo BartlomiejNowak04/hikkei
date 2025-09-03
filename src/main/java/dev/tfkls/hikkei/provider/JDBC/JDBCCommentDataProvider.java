@@ -45,7 +45,7 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
   public void deleteComment(int id) throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
-            "UPDATE comments SET deleted=true, date_deleted=now() WHERE id = ? AND page_id = ?")) {
+            "UPDATE comments SET deleted=true, date_deleted=now() WHERE id = ?")) {
       st.setInt(1, id);
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
