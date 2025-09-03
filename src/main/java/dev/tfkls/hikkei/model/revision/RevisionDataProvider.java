@@ -18,7 +18,8 @@ public interface RevisionDataProvider {
 
   UUID getDraft(int userId, int pageId) throws InternalErrorException;
 
-  void saveDraft(int userId, int pageId, UUID file) throws InternalErrorException, BadDataException;
+  void saveDraft(int userId, int pageId, byte[] file)
+      throws InternalErrorException, BadDataException;
 
   UUID deleteDraft(int userId, int pageId) throws InternalErrorException, BadDataException;
 }

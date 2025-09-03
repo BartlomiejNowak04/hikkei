@@ -6,6 +6,7 @@ import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.user.AuthData;
 import dev.tfkls.hikkei.model.user.UserData;
+import dev.tfkls.hikkei.provider.JDBC.JDBCUserDataProvider;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -16,14 +17,19 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
   private JDBCUserDataProvider provider;
 
   @BeforeAll
-  void initProvider() {
+  void initProvider() throws SQLException {
     provider = new JDBCUserDataProvider(connection);
 
     try (PreparedStatement st =
         connection.prepareStatement("INSERT INTO roles_with_data (name) VALUES (?)")) {
       st.setString(1, "test");
       st.executeUpdate();
-    } catch (SQLException ignored) {
+    }
+
+    try (PreparedStatement st =
+        connection.prepareStatement("INSERT INTO users_with_data (username) VALUES (?)")) {
+      st.setString(1, "testname");
+      st.executeUpdate();
     }
   }
 
@@ -34,7 +40,7 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
 
   @Test
   void freshlyAddedUserExists() throws InternalErrorException, BadDataException {
-    UserData user = new UserData("testname", null, LocalDateTime.now());
+    UserData user = new UserData("tt", null, LocalDateTime.now());
     int userId = provider.createUser(user);
     assertTrue(userId > 0);
     assertTrue(provider.doesUserExist(userId));

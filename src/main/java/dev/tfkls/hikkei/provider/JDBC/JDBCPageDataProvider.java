@@ -1,4 +1,6 @@
-package dev.tfkls.hikkei.provider;
+package dev.tfkls.hikkei.provider.JDBC;
+
+import static dev.tfkls.hikkei.provider.JDBC.Config.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
@@ -10,10 +12,6 @@ import java.util.List;
 
 public class JDBCPageDataProvider implements PageDataProvider {
   private final Connection connection;
-  private final String internal_error = "Database internal error";
-  private final String invalid_category = "The provided category is invalid";
-  private final String invalid_id = "The provided page id is invalid";
-  private final String taken_title = "This title is already taken";
 
   public JDBCPageDataProvider(Connection conn) {
     connection = conn;
@@ -122,7 +120,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
   @Override
   public void updatePageTitle(int pageId, String title)
       throws BadDataException, InternalErrorException {
-    if (!doesPageExist(pageId)) throw new BadDataException(invalid_id);
+    if (!doesPageExist(pageId)) throw new BadDataException(invalid_page);
 
     try (PreparedStatement st =
         connection.prepareStatement("INSERT INTO page_title (title, page_id) values (?, ?)")) {
@@ -139,7 +137,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
   @Override
   public void updatePageCategory(int pageId, int categoryId)
       throws BadDataException, InternalErrorException {
-    if (!doesPageExist(pageId)) throw new BadDataException(invalid_id);
+    if (!doesPageExist(pageId)) throw new BadDataException(invalid_page);
 
     try (PreparedStatement st =
         connection.prepareStatement(
@@ -157,7 +155,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
   @Override
   public void toggleArchive(int pageId, boolean type)
       throws BadDataException, InternalErrorException {
-    if (!doesPageExist(pageId)) throw new BadDataException(invalid_id);
+    if (!doesPageExist(pageId)) throw new BadDataException(invalid_page);
 
     try (PreparedStatement st =
         connection.prepareStatement(

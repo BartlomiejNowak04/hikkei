@@ -1,4 +1,4 @@
-package dev.tfkls.hikkei.provider;
+package dev.tfkls.hikkei.provider.JDBC;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;

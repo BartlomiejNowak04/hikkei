@@ -1,4 +1,6 @@
-package dev.tfkls.hikkei.provider;
+package dev.tfkls.hikkei.provider.JDBC;
+
+import static dev.tfkls.hikkei.provider.JDBC.Config.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
@@ -14,7 +16,6 @@ import java.util.UUID;
 
 public class JDBCRevisionDataProvider implements RevisionDataProvider {
   private final Connection connection;
-  private final String internal_error = "Database internal error";
 
   public JDBCRevisionDataProvider(Connection connection) {
     this.connection = connection;
@@ -32,12 +33,12 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next()) throw new InternalErrorException("Couldn't create a new revision");
+        if (!rs.next()) throw new InternalErrorException(internal_revision);
         return rs.getInt(1);
       }
     } catch (SQLException e) {
       String message = e.getMessage();
-      if (message.contains("revisions_page_id_fkey")) throw new BadDataException("Invalid page id");
+      if (message.contains("revisions_page_id_fkey")) throw new BadDataException(invalid_page);
       throw new InternalErrorException(internal_error);
     }
   }
@@ -49,11 +50,11 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
             "INSERT INTO revision_approved (approved, revision_id) values (?, ?)")) {
       st.setBoolean(1, state);
       st.setInt(2, id);
-      if (st.executeUpdate() < 1) throw new BadDataException("Invalid revision id");
+      if (st.executeUpdate() < 1) throw new BadDataException(invalid_revision);
     } catch (SQLException e) {
       String message = e.getMessage();
       if (message.contains("revision_approved_revision_id_fkey"))
-        throw new BadDataException("Invalid revision id");
+        throw new BadDataException(invalid_revision);
       throw new InternalErrorException(internal_error);
     }
   }
@@ -100,7 +101,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
   }
 
   @Override
-  public void saveDraft(int userId, int pageId, UUID file)
+  public void saveDraft(int userId, int pageId, byte[] file)
       throws InternalErrorException, BadDataException {}
 
   @Override

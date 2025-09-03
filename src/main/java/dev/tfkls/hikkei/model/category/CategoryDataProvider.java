@@ -13,6 +13,6 @@ public interface CategoryDataProvider {
 
   void changeName(int id, String name) throws InternalErrorException, BadDataException;
 
-  void updatePermission(int categoryId, int roleId, String permission, boolean set)
+  void updatePermission(int categoryId, int roleId, String permission, Boolean set)
       throws InternalErrorException, BadDataException;
 }

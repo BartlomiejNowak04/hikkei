@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.page.PageData;
+import dev.tfkls.hikkei.provider.JDBC.JDBCPageDataProvider;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.revision.RevisionData;
+import dev.tfkls.hikkei.provider.JDBC.JDBCRevisionDataProvider;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;

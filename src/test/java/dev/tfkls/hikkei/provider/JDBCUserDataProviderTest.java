@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.user.AuthData;
 import dev.tfkls.hikkei.model.user.UserData;
+import dev.tfkls.hikkei.provider.JDBC.JDBCUserDataProvider;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.List;

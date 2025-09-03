@@ -1,4 +1,7 @@
-package dev.tfkls.hikkei.provider;
+package dev.tfkls.hikkei.provider.JDBC;
+
+import static dev.tfkls.hikkei.provider.JDBC.Config.internal_error;
+import static dev.tfkls.hikkei.provider.JDBC.Config.invalid_role;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
@@ -19,7 +22,6 @@ public class JDBCRoleDataProvider implements RoleDataProvider {
 
   @Override
   public int createRole(RoleData data) throws InternalErrorException, BadDataException {
-    if (data.name() == null) throw new BadDataException("Role name is required");
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO roles_with_data (name) VALUES (?)",
@@ -28,11 +30,11 @@ public class JDBCRoleDataProvider implements RoleDataProvider {
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next()) throw new InternalErrorException("Couldn't create a new role");
+        if (!rs.next()) throw new InternalErrorException(invalid_role);
         return rs.getInt(1);
       }
     } catch (SQLException e) {
-      throw new InternalErrorException("Database internal error");
+      throw new InternalErrorException(internal_error);
     }
   }
 

@@ -1,4 +1,6 @@
-package dev.tfkls.hikkei.provider;
+package dev.tfkls.hikkei.provider.JDBC;
+
+import static dev.tfkls.hikkei.provider.JDBC.Config.*;
 
 import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
@@ -13,7 +15,6 @@ import java.util.List;
 
 public class JDBCCommentDataProvider implements CommentDataProvider {
   private final Connection connection;
-  private final String internal_error = "Database internal error";
 
   public JDBCCommentDataProvider(Connection connection) {
     this.connection = connection;
@@ -30,12 +31,12 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next()) throw new InternalErrorException("Couldn't create a new comment");
+        if (!rs.next()) throw new InternalErrorException(internal_comment);
         return rs.getInt(1);
       }
     } catch (SQLException e) {
       String message = e.getMessage();
-      if (message.contains("comments_page_id_fkey")) throw new BadDataException("Invalid page id");
+      if (message.contains("comments_page_id_fkey")) throw new BadDataException(invalid_page);
       throw new InternalErrorException(internal_error);
     }
   }

@@ -1,4 +1,7 @@
-package dev.tfkls.hikkei.provider;
+package dev.tfkls.hikkei.provider.JDBC;
+
+import static dev.tfkls.hikkei.provider.JDBC.Config.internal_category;
+import static dev.tfkls.hikkei.provider.JDBC.Config.internal_error;
 
 import dev.tfkls.hikkei.model.category.CategoryData;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
@@ -19,7 +22,6 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
 
   @Override
   public int createCategory(CategoryData data) throws InternalErrorException, BadDataException {
-    if (data.name() == null) throw new BadDataException("Category name is required");
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO categories_with_data (name) VALUES (?)",
@@ -28,11 +30,11 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next()) throw new InternalErrorException("Couldn't create a new category");
+        if (!rs.next()) throw new InternalErrorException(internal_category);
         return rs.getInt(1);
       }
     } catch (SQLException e) {
-      throw new InternalErrorException("Database internal error");
+      throw new InternalErrorException(internal_error);
     }
   }
 
@@ -50,6 +52,6 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
   public void changeName(int id, String name) throws InternalErrorException, BadDataException {}
 
   @Override
-  public void updatePermission(int categoryId, int roleId, String permission, boolean set)
+  public void updatePermission(int categoryId, int roleId, String permission, Boolean set)
       throws InternalErrorException, BadDataException {}
 }
