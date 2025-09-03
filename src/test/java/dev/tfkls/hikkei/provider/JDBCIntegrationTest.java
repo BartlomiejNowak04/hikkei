@@ -1,14 +1,12 @@
 package dev.tfkls.hikkei.provider;
 
+import static dev.tfkls.hikkei.provider.JDBC.Config.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import dev.tfkls.hikkei.test.IntegrationTest;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
@@ -51,5 +49,92 @@ public abstract class JDBCIntegrationTest extends IntegrationTest {
   @AfterAll
   void tearDown() throws SQLException {
     if (connection != null) connection.close();
+  }
+
+  protected int create_user(String username, byte[] picture) throws SQLException {
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "INSERT INTO users_with_data (username, picture) VALUES (?, ?)",
+            Statement.RETURN_GENERATED_KEYS)) {
+      st.setString(1, username);
+      st.setBytes(2, picture);
+      st.executeUpdate();
+      st.getGeneratedKeys().next();
+      return st.getGeneratedKeys().getInt(1);
+    }
+  }
+
+  protected int create_role(String name) throws SQLException {
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "INSERT INTO roles_with_data (name) VALUES (?)",
+            PreparedStatement.RETURN_GENERATED_KEYS)) {
+      st.setString(1, name);
+      st.executeUpdate();
+      st.getGeneratedKeys().next();
+      return st.getGeneratedKeys().getInt(1);
+    }
+  }
+
+  protected int create_category(String name) throws SQLException {
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "INSERT INTO categories_with_data (name) VALUES (?)",
+            PreparedStatement.RETURN_GENERATED_KEYS)) {
+      st.setString(1, name);
+      st.executeUpdate();
+      st.getGeneratedKeys().next();
+      return st.getGeneratedKeys().getInt(1);
+    }
+  }
+
+  protected int create_page(String title, int category, int user) throws SQLException {
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "INSERT INTO pages_with_data (user_id, title, category) VALUES (?, ?, ?)",
+            PreparedStatement.RETURN_GENERATED_KEYS)) {
+      st.setInt(1, user);
+      st.setString(2, title);
+      st.setInt(3, category);
+      st.executeUpdate();
+      st.getGeneratedKeys().next();
+      return st.getGeneratedKeys().getInt(1);
+    }
+  }
+
+  protected int create_revision(int page, int user, byte[] file) throws SQLException {
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "INSERT INTO revisions_with_data (page_id, user_id, file) VALUES (?, ?, ?)",
+            PreparedStatement.RETURN_GENERATED_KEYS)) {
+      st.setInt(1, page);
+      st.setInt(2, user);
+      st.setObject(3, file);
+      st.executeUpdate();
+      st.getGeneratedKeys().next();
+      return st.getGeneratedKeys().getInt(1);
+    }
+  }
+
+  protected int create_comment(int page, String content) throws SQLException {
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "INSERT INTO comments (page_id, content) VALUES (?, ?)",
+            PreparedStatement.RETURN_GENERATED_KEYS)) {
+      st.setInt(1, page);
+      st.setString(2, content);
+      st.executeUpdate();
+      st.getGeneratedKeys().next();
+      return st.getGeneratedKeys().getInt(1);
+    }
+  }
+
+  protected void delete(String type, int id) throws SQLException {
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "UPDATE " + type + " SET deleted=true, date_delete=now() WHERE id=?")) {
+      st.setInt(1, id);
+      st.executeUpdate();
+    }
   }
 }
