@@ -117,7 +117,8 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
 
   @Test
   public void apiPageCreateRejectsImproperData() {
-    assertEndpoint("/api/page/create", Method.PUT, Map.of("title", "New Page", "category", 0));
+    assertEndpoint(
+        "/api/page/create", Method.PUT, Map.of("title", "New Page", "category", 0, "user", 0));
   }
 
   @Test
@@ -158,7 +159,7 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
 
   @Test
   public void apiRevisionByidRejectsImproperData() {
-    assertEndpoint("/api/revision/byid", Method.POST, Map.of("id", 0, "page_id", 0));
+    assertEndpoint("/api/revision/byid", Method.POST, Map.of("id", 0));
   }
 
   //  @Test
@@ -169,13 +170,14 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
   @Test
   public void apiRevisionCreateRejectsImproperData() {
     assertEndpoint(
-        "/api/revision/create", Method.PUT, Map.of("id", 0, "content", "New revision content"));
+        "/api/revision/create",
+        Method.PUT,
+        Map.of("id", 0, "content", "New revision content", "user", 0));
   }
 
   @Test
   public void apiRevisionUpdateStatusRejectsImproperData() {
-    assertEndpoint(
-        "/api/revision/update/status", Method.PUT, Map.of("id", 0, "page_id", 0, "status", true));
+    assertEndpoint("/api/revision/update/status", Method.PUT, Map.of("id", 0, "status", true));
   }
 
   //  @Test
@@ -203,17 +205,18 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
 
   @Test
   public void apiCommentByidRejectsImproperData() {
-    assertEndpoint("/api/comment/byid", Method.POST, Map.of("id", 0, "page_id", 0));
+    assertEndpoint("/api/comment/byid", Method.POST, Map.of("id", 0));
   }
 
   @Test
   public void apiCommentCreateRejectsImproperData() {
-    assertEndpoint("/api/comment/create", Method.PUT, Map.of("id", 0, "content", "Comment text"));
+    assertEndpoint(
+        "/api/comment/create", Method.PUT, Map.of("id", 0, "content", "Comment text", "user", 0));
   }
 
   @Test
   public void apiCommentDeleteRejectsImproperData() {
-    assertEndpoint("/api/comment/delete", Method.DELETE, Map.of("id", 0, "page_id", 0));
+    assertEndpoint("/api/comment/delete", Method.DELETE, Map.of("id", 0));
   }
 
   // /api/category/

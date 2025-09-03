@@ -22,33 +22,35 @@ public class JDBCRevisionDataProviderIntegrationTest extends JDBCIntegrationTest
     provider = new JDBCRevisionDataProvider(connection);
 
     try (PreparedStatement st =
-        connection.prepareStatement("INSERT INTO categories (name) VALUES (?)")) {
+        connection.prepareStatement("INSERT INTO categories_with_data (name) VALUES (?)")) {
       st.setString(1, "test-category");
       st.executeUpdate();
-    } catch (SQLException ignored) {
+    }
+
+    try (PreparedStatement st =
+        connection.prepareStatement("INSERT INTO users_with_data (username) VALUES (?)")) {
+      st.setString(1, "test-user");
+      st.executeUpdate();
     }
 
     PreparedStatement st1 =
         connection.prepareStatement(
-            "INSERT INTO pages (title, category) VALUES (?, ?)",
+            "INSERT INTO pages_with_data (title, category, user_id) VALUES (?, ?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS);
     st1.setString(1, "test-page1");
     st1.setInt(2, 1);
+    st1.setInt(3, 1);
     st1.executeUpdate();
 
     st1.getGeneratedKeys().next();
     pageId = st1.getGeneratedKeys().getInt(1);
 
-    PreparedStatement st2 =
-        connection.prepareStatement(
-            "INSERT INTO pages (title, category) VALUES (?, ?)",
-            PreparedStatement.RETURN_GENERATED_KEYS);
-    st2.setString(1, "no-revisions");
-    st2.setInt(2, 1);
-    st2.executeUpdate();
+    st1.setString(1, "no-revisions");
+    st1.setInt(2, 1);
+    st1.executeUpdate();
 
-    st2.getGeneratedKeys().next();
-    noRevisionsId = st2.getGeneratedKeys().getInt(1);
+    st1.getGeneratedKeys().next();
+    noRevisionsId = st1.getGeneratedKeys().getInt(1);
   }
 
   @Test
@@ -60,7 +62,8 @@ public class JDBCRevisionDataProviderIntegrationTest extends JDBCIntegrationTest
 
   @Test
   void createRevisionSuccess() throws BadDataException, InternalErrorException {
-    RevisionData revision = new RevisionData(-1, pageId, null, null, LocalDateTime.now(), null);
+    RevisionData revision =
+        new RevisionData(-1, pageId, 1, new byte[] {}, LocalDateTime.now(), null);
 
     int revId = provider.createRevision(revision);
     assertTrue(revId > 0);
@@ -68,21 +71,23 @@ public class JDBCRevisionDataProviderIntegrationTest extends JDBCIntegrationTest
 
   @Test
   void createRevisionFailsWithInvalidPage() {
-    RevisionData revision = new RevisionData(-1, -9999, null, null, LocalDateTime.now(), null);
+    RevisionData revision =
+        new RevisionData(-1, -9999, 1, new byte[] {}, LocalDateTime.now(), null);
 
     assertThrows(BadDataException.class, () -> provider.createRevision(revision));
   }
 
   @Test
   void changeStateSuccess() throws BadDataException, InternalErrorException {
-    RevisionData revision = new RevisionData(-1, pageId, null, null, LocalDateTime.now(), null);
+    RevisionData revision =
+        new RevisionData(-1, pageId, 1, new byte[] {}, LocalDateTime.now(), null);
 
     int revId = provider.createRevision(revision);
-    assertDoesNotThrow(() -> provider.changeState(revId, pageId, true));
+    assertDoesNotThrow(() -> provider.changeState(revId, true));
   }
 
   @Test
   void changeStateFailsForNonexistentRevision() {
-    assertThrows(BadDataException.class, () -> provider.changeState(-1, pageId, true));
+    assertThrows(BadDataException.class, () -> provider.changeState(-1, true));
   }
 }

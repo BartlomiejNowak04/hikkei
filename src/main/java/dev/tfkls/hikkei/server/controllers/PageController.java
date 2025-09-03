@@ -66,11 +66,13 @@ public class PageController {
   public void createPage(RoutingContext ctx) {
     try {
       JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("title", String.class, "category", Integer.class));
+      checkBody(
+          body, Map.of("title", String.class, "category", Integer.class, "user", Integer.class));
       String title = body.getString("title");
       Integer category = body.getInteger("category");
+      Integer user = body.getInteger("user");
 
-      int id = pageProvider.createPage(new PageData(null, null, title, category, null, null));
+      int id = pageProvider.createPage(new PageData(null, user, title, category, null, null));
       ctx.response().setStatusCode(201);
       ctx.json(new JsonObject().put("id", id));
     } catch (Exception e) {

@@ -76,10 +76,9 @@ public class JDBCUserDataProviderTest {
     when(connection.prepareStatement(any())).thenReturn(statement);
     when(statement.executeQuery()).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(true);
-    when(resultSet.getString(2)).thenReturn("test");
-    when(resultSet.getBytes(3)).thenReturn(new byte[] {1, 2, 3});
-    when(resultSet.getTimestamp(4)).thenReturn(new Timestamp(System.currentTimeMillis()));
-    when(resultSet.getBoolean(5)).thenReturn(false);
+    when(resultSet.getString("username")).thenReturn("test");
+    when(resultSet.getBytes("picture")).thenReturn(new byte[] {1, 2, 3});
+    when(resultSet.getTimestamp("joined")).thenReturn(new Timestamp(System.currentTimeMillis()));
 
     UserData data = provider.getUserData(1);
     assertSame("test", data.username());

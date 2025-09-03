@@ -73,7 +73,7 @@ The frontend application communicates with the backend server through an API. Be
     - POST `byurl`: get page with a given url, params: String url
     - POST `search`: search for pages with a phrase in title, params: String title
     - POST `category`: get pages within a category, params: Integer category
-    - PUT `create`: create a page, params: String title, Integer category
+    - PUT `create`: create a page, params: String title, Integer category, Integer user
     - PUT `update/title`: update page title, params: Integer id, String title
     - PUT `update/category`: update page category, params: Integer id, Integer category
     - PUT `update/archive`: archive or de-archive page, params: Integer id, Boolean value
@@ -82,18 +82,18 @@ The frontend application communicates with the backend server through an API. Be
     - POST `page`: get page's revisions, params: Integer page
     - POST `render`: render passed content, params: String content
     - POST `content`: get current content for a page, params: Integer id
-    - POST `byid`: get revision by id, params: Integer id, Integer page_id
+    - POST `byid`: get revision by id, params: Integer id
     - POST `draft`: get user's draft revision for a page, params: Integer page_id, Integer user_id
-    - PUT `create`: create a revision, params: Integer id (page's id), String content
-    - PUT `update/status`: approve or reject a revision, params: Integer id, Integer page_id, Boolean status
+    - PUT `create`: create a revision, params: Integer id (page's id), String content, Integer user
+    - PUT `update/status`: approve or reject a revision, params: Integer id, Boolean status
     - PUT `draft/save`: save a draft revision, params: Integer page_id, Integer user_id, String content
     - DELETE `draft/delete`: delete a draft revision, params: Integer page_id, Integer user_id
 - `/api/comment/`:
     - POST `user`: get user's comments, params: Integer user
     - POST `page`: get page's comments, params: Integer page
-    - POST `byid`: get comment by id, params: Integer id, Integer page_id
-    - PUT `create`: create a comment, params: Integer id (page's id), String content
-    - DELETE `delete`: delete a comment, params: Integer id, Integer page_id
+    - POST `byid`: get comment by id, params: Integer id
+    - PUT `create`: create a comment, params: Integer id (page's id), String content, Integer user
+    - DELETE `delete`: delete a comment, params: Integer id
 - `/api/category/`:
     - POST `/`: get all categories
     - POST `byid`: get category by id, params: Integer id

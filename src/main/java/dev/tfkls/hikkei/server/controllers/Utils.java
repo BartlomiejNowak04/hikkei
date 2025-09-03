@@ -40,15 +40,18 @@ public class Utils {
   public static JsonObject pageToJson(PageData page) {
     return new JsonObject()
         .put("id", page.id())
+        .put("user_id", page.userId())
         .put("title", page.title())
         .put("category", page.category())
-        .put("archived", page.archived());
+        .put("archived", page.archived())
+        .put("created", page.created());
   }
 
   public static JsonObject revisionToJson(RevisionData revision) {
     return new JsonObject()
         .put("id", revision.id())
         .put("page_id", revision.pageId())
+        .put("user_id", revision.userId())
         .put("filename", revision.file())
         .put("date", revision.date() == null ? null : revision.date().toString())
         .put("approved", revision.approved());
@@ -58,6 +61,7 @@ public class Utils {
     return new JsonObject()
         .put("id", comment.id())
         .put("page_id", comment.pageId())
+        .put("user_id", comment.userId())
         .put("content", comment.content())
         .put("date", comment.date() == null ? null : comment.date().toString());
   }

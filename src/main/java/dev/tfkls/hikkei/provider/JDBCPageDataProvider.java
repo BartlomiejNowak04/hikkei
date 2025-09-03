@@ -100,7 +100,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
         connection.prepareStatement(
             "INSERT INTO pages_with_data (user_id, title, category) VALUES (?, ?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
-      st.setInt(3, data.userId());
+      st.setInt(1, data.userId());
       st.setString(2, data.title());
       st.setInt(3, data.category());
       st.executeUpdate();
@@ -113,7 +113,8 @@ public class JDBCPageDataProvider implements PageDataProvider {
     } catch (SQLException e) {
       String message = e.getMessage();
       if (message.contains("already taken")) throw new BadDataException(taken_title);
-      if (message.contains("pages_category_fkey")) throw new BadDataException(invalid_category);
+      if (message.contains("page_category_category_fkey"))
+        throw new BadDataException(invalid_category);
       throw new InternalErrorException(internal_error);
     }
   }

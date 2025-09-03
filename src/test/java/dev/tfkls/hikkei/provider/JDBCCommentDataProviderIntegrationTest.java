@@ -22,39 +22,36 @@ public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest 
     provider = new JDBCCommentDataProvider(connection);
 
     PreparedStatement stCat =
-        connection.prepareStatement("INSERT INTO categories (name) VALUES (?)");
+        connection.prepareStatement("INSERT INTO categories_with_data (name) VALUES (?)");
     stCat.setString(1, "test-category");
     stCat.executeUpdate();
 
+    PreparedStatement stUsr =
+        connection.prepareStatement("INSERT INTO users_with_data (username) VALUES (?)");
+    stUsr.setString(1, "testname");
+    stUsr.executeUpdate();
+
     PreparedStatement stPage =
         connection.prepareStatement(
-            "INSERT INTO pages (title, category) VALUES (?, ?)",
-            PreparedStatement.RETURN_GENERATED_KEYS);
+            "INSERT INTO pages_with_data (title, category, user_id) VALUES (?, ?, ?)");
     stPage.setString(1, "test-page");
     stPage.setInt(2, 1);
+    stPage.setInt(3, 1);
     stPage.executeUpdate();
 
-    stPage.getGeneratedKeys().next();
-    pageId = stPage.getGeneratedKeys().getInt(1);
-
-    PreparedStatement stUser =
-        connection.prepareStatement(
-            "INSERT INTO users (username) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS);
-    stUser.setString(1, "testname");
-    stUser.executeUpdate();
-
-    stUser.getGeneratedKeys().next();
-    userId = stUser.getGeneratedKeys().getInt(1);
+    pageId = 1;
+    userId = 1;
   }
 
   @Test
   void pageWithNoCommentsReturnsEmptyList() throws InternalErrorException, SQLException {
     PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO pages (title, category) VALUES (?, ?)",
+            "INSERT INTO pages_with_data (title, category, user_id) VALUES (?, ?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS);
     st.setString(1, "no-comments");
     st.setInt(2, 1);
+    st.setInt(3, 1);
     st.executeUpdate();
 
     st.getGeneratedKeys().next();
@@ -69,7 +66,8 @@ public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest 
   void userWithNoCommentsReturnsEmptyList() throws InternalErrorException, SQLException {
     PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO users (username) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS);
+            "INSERT INTO users_with_data (username) VALUES (?)",
+            PreparedStatement.RETURN_GENERATED_KEYS);
     st.setString(1, "no-comments");
     st.executeUpdate();
 

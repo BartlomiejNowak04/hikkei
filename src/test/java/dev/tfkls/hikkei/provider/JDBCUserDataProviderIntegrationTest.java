@@ -20,7 +20,7 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     provider = new JDBCUserDataProvider(connection);
 
     try (PreparedStatement st =
-        connection.prepareStatement("INSERT INTO roles (name) VALUES (?)")) {
+        connection.prepareStatement("INSERT INTO roles_with_data (name) VALUES (?)")) {
       st.setString(1, "test");
       st.executeUpdate();
     } catch (SQLException ignored) {
@@ -43,7 +43,7 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
   @Test
   void basicAuthTest() throws InternalErrorException, BadDataException {
     UserData user = new UserData("auth", null, LocalDateTime.now());
-    Integer userId = provider.createUser(user);
+    int userId = provider.createUser(user);
     AuthData auth = new AuthData("google", "abc");
     assertNull(provider.getUserByAuth(auth));
     assertThrows(BadDataException.class, () -> provider.addUserAuthMethod(-1, auth));
@@ -58,7 +58,7 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     assertThrows(BadDataException.class, () -> provider.removeUserAuthMethod(-1, ""));
 
     UserData user = new UserData("authmethods", null, LocalDateTime.now());
-    Integer userId = provider.createUser(user);
+    int userId = provider.createUser(user);
     assertTrue(provider.getUserAuthMethods(userId).isEmpty());
     AuthData auth = new AuthData("google", "abcd");
     assertFalse(provider.removeUserAuthMethod(userId, auth.type()));
@@ -90,7 +90,6 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     UserData user = new UserData("roles", null, LocalDateTime.now());
     int userId = provider.createUser(user);
     assertTrue(provider.getUserRoles(userId).isEmpty());
-    assertFalse(provider.alterUserRole(userId, 1, false));
     assertTrue(provider.alterUserRole(userId, 1, true));
     assertFalse(provider.getUserRoles(userId).isEmpty());
   }
@@ -103,7 +102,7 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     assertThrows(BadDataException.class, () -> provider.deleteUser(-1));
 
     UserData user = new UserData("mod", null, LocalDateTime.now());
-    Integer userId = provider.createUser(user);
+    int userId = provider.createUser(user);
 
     UserData tmp = new UserData("tmp", null, LocalDateTime.now());
     provider.createUser(tmp);

@@ -27,14 +27,14 @@ public class CommentRouteHandlerIntegrationTest extends RouteHandlerIntegrationT
         .body("$", hasSize(2))
         .body("[0].id", equalTo(1))
         .body("[0].page_id", equalTo(10))
+        .body("[0].user_id", equalTo(1))
         .body("[0].content", equalTo("First comment"))
         .body("[0].date", equalTo(null))
-        .body("[0].deleted", equalTo(false))
         .body("[1].id", equalTo(2))
         .body("[1].page_id", equalTo(10))
+        .body("[1].user_id", equalTo(1))
         .body("[1].content", equalTo("Second comment"))
-        .body("[1].date", equalTo(null))
-        .body("[1].deleted", equalTo(false));
+        .body("[1].date", equalTo(null));
 
     verify(commentProvider, times(1)).getByUser(42);
   }

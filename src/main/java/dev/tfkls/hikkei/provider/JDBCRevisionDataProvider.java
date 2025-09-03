@@ -28,7 +28,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
             PreparedStatement.RETURN_GENERATED_KEYS)) {
       st.setInt(1, data.pageId());
       st.setInt(2, data.userId());
-      st.setObject(2, data.file());
+      st.setObject(3, data.file());
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
@@ -51,6 +51,9 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
       st.setInt(2, id);
       if (st.executeUpdate() < 1) throw new BadDataException("Invalid revision id");
     } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("revision_approved_revision_id_fkey"))
+        throw new BadDataException("Invalid revision id");
       throw new InternalErrorException(internal_error);
     }
   }

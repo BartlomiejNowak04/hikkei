@@ -21,10 +21,9 @@ public class CommentController {
   public void addComment(RoutingContext ctx) {
     try {
       JsonObject body = ctx.body().asJsonObject();
-      checkBody(
-          body, Map.of("id", Integer.class, "user_id", Integer.class, "content", String.class));
+      checkBody(body, Map.of("id", Integer.class, "user", Integer.class, "content", String.class));
       Integer id = body.getInteger("id");
-      Integer userId = body.getInteger("user_id");
+      Integer userId = body.getInteger("user");
       String content = body.getString("content");
 
       int idc = commentProvider.addComment(new CommentData(null, id, userId, content, null));
@@ -38,9 +37,8 @@ public class CommentController {
   public void deleteComment(RoutingContext ctx) {
     try {
       JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class, "page_id", Integer.class));
+      checkBody(body, Map.of("id", Integer.class));
       Integer id = body.getInteger("id");
-      Integer pageId = body.getInteger("page_id");
 
       commentProvider.deleteComment(id);
       ctx.response().setStatusCode(200).end();
@@ -79,9 +77,8 @@ public class CommentController {
   public void getById(RoutingContext ctx) {
     try {
       JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class, "page_id", Integer.class));
+      checkBody(body, Map.of("id", Integer.class));
       Integer id = body.getInteger("id");
-      Integer pageId = body.getInteger("page_id");
 
       CommentData data = commentProvider.getById(id);
       if (data == null) throw new BadDataException("Incorrect parameter value: id");

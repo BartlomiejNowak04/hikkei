@@ -26,13 +26,14 @@ public class RevisionController {
   public void addRevision(RoutingContext ctx) {
     try {
       JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class, "content", String.class));
+      checkBody(body, Map.of("id", Integer.class, "content", String.class, "user", Integer.class));
       Integer id = body.getInteger("id");
       String content = body.getString("content");
+      Integer user = body.getInteger("user");
 
       byte[] filename = versionProvider.storeContent(content);
       int idr =
-          revisionProvider.createRevision(new RevisionData(null, null, id, filename, null, null));
+          revisionProvider.createRevision(new RevisionData(id, null, user, filename, null, null));
       ctx.response().setStatusCode(201);
       ctx.json(new JsonObject().put("id", idr));
     } catch (Exception e) {
@@ -43,13 +44,11 @@ public class RevisionController {
   public void changeStatus(RoutingContext ctx) {
     try {
       JsonObject body = ctx.body().asJsonObject();
-      checkBody(
-          body, Map.of("id", Integer.class, "status", Boolean.class, "page_id", Integer.class));
+      checkBody(body, Map.of("id", Integer.class, "status", Boolean.class));
       Integer id = body.getInteger("id");
-      Integer pageId = body.getInteger("page_id");
       Boolean status = body.getBoolean("status");
 
-      revisionProvider.changeState(id, pageId, status);
+      revisionProvider.changeState(id, status);
       ctx.response().setStatusCode(204).end();
     } catch (Exception e) {
       ctx.fail(exceptionToCode(e), e);
@@ -112,9 +111,8 @@ public class RevisionController {
   public void getById(RoutingContext ctx) {
     try {
       JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class, "page_id", Integer.class));
+      checkBody(body, Map.of("id", Integer.class));
       Integer id = body.getInteger("id");
-      Integer pageId = body.getInteger("page_id");
 
       RevisionData data = revisionProvider.getById(id);
       if (data == null) throw new BadDataException("Incorrect parameter value: id");

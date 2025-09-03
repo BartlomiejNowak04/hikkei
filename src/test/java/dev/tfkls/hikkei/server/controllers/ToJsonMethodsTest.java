@@ -8,34 +8,36 @@ import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import io.vertx.core.json.JsonObject;
 import java.time.LocalDateTime;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class ToJsonMethodsTest {
 
   @Test
   void pageToJsonShouldMapCorrectly() {
-    PageData page = new PageData(1, 2, "Test Page", 42, false, null);
+    LocalDateTime now = LocalDateTime.now();
+    PageData page = new PageData(1, 2, "Test Page", 42, false, now);
 
     JsonObject json = pageToJson(page);
 
     assertEquals(1, json.getInteger("id"));
+    assertEquals(2, json.getInteger("user_id"));
     assertEquals("Test Page", json.getString("title"));
     assertEquals(42, json.getInteger("category"));
     assertFalse(json.getBoolean("archived"));
+    assertEquals(now, LocalDateTime.parse(json.getString("created")));
   }
 
   @Test
   void revisionToJsonShouldMapCorrectly() {
     LocalDateTime now = LocalDateTime.now();
-    UUID fileId = UUID.randomUUID();
-    RevisionData revision = new RevisionData(5, 2, 1, null, now, true);
+    RevisionData revision = new RevisionData(5, 2, 1, new byte[] {0}, now, true);
 
     JsonObject json = revisionToJson(revision);
 
     assertEquals(5, json.getInteger("id"));
-    assertEquals(1, json.getInteger("page_id"));
-    assertEquals(fileId, UUID.fromString(json.getString("filename")));
+    assertEquals(2, json.getInteger("page_id"));
+    assertEquals(1, json.getInteger("user_id"));
+    assertArrayEquals(new byte[] {0}, json.getBinary("filename"));
     assertEquals(now, LocalDateTime.parse(json.getString("date")));
     assertTrue(json.getBoolean("approved"));
   }
@@ -52,7 +54,6 @@ class ToJsonMethodsTest {
     assertEquals(1, json.getInteger("user_id"));
     assertEquals("Hello world", json.getString("content"));
     assertEquals(now, LocalDateTime.parse(json.getString("date")));
-    assertFalse(json.getBoolean("deleted"));
   }
 
   @Test
@@ -63,12 +64,16 @@ class ToJsonMethodsTest {
 
     assertTrue(json.containsKey("id"));
     assertNull(json.getValue("id"));
+    assertTrue(json.containsKey("user_id"));
+    assertNull(json.getValue("user_id"));
     assertTrue(json.containsKey("title"));
     assertNull(json.getValue("title"));
     assertTrue(json.containsKey("category"));
     assertNull(json.getValue("category"));
     assertTrue(json.containsKey("archived"));
     assertNull(json.getValue("archived"));
+    assertTrue(json.containsKey("created"));
+    assertNull(json.getValue("created"));
   }
 
   @Test
@@ -81,6 +86,8 @@ class ToJsonMethodsTest {
     assertNull(json.getValue("id"));
     assertTrue(json.containsKey("page_id"));
     assertNull(json.getValue("page_id"));
+    assertTrue(json.containsKey("user_id"));
+    assertNull(json.getValue("user_id"));
     assertTrue(json.containsKey("filename"));
     assertNull(json.getValue("filename"));
     assertTrue(json.containsKey("date"));
@@ -105,7 +112,5 @@ class ToJsonMethodsTest {
     assertNull(json.getValue("content"));
     assertTrue(json.containsKey("date"));
     assertNull(json.getValue("date"));
-    assertTrue(json.containsKey("deleted"));
-    assertNull(json.getValue("deleted"));
   }
 }
