@@ -3,6 +3,7 @@ package dev.tfkls.hikkei.provider;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
+import dev.tfkls.hikkei.model.file.StoredFile;
 import java.io.IOException;
 import java.nio.file.*;
 import org.junit.jupiter.api.*;
@@ -31,12 +32,21 @@ class FilesystemFileProviderTest {
   void testStoreContent() throws Exception {
     byte[] data = "Hello world".getBytes();
 
-    byte[] id = provider.storeContent(data);
+    byte[] id = provider.storeContent(data, null);
     assertNotNull(id);
 
     Path file = tempDir.resolve(new String(id));
     assertTrue(Files.exists(file));
     assertArrayEquals(data, Files.readAllBytes(file));
+  }
+
+  @Test
+  void mimeGetsSaved() throws Exception {
+    byte[] data = "Hello world".getBytes();
+    byte[] id = provider.storeContent(data, "bin");
+    StoredFile file = provider.getContent(id);
+    assertEquals("bin", file.mime());
+    assertArrayEquals(data, file.data());
   }
 
   @Test
@@ -66,8 +76,8 @@ class FilesystemFileProviderTest {
     byte[] data1 = "File1".getBytes();
     byte[] data2 = "File2".getBytes();
 
-    byte[] id1 = provider.storeContent(data1);
-    byte[] id2 = provider.storeContent(data2);
+    byte[] id1 = provider.storeContent(data1, null);
+    byte[] id2 = provider.storeContent(data2, null);
 
     assertNotEquals(new String(id1), new String(id2));
   }

@@ -2,6 +2,7 @@ package dev.tfkls.hikkei.server;
 
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
+import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
@@ -20,6 +21,7 @@ public class MainVerticle extends VerticleBase {
   private final CommentDataProvider commentProvider;
   private final CategoryDataProvider categoryProvider;
   private final VersionProvider versionProvider;
+  private final FileProvider fileProvider;
   private final Integer port;
 
   public MainVerticle(
@@ -29,6 +31,7 @@ public class MainVerticle extends VerticleBase {
       CommentDataProvider commentProvider,
       CategoryDataProvider categoryProvider,
       VersionProvider versionProvider,
+      FileProvider fileProvider,
       Integer port) {
     super();
     this.userProvider = userProvider;
@@ -37,12 +40,13 @@ public class MainVerticle extends VerticleBase {
     this.commentProvider = commentProvider;
     this.categoryProvider = categoryProvider;
     this.versionProvider = versionProvider;
+    this.fileProvider = fileProvider;
     this.port = port;
   }
 
   @Override
   public Future<?> start() {
-    UserRouteHandler userRoute = new UserRouteHandler(vertx, userProvider);
+    UserRouteHandler userRoute = new UserRouteHandler(vertx, userProvider, fileProvider);
     PageRouteHandler pageRoute = new PageRouteHandler(vertx, pageProvider);
     RevisionRouteHandler revisionRoute =
         new RevisionRouteHandler(vertx, revisionProvider, versionProvider);
@@ -51,7 +55,7 @@ public class MainVerticle extends VerticleBase {
 
     Router router = Router.router(vertx);
     router.route("/api/*").failureHandler(new FailureHandler());
-    router.route("/api/*").handler(BodyHandler.create());
+    router.route("/api/*").handler(BodyHandler.create().setDeleteUploadedFilesOnEnd(true));
     router.route("/api/user/*").subRouter(userRoute.getRouter());
     router.route("/api/page/*").subRouter(pageRoute.getRouter());
     router.route("/api/revision/*").subRouter(revisionRoute.getRouter());

@@ -55,7 +55,8 @@ The frontend application communicates with the backend server through an API. Be
 - `/api/user/`:
     - POST `login`: log a user in
     - POST `byid`: get user by id, params: Integer id
-    - PUT `create`: create a user, params: String name, Picture pfp (optional)
+    - POST `pfp`: get user's profile picture, params: Integer id
+    - PUT `create`: create a user, params: String name
     - PUT `update/name`: update username, params: Integer id, String name
     - PUT `update/pfp`: update profile picture, params: Integer id, Picture pfp
     - DELETE `delete`: delete a user, params: Integer id
@@ -101,7 +102,8 @@ POSTGRES_HOST=[hostname]:[port]
 POSTGRES_NAME=[database_name]
 POSTGRES_USER=[username]
 POSTGRES_PASS=[password]
-FILE_DIRECTORY=/directory/ending/with/a/slash/
+FILE_DIRECTORY=/directory/where/revisions/are/kept
+IMAGE_DIRECTORY=/directory/where/images/are/kept
 PORT=[port_number]
 ```
 
@@ -121,6 +123,9 @@ psql -h [hostname] -p [post] -d [database_name] -U [username]
 
 ### Version Control
 All of the version-control-related files are kept in the `[FILE_DIRECTORY]` directory, to which the user running the backend application needs read and write permissions.
+
+### Static files
+All of the static files are kept in the `[IMAGE_DIRECTORY]` directory.
 
 ### API Server
 The project uses Vert.x to create an asynchronous HTTP API. It is run locally, on port `[PORT]`.

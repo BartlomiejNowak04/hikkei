@@ -3,6 +3,7 @@ package dev.tfkls.hikkei.provider;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.file.FileProvider;
+import dev.tfkls.hikkei.model.file.StoredFile;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.UUID;
@@ -17,13 +18,16 @@ public class FilesystemFileProvider implements FileProvider {
   }
 
   @Override
-  public byte[] getContent(byte[] id) throws BadDataException, InternalErrorException {
+  public StoredFile getContent(byte[] id) throws BadDataException, InternalErrorException {
     try {
-      String relativePathStr = new String(id);
-      Path filePath = dir.resolve(relativePathStr).normalize();
+      String decoded = new String(id);
+      int dot = decoded.lastIndexOf('.');
+      Path filePath = dir.resolve(decoded).normalize();
       if (!filePath.startsWith(dir)) throw new BadDataException("Invalid data id");
 
-      return Files.readAllBytes(filePath);
+      return new StoredFile(
+          Files.readAllBytes(filePath),
+          dot == -1 ? null : decoded.substring(dot + 1).replace('$', '/'));
     } catch (NoSuchFileException e) {
       throw new BadDataException("Invalid data id");
     } catch (IOException e) {
@@ -32,9 +36,9 @@ public class FilesystemFileProvider implements FileProvider {
   }
 
   @Override
-  public byte[] storeContent(byte[] data) throws InternalErrorException {
+  public byte[] storeContent(byte[] data, String mime) throws InternalErrorException {
     try {
-      String filename = UUID.randomUUID().toString();
+      String filename = UUID.randomUUID() + (mime == null ? "" : "." + mime.replace('/', '$'));
       Path filePath = dir.resolve(filename);
 
       Files.write(filePath, data);

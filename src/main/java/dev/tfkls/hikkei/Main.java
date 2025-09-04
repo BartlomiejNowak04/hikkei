@@ -2,10 +2,12 @@ package dev.tfkls.hikkei;
 
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
+import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
+import dev.tfkls.hikkei.provider.FilesystemFileProvider;
 import dev.tfkls.hikkei.provider.FilesystemVersionProvider;
 import dev.tfkls.hikkei.provider.JDBC.*;
 import dev.tfkls.hikkei.server.MainVerticle;
@@ -25,6 +27,7 @@ public class Main {
     String db_user = dotenv.get("POSTGRES_USER");
     String db_password = dotenv.get("POSTGRES_PASS");
     String file_dir = dotenv.get("FILE_DIRECTORY");
+    String img_dir = dotenv.get("IMAGE_DIRECTORY");
     Integer port = Integer.valueOf(dotenv.get("PORT"));
     System.out.println("Read environment variables");
 
@@ -44,6 +47,7 @@ public class Main {
     CommentDataProvider commentDataProvider = new JDBCCommentDataProvider(connection);
     CategoryDataProvider categoryDataProvider = new JDBCCategoryDataProvider(connection);
     VersionProvider versionProvider = new FilesystemVersionProvider(file_dir);
+    FileProvider fileProvider = new FilesystemFileProvider(img_dir);
 
     System.out.println("Deploying the application");
     Vertx vertx = Vertx.vertx();
@@ -55,6 +59,7 @@ public class Main {
             commentDataProvider,
             categoryDataProvider,
             versionProvider,
+            fileProvider,
             port));
   }
 }

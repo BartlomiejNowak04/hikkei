@@ -25,6 +25,7 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     verifyNoInteractions(commentProvider);
     verifyNoInteractions(categoryProvider);
     verifyNoInteractions(versionProvider);
+    verifyNoInteractions(fileProvider);
   }
 
   private void assertEndpoint(String endpoint, Method method, Map<String, Object> constraints) {
@@ -61,20 +62,20 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
   //    assertEndpoint("/api/user/byid", Method.POST, Map.of("id", 0));
   //  }
   //
+  @Test
+  public void apiUserPfpRejectsImproperData() {
+    assertEndpoint("/api/user/pfp", Method.POST, Map.of("id", 0));
+  }
+
+  //
   //  @Test
   //  public void apiUserCreateRejectsImproperData() {
-  //    assertEndpoint("/api/user/create", Method.PUT, Map.of("name", "example", "pfp",
-  // "<picture>"));
+  //    assertEndpoint("/api/user/create", Method.PUT, Map.of("name", "example"));
   //  }
   //
   //  @Test
   //  public void apiUserUpdateNameRejectsImproperData() {
   //    assertEndpoint("/api/user/update/name", Method.PUT, Map.of("id", 0, "name", "newName"));
-  //  }
-  //
-  //  @Test
-  //  public void apiUserUpdatePfpRejectsImproperData() {
-  //    assertEndpoint("/api/user/update/pfp", Method.PUT, Map.of("id", 0, "pfp", "<picture>"));
   //  }
   //
   //  @Test

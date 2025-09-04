@@ -4,6 +4,7 @@ import static org.mockito.Mockito.mock;
 
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
+import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
@@ -29,6 +30,7 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
   protected CommentDataProvider commentProvider;
   protected CategoryDataProvider categoryProvider;
   protected VersionProvider versionProvider;
+  protected FileProvider fileProvider;
 
   @BeforeAll
   void initServer(Vertx vertx, VertxTestContext testContext) {
@@ -42,6 +44,7 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
     commentProvider = mock();
     categoryProvider = mock();
     versionProvider = mock();
+    fileProvider = mock();
 
     vertx
         .deployVerticle(
@@ -52,6 +55,7 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
                 commentProvider,
                 categoryProvider,
                 versionProvider,
+                fileProvider,
                 port))
         .onComplete(testContext.succeedingThenComplete());
   }
@@ -64,6 +68,7 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
         revisionProvider,
         commentProvider,
         categoryProvider,
-        versionProvider);
+        versionProvider,
+        fileProvider);
   }
 }
