@@ -2,34 +2,34 @@ package dev.tfkls.hikkei.provider;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
-import dev.tfkls.hikkei.model.version.VersionProvider;
+import dev.tfkls.hikkei.model.file.VersionProvider;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.UUID;
 
-public class FileVersionProvider implements VersionProvider {
-  private final String dir;
+public class FilesystemVersionProvider implements VersionProvider {
+  private final Path dir;
 
-  public FileVersionProvider(String directory) {
-    dir = directory;
+  public FilesystemVersionProvider(String directory) {
+    dir = Paths.get(directory);
+    if (!Files.exists(dir) || !Files.isDirectory(dir))
+      throw new InvalidPathException(null, "Invalid directory: " + directory);
   }
 
   @Override
-  public String getContent(byte[] id) throws BadDataException, InternalErrorException {
-    if (id == null || id.length != 16) throw new BadDataException("Invalid version id");
+  public String getVersion(byte[] id) throws BadDataException, InternalErrorException {
+    if (id == null || id.length != 16) throw new BadDataException("Invalid data id");
     ByteBuffer buffer = ByteBuffer.wrap(id);
     long high = buffer.getLong();
     long low = buffer.getLong();
     UUID uuid = new UUID(high, low);
 
     try {
-      return Files.readString(Path.of(dir, uuid.toString()));
+      return Files.readString(dir.resolve(uuid.toString()));
     } catch (NoSuchFileException e) {
-      throw new BadDataException("Invalid version id");
+      throw new BadDataException("Invalid data id");
     } catch (IOException e) {
       throw new InternalErrorException("Filesystem internal error");
     }
@@ -38,7 +38,7 @@ public class FileVersionProvider implements VersionProvider {
   @Override
   public byte[] storeContent(String content) throws InternalErrorException {
     UUID id = UUID.randomUUID();
-    try (FileWriter writer = new FileWriter(dir + id)) {
+    try (FileWriter writer = new FileWriter(dir.resolve(id.toString()).toFile())) {
       writer.write(content);
       ByteBuffer buffer = ByteBuffer.allocate(16);
       buffer.putLong(id.getMostSignificantBits());
@@ -47,5 +47,12 @@ public class FileVersionProvider implements VersionProvider {
     } catch (IOException e) {
       throw new InternalErrorException("Filesystem internal error");
     }
+  }
+
+  @Override
+  public byte[] storeVersion(String content, byte[] previous)
+      throws BadDataException, InternalErrorException {
+    getVersion(previous);
+    return storeContent(content);
   }
 }

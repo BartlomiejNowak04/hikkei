@@ -1,7 +1,7 @@
 package dev.tfkls.hikkei.server.routes;
 
+import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
-import dev.tfkls.hikkei.model.version.VersionProvider;
 import dev.tfkls.hikkei.server.controllers.RevisionController;
 import io.vertx.core.Vertx;
 

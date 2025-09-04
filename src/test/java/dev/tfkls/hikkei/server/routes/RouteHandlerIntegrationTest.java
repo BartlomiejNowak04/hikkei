@@ -4,10 +4,10 @@ import static org.mockito.Mockito.mock;
 
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
+import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
-import dev.tfkls.hikkei.model.version.VersionProvider;
 import dev.tfkls.hikkei.server.MainVerticle;
 import dev.tfkls.hikkei.test.IntegrationTest;
 import io.restassured.RestAssured;

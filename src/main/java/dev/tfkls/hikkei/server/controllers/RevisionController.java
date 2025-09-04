@@ -4,9 +4,9 @@ import static dev.tfkls.hikkei.server.controllers.Utils.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
-import dev.tfkls.hikkei.model.version.VersionProvider;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -96,7 +96,7 @@ public class RevisionController {
 
       String data = "";
       if (!revisions.isEmpty()) {
-        data = versionProvider.getContent(revisions.getFirst().file());
+        data = versionProvider.getVersion(revisions.getFirst().file());
         if (data == null)
           throw new InternalErrorException("Couldn't retrieve content for page " + id);
       }

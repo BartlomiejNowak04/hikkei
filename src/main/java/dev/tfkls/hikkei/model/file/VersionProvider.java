@@ -1,10 +1,13 @@
-package dev.tfkls.hikkei.model.version;
+package dev.tfkls.hikkei.model.file;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 
 public interface VersionProvider {
-  String getContent(byte[] id) throws BadDataException, InternalErrorException;
+  String getVersion(byte[] id) throws BadDataException, InternalErrorException;
 
   byte[] storeContent(String content) throws InternalErrorException;
+
+  byte[] storeVersion(String content, byte[] previous)
+      throws BadDataException, InternalErrorException;
 }

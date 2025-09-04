@@ -2,11 +2,11 @@ package dev.tfkls.hikkei;
 
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
+import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
-import dev.tfkls.hikkei.model.version.VersionProvider;
-import dev.tfkls.hikkei.provider.FileVersionProvider;
+import dev.tfkls.hikkei.provider.FilesystemVersionProvider;
 import dev.tfkls.hikkei.provider.JDBC.*;
 import dev.tfkls.hikkei.server.MainVerticle;
 import io.github.cdimascio.dotenv.Dotenv;
@@ -43,7 +43,7 @@ public class Main {
     RevisionDataProvider revisionDataProvider = new JDBCRevisionDataProvider(connection);
     CommentDataProvider commentDataProvider = new JDBCCommentDataProvider(connection);
     CategoryDataProvider categoryDataProvider = new JDBCCategoryDataProvider(connection);
-    VersionProvider versionProvider = new FileVersionProvider(file_dir);
+    VersionProvider versionProvider = new FilesystemVersionProvider(file_dir);
 
     System.out.println("Deploying the application");
     Vertx vertx = Vertx.vertx();

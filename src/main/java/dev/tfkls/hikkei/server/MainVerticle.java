@@ -2,10 +2,10 @@ package dev.tfkls.hikkei.server;
 
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
+import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
-import dev.tfkls.hikkei.model.version.VersionProvider;
 import dev.tfkls.hikkei.server.handlers.FailureHandler;
 import dev.tfkls.hikkei.server.routes.*;
 import io.vertx.core.Future;
