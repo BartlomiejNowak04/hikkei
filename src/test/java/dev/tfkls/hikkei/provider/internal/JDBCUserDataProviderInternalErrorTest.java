@@ -104,11 +104,4 @@ public class JDBCUserDataProviderInternalErrorTest {
         assertThrows(InternalErrorException.class, () -> provider.removeUserAuthMethod(1, "type"));
     assertEquals(internal_error, ex.getMessage());
   }
-
-  @Test
-  void alterUserRoleThrowsInternalError() {
-    InternalErrorException ex =
-        assertThrows(InternalErrorException.class, () -> provider.alterUserRole(1, 2, true));
-    assertEquals(internal_error, ex.getMessage());
-  }
 }

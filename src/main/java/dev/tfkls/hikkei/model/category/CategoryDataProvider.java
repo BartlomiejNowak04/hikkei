@@ -2,6 +2,7 @@ package dev.tfkls.hikkei.model.category;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import java.util.List;
 
 public interface CategoryDataProvider {
@@ -13,7 +14,7 @@ public interface CategoryDataProvider {
 
   void changeName(int id, String name) throws InternalErrorException, BadDataException;
 
-  void updatePermission(int categoryId, int roleId, String permission, Boolean set)
+  void updatePermission(int categoryId, int userId, PermissionLevel level)
       throws InternalErrorException, BadDataException;
 
   void deleteCategory(int id) throws InternalErrorException;

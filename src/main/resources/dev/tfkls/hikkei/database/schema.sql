@@ -1,6 +1,9 @@
+CREATE TYPE PermissionLevel AS ENUM ('NoAccess', 'Untrusted', 'Trusted', 'Moderator', 'Admin', 'SuperAdmin');
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     joined TIMESTAMP NOT NULL DEFAULT now(),
+    minimal_permission PermissionLevel NOT NULL DEFAULT 'NoAccess',
     deleted BOOLEAN NOT NULL DEFAULT false,
     date_deleted TIMESTAMP
 );
@@ -28,31 +31,10 @@ CREATE TABLE auth (
     UNIQUE(type, token)
 );
 
-CREATE TABLE roles (
-    id SERIAL PRIMARY KEY,
-    created TIMESTAMP NOT NULL DEFAULT now(),
-    deleted BOOLEAN NOT NULL DEFAULT FALSE,
-    date_deleted TIMESTAMP
-);
-
-CREATE TABLE role_name (
-    role_id INTEGER REFERENCES roles(id),
-    date TIMESTAMP NOT NULL DEFAULT now(),
-    name VARCHAR(125) NOT NULL,
-    PRIMARY KEY (role_id, date)
-);
-
-CREATE TABLE user_role (
-    user_id INTEGER REFERENCES users(id),
-    role_id INTEGER REFERENCES roles(id),
-    date TIMESTAMP NOT NULL DEFAULT now(),
-    set BOOLEAN NOT NULL,
-    PRIMARY KEY (user_id, role_id, date)
-);
-
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
     created TIMESTAMP NOT NULL DEFAULT now(),
+    default_permission PermissionLevel NOT NULL DEFAULT 'Untrusted',
     deleted BOOLEAN NOT NULL DEFAULT FALSE,
     date_deleted TIMESTAMP
 );
@@ -64,14 +46,12 @@ CREATE TABLE category_name (
     PRIMARY KEY (category_id, date)
 );
 
--- NOTE: Maybe permission_name should be an enumerator instead
-CREATE TABLE category_role (
+CREATE TABLE user_category (
+    user_id INTEGER REFERENCES users(id),
     category_id INTEGER REFERENCES categories(id),
-    role_id INTEGER REFERENCES roles(id),
-    permission_name VARCHAR(125) NOT NULL,
-    permission_status BOOLEAN,
     date TIMESTAMP NOT NULL DEFAULT now(),
-    PRIMARY KEY (category_id, role_id, permission_name, date)
+    permission PermissionLevel,
+    PRIMARY KEY (user_id, category_id, date)
 );
 
 CREATE TABLE pages (
@@ -106,7 +86,7 @@ CREATE TABLE page_archived (
 
 CREATE TABLE revisions (
     id SERIAL PRIMARY KEY ,
-    page_id INTEGER REFERENCES pages(id),
+    page_id INTEGER REFERENCES pages(id) NOT NULL,
     user_id INTEGER REFERENCES users(id),
     -- binary data from file provider
     file BYTEA NOT NULL,
@@ -124,7 +104,7 @@ CREATE TABLE revision_approved (
 
 CREATE TABLE comments (
     id SERIAL PRIMARY KEY ,
-    page_id INTEGER REFERENCES pages(id),
+    page_id INTEGER REFERENCES pages(id) NOT NULL,
     user_id INTEGER REFERENCES users(id),
     content TEXT NOT NULL,
     date TIMESTAMP NOT NULL DEFAULT NOW(),

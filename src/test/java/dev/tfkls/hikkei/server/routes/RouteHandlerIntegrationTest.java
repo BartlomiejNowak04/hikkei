@@ -6,7 +6,6 @@ import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
-import dev.tfkls.hikkei.model.role.RoleDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.model.version.VersionProvider;
 import dev.tfkls.hikkei.server.MainVerticle;
@@ -29,7 +28,6 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
   protected RevisionDataProvider revisionProvider;
   protected CommentDataProvider commentProvider;
   protected CategoryDataProvider categoryProvider;
-  protected RoleDataProvider roleProvider;
   protected VersionProvider versionProvider;
 
   @BeforeAll
@@ -43,7 +41,6 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
     revisionProvider = mock();
     commentProvider = mock();
     categoryProvider = mock();
-    roleProvider = mock();
     versionProvider = mock();
 
     vertx
@@ -54,7 +51,6 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
                 revisionProvider,
                 commentProvider,
                 categoryProvider,
-                roleProvider,
                 versionProvider,
                 port))
         .onComplete(testContext.succeedingThenComplete());
@@ -68,7 +64,6 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
         revisionProvider,
         commentProvider,
         categoryProvider,
-        roleProvider,
         versionProvider);
   }
 }

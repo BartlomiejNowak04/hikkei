@@ -72,36 +72,6 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
   }
 
   @Test
-  void getByRoleTest() throws Exception {
-    assertNull(provider.getByRole(-1));
-    int id = create_role("role1");
-    assertTrue(provider.getByRole(id).isEmpty());
-
-    try (PreparedStatement st =
-        connection.prepareStatement(
-            "insert into user_role (user_id, role_id, set) values (?, ?, true)")) {
-      int uid = create_user("roletest", null);
-      st.setInt(1, uid);
-      st.setInt(2, id);
-      st.executeUpdate();
-      List<UserData> users = provider.getByRole(id);
-      assertEquals(1, users.size());
-      assertEquals(uid, users.getFirst().id());
-      assertEquals("roletest", users.getFirst().username());
-
-      delete("user", uid);
-      int u2id = create_user("roletest2", null);
-      st.setInt(1, u2id);
-      st.setInt(2, id);
-      st.executeUpdate();
-      users = provider.getByRole(id);
-      assertEquals(1, users.size());
-      assertEquals(u2id, users.getFirst().id());
-      assertEquals("roletest2", users.getFirst().username());
-    }
-  }
-
-  @Test
   void getUserAuthMethodsTest() throws Exception {
     assertNull(provider.getUserAuthMethods(-1));
     int id = create_user("getauth", null);
@@ -121,14 +91,18 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
 
   @Test
   void freshlyAddedUserExists() throws Exception {
-    UserData user = new UserData("tt");
+    UserData user = new UserData("tt", new byte[] {1, 2});
     int userId = provider.createUser(user);
     assertTrue(userId > 0);
 
-    try (PreparedStatement st = connection.prepareStatement("select 1 from users where id = ?")) {
+    try (PreparedStatement st =
+        connection.prepareStatement("select * from users_with_data where id = ?")) {
       st.setInt(1, userId);
       ResultSet rs = st.executeQuery();
       assertTrue(rs.next());
+      assertEquals(userId, rs.getInt("id"));
+      assertEquals("tt", rs.getString("username"));
+      assertArrayEquals(new byte[] {1, 2}, rs.getBytes("picture"));
     }
   }
 
@@ -267,41 +241,6 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
 
     delete("user", id);
     e = assertThrows(BadDataException.class, () -> provider.removeUserAuthMethod(-1, "a"));
-    assertEquals(Config.invalid_user, e.getMessage());
-  }
-
-  @Test
-  void alterUserRoleTest() throws Exception {
-    int roleId = create_role("testtole");
-    int userId = create_user("roletestuser", null);
-    BadDataException e =
-        assertThrows(BadDataException.class, () -> provider.alterUserRole(-1, roleId, true));
-    assertEquals(Config.invalid_user, e.getMessage());
-    e = assertThrows(BadDataException.class, () -> provider.alterUserRole(userId, -1, true));
-    assertEquals(Config.invalid_role, e.getMessage());
-
-    provider.alterUserRole(userId, roleId, false);
-    provider.alterUserRole(userId, roleId, true);
-    try (PreparedStatement st =
-        connection.prepareStatement("select * from user_role_current where user_id = ?")) {
-      st.setInt(1, userId);
-      ResultSet rs = st.executeQuery();
-      assertTrue(rs.next());
-      assertEquals(roleId, rs.getInt("role_id"));
-      assertFalse(rs.next());
-    }
-
-    provider.alterUserRole(userId, roleId, true);
-    provider.alterUserRole(userId, roleId, false);
-    try (PreparedStatement st =
-        connection.prepareStatement("select * from user_role_current where user_id = ?")) {
-      st.setInt(1, userId);
-      ResultSet rs = st.executeQuery();
-      assertFalse(rs.next());
-    }
-
-    delete("user", userId);
-    e = assertThrows(BadDataException.class, () -> provider.alterUserRole(-1, roleId, true));
     assertEquals(Config.invalid_user, e.getMessage());
   }
 }

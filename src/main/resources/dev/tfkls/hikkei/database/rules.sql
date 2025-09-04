@@ -5,10 +5,7 @@ BEGIN
     FOREACH name in ARRAY $arr$
         { user_name,
         user_picture,
-        role_name,
-        user_role,
         category_name,
-        category_role,
         page_title,
         page_category,
         page_archived,
@@ -17,7 +14,6 @@ BEGIN
         comments,
         pages,
         categories,
-        roles,
         users
         }$arr$::text[]
     LOOP
@@ -32,10 +28,7 @@ DO $$
         FOREACH name in ARRAY $arr$
         { user_name,
         user_picture,
-        role_name,
-        user_role,
         category_name,
-        category_role,
         page_title,
         page_category,
         page_archived,
@@ -47,17 +40,12 @@ DO $$
 END$$;
 
 CREATE RULE no_updates_users AS ON UPDATE TO users
-WHERE NEW.id<>OLD.id OR NEW.joined<>OLD.joined
-DO INSTEAD NOTHING;
-
-CREATE RULE no_updates_roles AS
-ON UPDATE TO roles
-WHERE NEW.id <> OLD.id OR NEW.created <> OLD.created
+WHERE NEW.id<>OLD.id OR NEW.joined<>OLD.joined OR NEW.minimal_permission<>OLD.minimal_permission
 DO INSTEAD NOTHING;
 
 CREATE RULE no_updates_categories AS
 ON UPDATE TO categories
-WHERE NEW.id <> OLD.id OR NEW.created <> OLD.created
+WHERE NEW.id <> OLD.id OR NEW.created <> OLD.created OR NEW.default_permission<>OLD.default_permission
 DO INSTEAD NOTHING;
 
 CREATE RULE no_updates_pages AS
@@ -86,7 +74,6 @@ DO $$
     BEGIN
         FOREACH name in ARRAY $arr$
         { users,
-        roles,
         categories,
         pages,
         revisions,

@@ -7,14 +7,12 @@ public class Config {
   public static final String internal_comment = "Could not create a new comment";
   public static final String internal_page = "Could not create a new page";
   public static final String internal_revision = "Could not create a new revision";
-  public static final String internal_role = "Could not create a new role";
   public static final String internal_user = "Could not create a new user";
 
   public static final String invalid_category = "Invalid category id";
   public static final String invalid_comment = "Invalid comment id";
   public static final String invalid_page = "Invalid page id";
   public static final String invalid_revision = "Invalid revision id";
-  public static final String invalid_role = "Invalid role id";
   public static final String invalid_user = "Invalid user id";
 
   public static final String taken_title = "This title is already taken";

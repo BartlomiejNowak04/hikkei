@@ -1,6 +1,7 @@
 CREATE VIEW users_with_data AS
 SELECT u.id,
        u.joined,
+       u.minimal_permission,
        u.deleted,
        u.date_deleted,
        un.username,
@@ -21,24 +22,10 @@ LEFT JOIN LATERAL (
     LIMIT 1
 ) up ON true;
 
-CREATE VIEW roles_with_data AS
-SELECT r.id,
-       r.created,
-       r.deleted,
-       r.date_deleted,
-       rn.name
-FROM roles r
-LEFT JOIN LATERAL (
-    SELECT name
-    FROM role_name
-    WHERE role_id = r.id
-    ORDER BY date DESC
-    LIMIT 1
-) rn ON true;
-
 CREATE VIEW categories_with_data AS
 SELECT c.id,
        c.created,
+       c.default_permission,
        c.deleted,
        c.date_deleted,
        cn.name
@@ -101,37 +88,15 @@ LEFT JOIN LATERAL (
     LIMIT 1
 ) ra ON true;
 
-CREATE VIEW user_role_current AS
-SELECT ur.user_id,
-       ur.role_id
-FROM user_role ur
+CREATE VIEW user_category_current AS
+SELECT uc.user_id, uc.category_id, uc.permission
+FROM user_category uc
 JOIN (
-    SELECT user_id, role_id, MAX(date) AS max_date
-    FROM user_role
-    GROUP BY user_id, role_id
+    SELECT user_id, category_id, max(date) AS max_date
+    FROM user_category GROUP BY user_id, category_id
 ) latest
-ON ur.user_id = latest.user_id
-AND ur.role_id = latest.role_id
-AND ur.date = latest.max_date
-JOIN users u ON u.id=ur.user_id
-JOIN roles r ON r.id=ur.role_id
-WHERE ur.set = true AND u.deleted = false AND r.deleted = false;
-
-CREATE VIEW category_role_current AS
-SELECT cr.category_id,
-       cr.role_id,
-       cr.permission_name,
-       cr.permission_status
-FROM category_role cr
-JOIN (
-    SELECT category_id, role_id, permission_name, MAX(date) AS max_date
-    FROM category_role
-    GROUP BY category_id, role_id, permission_name
-) latest
-ON cr.category_id = latest.category_id
-AND cr.role_id = latest.role_id
-AND cr.permission_name = latest.permission_name
-AND cr.date = latest.max_date
-JOIN roles r ON r.id = cr.role_id
-JOIN categories c on cr.category_id = c.id
-WHERE r.deleted = false AND c.deleted = false;
+ON uc.user_id=latest.user_id AND uc.category_id=latest.category_id
+AND uc.date=latest.max_date
+JOIN users u ON uc.user_id=u.id
+JOIN categories c on uc.category_id=c.id
+WHERE u.deleted=false AND c.deleted=false AND uc.permission IS NOT NULL;

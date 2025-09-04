@@ -4,7 +4,6 @@ import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
-import dev.tfkls.hikkei.model.role.RoleDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.model.version.VersionProvider;
 import dev.tfkls.hikkei.server.handlers.FailureHandler;
@@ -20,7 +19,6 @@ public class MainVerticle extends VerticleBase {
   private final RevisionDataProvider revisionProvider;
   private final CommentDataProvider commentProvider;
   private final CategoryDataProvider categoryProvider;
-  private final RoleDataProvider roleProvider;
   private final VersionProvider versionProvider;
   private final Integer port;
 
@@ -30,7 +28,6 @@ public class MainVerticle extends VerticleBase {
       RevisionDataProvider revisionProvider,
       CommentDataProvider commentProvider,
       CategoryDataProvider categoryProvider,
-      RoleDataProvider roleProvider,
       VersionProvider versionProvider,
       Integer port) {
     super();
@@ -39,7 +36,6 @@ public class MainVerticle extends VerticleBase {
     this.revisionProvider = revisionProvider;
     this.commentProvider = commentProvider;
     this.categoryProvider = categoryProvider;
-    this.roleProvider = roleProvider;
     this.versionProvider = versionProvider;
     this.port = port;
   }
@@ -52,7 +48,6 @@ public class MainVerticle extends VerticleBase {
         new RevisionRouteHandler(vertx, revisionProvider, versionProvider);
     CommentRouteHandler commentRoute = new CommentRouteHandler(vertx, commentProvider);
     CategoryRouteHandler categoryRoute = new CategoryRouteHandler(vertx, categoryProvider);
-    RoleRouteHandler roleRoute = new RoleRouteHandler(vertx, roleProvider);
 
     Router router = Router.router(vertx);
     router.route("/api/*").failureHandler(new FailureHandler());
@@ -62,7 +57,6 @@ public class MainVerticle extends VerticleBase {
     router.route("/api/revision/*").subRouter(revisionRoute.getRouter());
     router.route("/api/comment/*").subRouter(commentRoute.getRouter());
     router.route("/api/category/*").subRouter(categoryRoute.getRouter());
-    router.route("/api/role/*").subRouter(roleRoute.getRouter());
 
     return vertx
         .createHttpServer()

@@ -64,18 +64,6 @@ public abstract class JDBCIntegrationTest extends IntegrationTest {
     }
   }
 
-  protected int create_role(String name) throws SQLException {
-    try (PreparedStatement st =
-        connection.prepareStatement(
-            "INSERT INTO roles_with_data (name) VALUES (?)",
-            PreparedStatement.RETURN_GENERATED_KEYS)) {
-      st.setString(1, name);
-      st.executeUpdate();
-      st.getGeneratedKeys().next();
-      return st.getGeneratedKeys().getInt(1);
-    }
-  }
-
   protected int create_category(String name) throws SQLException {
     try (PreparedStatement st =
         connection.prepareStatement(

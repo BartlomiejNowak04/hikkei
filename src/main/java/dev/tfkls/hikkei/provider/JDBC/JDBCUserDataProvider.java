@@ -63,29 +63,6 @@ public class JDBCUserDataProvider implements UserDataProvider {
   }
 
   @Override
-  public List<UserData> getByRole(int roleId) throws InternalErrorException {
-    try (PreparedStatement st = connection.prepareStatement("SELECT 1 FROM roles WHERE id = ?")) {
-      st.setInt(1, roleId);
-      if (!st.executeQuery().next()) return null;
-    } catch (SQLException e) {
-      throw new InternalErrorException(internal_error);
-    }
-
-    try (PreparedStatement st =
-        connection.prepareStatement(
-            "SELECT * FROM users_with_data ud JOIN user_role_current ur ON ud.id=ur.user_id WHERE ur.role_id = ?")) {
-      st.setInt(1, roleId);
-      try (ResultSet rs = st.executeQuery()) {
-        ArrayList<UserData> res = new ArrayList<>();
-        while (rs.next()) res.add(getData(rs));
-        return res;
-      }
-    } catch (SQLException e) {
-      throw new InternalErrorException(internal_error);
-    }
-  }
-
-  @Override
   public List<AuthData> getUserAuthMethods(int userId) throws InternalErrorException {
     if (!doesUserExist(userId)) return null;
 
@@ -210,32 +187,6 @@ public class JDBCUserDataProvider implements UserDataProvider {
       st.setString(2, authType);
       st.executeUpdate();
     } catch (SQLException e) {
-      throw new InternalErrorException(internal_error);
-    }
-  }
-
-  @Override
-  public void alterUserRole(int userId, int roleId, boolean value)
-      throws BadDataException, InternalErrorException {
-    if (!doesUserExist(userId)) throw new BadDataException(invalid_user);
-    try (PreparedStatement st = connection.prepareStatement("SELECT 1 FROM roles WHERE id = ?")) {
-      st.setInt(1, roleId);
-      if (!st.executeQuery().next()) throw new BadDataException(invalid_role);
-    } catch (SQLException e) {
-      throw new InternalErrorException(internal_error);
-    }
-
-    try (PreparedStatement st =
-        connection.prepareStatement(
-            "INSERT INTO user_role (user_id, role_id, set) VALUES (?, ?, ?)")) {
-      st.setInt(1, userId);
-      st.setInt(2, roleId);
-      st.setBoolean(3, value);
-      st.executeUpdate();
-    } catch (SQLException e) {
-      String message = e.getMessage();
-      if (message.contains("user_role_role_id_fkey")) throw new BadDataException("Invalid role id");
-      if (message.contains("user_role_user_id_fkey")) throw new BadDataException(invalid_user);
       throw new InternalErrorException(internal_error);
     }
   }

@@ -4,7 +4,6 @@ import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
-import dev.tfkls.hikkei.model.role.RoleDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.model.version.VersionProvider;
 import dev.tfkls.hikkei.provider.FileVersionProvider;
@@ -44,7 +43,6 @@ public class Main {
     RevisionDataProvider revisionDataProvider = new JDBCRevisionDataProvider(connection);
     CommentDataProvider commentDataProvider = new JDBCCommentDataProvider(connection);
     CategoryDataProvider categoryDataProvider = new JDBCCategoryDataProvider(connection);
-    RoleDataProvider roleDataProvider = new JDBCRoleDataProvider(connection);
     VersionProvider versionProvider = new FileVersionProvider(file_dir);
 
     System.out.println("Deploying the application");
@@ -56,7 +54,6 @@ public class Main {
             revisionDataProvider,
             commentDataProvider,
             categoryDataProvider,
-            roleDataProvider,
             versionProvider,
             port));
   }

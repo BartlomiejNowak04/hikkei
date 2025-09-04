@@ -55,8 +55,8 @@ FOR EACH ROW EXECUTE FUNCTION unique_title();
 CREATE FUNCTION deleted_has_date()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF (NEW.deleted=true AND NEW.date_deleted IS NULL) THEN
-        RAISE EXCEPTION 'No date provided for deletion';
+    IF NEW.deleted=true THEN
+        NEW.date_deleted = now();
     END IF;
 
     IF NEW.deleted=false AND NEW.date_deleted IS NOT NULL THEN
@@ -75,7 +75,6 @@ BEGIN
     comments,
     pages,
     categories,
-    roles,
     users
     }$arr$::text[]
     LOOP
@@ -89,9 +88,15 @@ RETURNS TRIGGER AS $$
 DECLARE
     new_user_id INTEGER;
 BEGIN
-    INSERT INTO users
-    DEFAULT VALUES
-    RETURNING id INTO new_user_id;
+    IF NEW.minimal_permission IS NULL THEN
+        INSERT INTO users DEFAULT VALUES
+        RETURNING id INTO new_user_id;
+    END IF;
+    IF NEW.minimal_permission IS NOT NULL THEN
+        INSERT INTO users (minimal_permission)
+        VALUES (NEW.minimal_permission)
+        RETURNING id INTO new_user_id;
+    END IF;
 
     INSERT INTO user_name (user_id, username)
     VALUES (new_user_id, NEW.username);
@@ -130,55 +135,20 @@ DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
 EXECUTE FUNCTION inserted_user_has_data();
 
 
-CREATE FUNCTION insert_role_with_data()
-RETURNS TRIGGER AS $$
-DECLARE
-    new_role_id INTEGER;
-BEGIN
-    INSERT INTO roles
-    DEFAULT VALUES
-    RETURNING id INTO new_role_id;
-
-    INSERT INTO role_name (role_id, name)
-    VALUES (new_role_id, NEW.name);
-
-    NEW.id = new_role_id;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_insert_role_with_data
-INSTEAD OF INSERT ON roles_with_data
-FOR EACH ROW
-EXECUTE FUNCTION insert_role_with_data();
-
-
-CREATE FUNCTION inserted_role_has_data()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM role_name WHERE role_id = NEW.id
-    ) THEN
-        RAISE EXCEPTION 'No name defined for role %', NEW.id;
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE CONSTRAINT TRIGGER trg_inserted_role_has_data
-AFTER INSERT ON roles
-DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
-EXECUTE FUNCTION inserted_role_has_data();
-
-
 CREATE FUNCTION insert_category_with_data()
 RETURNS TRIGGER AS $$
 DECLARE
     new_category_id INTEGER;
 BEGIN
-    INSERT INTO categories
-    DEFAULT VALUES
-    RETURNING id INTO new_category_id;
+    IF NEW.default_permission IS NULL THEN
+        INSERT INTO categories DEFAULT VALUES
+        RETURNING id INTO new_category_id;
+    END IF;
+    IF NEW.default_permission IS NOT NULL THEN
+        INSERT INTO categories (default_permission)
+        VALUES (NEW.default_permission)
+        RETURNING id INTO new_category_id;
+    END IF;
 
     INSERT INTO category_name (category_id, name)
     VALUES (new_category_id, NEW.name);
@@ -333,12 +303,7 @@ DECLARE
     { { user_name, user_id, users },
     { user_picture, user_id, users },
     { auth, user_id, users },
-    { role_name, role_id, roles },
-    { user_role, user_id, users },
-    { user_role, role_id, roles },
     { category_name, category_id, categories },
-    { category_role, category_id, categories },
-    { category_role, role_id, roles },
     { page_title, page_id, pages },
     { page_category, page_id, pages },
     { page_category, category, categories },

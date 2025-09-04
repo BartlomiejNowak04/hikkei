@@ -11,8 +11,6 @@ public interface UserDataProvider {
 
   UserData getUserData(int userId) throws InternalErrorException;
 
-  List<UserData> getByRole(int roleId) throws InternalErrorException;
-
   List<AuthData> getUserAuthMethods(int userId) throws InternalErrorException;
 
   int createUser(UserData data) throws BadDataException, InternalErrorException;
@@ -27,8 +25,5 @@ public interface UserDataProvider {
   void addUserAuthMethod(int userId, AuthData auth) throws BadDataException, InternalErrorException;
 
   void removeUserAuthMethod(int userId, String authType)
-      throws BadDataException, InternalErrorException;
-
-  void alterUserRole(int userId, int roleId, boolean value)
       throws BadDataException, InternalErrorException;
 }

@@ -26,13 +26,7 @@
 - [ ] change category's name
 - [ ] list pages in a category (with search)
 - [ ] create a page within a category
-- [ ] assign permissions to roles within a category
-#### Roles
-- [ ] display all roles (with search)
-- [ ] create and delete roles
-- [ ] list users with a given role
-- [ ] change role's name
-- [ ] grant and revoke permissions by modifying user's roles
+- [ ] assign permissions to users within a category
 #### Main Page
 - [ ] search for page by its title
 - [ ] display a random article
@@ -61,11 +55,9 @@ The frontend application communicates with the backend server through an API. Be
 - `/api/user/`:
     - POST `login`: log a user in
     - POST `byid`: get user by id, params: Integer id
-    - POST `role`: get users with a role, params: Integer role
     - PUT `create`: create a user, params: String name, Picture pfp (optional)
     - PUT `update/name`: update username, params: Integer id, String name
     - PUT `update/pfp`: update profile picture, params: Integer id, Picture pfp
-    - PUT `update/role`: alter role, params: Integer id, Integer role_id, Boolean status
     - DELETE `delete`: delete a user, params: Integer id
 - `/api/page/`:
     - POST `random`: get a random page
@@ -83,11 +75,11 @@ The frontend application communicates with the backend server through an API. Be
     - POST `render`: render passed content, params: String content
     - POST `content`: get current content for a page, params: Integer id
     - POST `byid`: get revision by id, params: Integer id
-    - POST `draft`: get user's draft revision for a page, params: Integer page_id, Integer user_id
+    - POST `draft`: get user's draft revision for a page, params: Integer page, Integer user
     - PUT `create`: create a revision, params: Integer id (page's id), String content, Integer user
     - PUT `update/status`: approve or reject a revision, params: Integer id, Boolean status
-    - PUT `draft/save`: save a draft revision, params: Integer page_id, Integer user_id, String content
-    - DELETE `draft/delete`: delete a draft revision, params: Integer page_id, Integer user_id
+    - PUT `draft/save`: save a draft revision, params: Integer page, Integer user, String content
+    - DELETE `draft/delete`: delete a draft revision, params: Integer page, Integer user
 - `/api/comment/`:
     - POST `user`: get user's comments, params: Integer user
     - POST `page`: get page's comments, params: Integer page
@@ -97,16 +89,9 @@ The frontend application communicates with the backend server through an API. Be
 - `/api/category/`:
     - POST `/`: get all categories
     - POST `byid`: get category by id, params: Integer id
-    - POST `permission`: modify role's permissions to given category
+    - POST `permission`: modify user's permissions to given category, params: Integer category, Integer user, Integer permission
     - PUT `create`: create a category, params: String name
     - PUT `update/name`: update category name, params: Integer id, String name
-- `/api/role/`:
-    - POST `/`: get all roles
-    - POST `byid`: get role by id, params: Integer id
-    - POST `user`: get user's roles, params: Integer user
-    - PUT `create`: create a role, params: String name
-    - PUT `update/name`: update role name, params: Integer id, String name
-    - DELETE `delete`: delete a role, params: Integer id
 
 
 ## Setup

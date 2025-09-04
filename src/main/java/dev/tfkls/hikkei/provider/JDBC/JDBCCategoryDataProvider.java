@@ -7,6 +7,7 @@ import dev.tfkls.hikkei.model.category.CategoryData;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -52,7 +53,7 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
   public void changeName(int id, String name) throws InternalErrorException, BadDataException {}
 
   @Override
-  public void updatePermission(int categoryId, int roleId, String permission, Boolean set)
+  public void updatePermission(int categoryId, int userId, PermissionLevel level)
       throws InternalErrorException, BadDataException {}
 
   @Override

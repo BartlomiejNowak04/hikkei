@@ -24,7 +24,6 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     verifyNoInteractions(revisionProvider);
     verifyNoInteractions(commentProvider);
     verifyNoInteractions(categoryProvider);
-    verifyNoInteractions(roleProvider);
     verifyNoInteractions(versionProvider);
   }
 
@@ -63,11 +62,6 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
   //  }
   //
   //  @Test
-  //  public void apiUserRoleRejectsImproperData() {
-  //    assertEndpoint("/api/user/role", Method.POST, Map.of("role", 0));
-  //  }
-  //
-  //  @Test
   //  public void apiUserCreateRejectsImproperData() {
   //    assertEndpoint("/api/user/create", Method.PUT, Map.of("name", "example", "pfp",
   // "<picture>"));
@@ -81,12 +75,6 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
   //  @Test
   //  public void apiUserUpdatePfpRejectsImproperData() {
   //    assertEndpoint("/api/user/update/pfp", Method.PUT, Map.of("id", 0, "pfp", "<picture>"));
-  //  }
-  //
-  //  @Test
-  //  public void apiUserUpdateRoleRejectsImproperData() {
-  //    assertEndpoint(
-  //        "/api/user/update/role", Method.PUT, Map.of("id", 0, "role_id", 0, "status", true));
   //  }
   //
   //  @Test
@@ -164,7 +152,7 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
 
   //  @Test
   //  public void apiRevisionDraftRejectsImproperData() {
-  //    assertEndpoint("/api/revision/draft", Method.POST, Map.of("page_id", 0, "user_id", 0));
+  //    assertEndpoint("/api/revision/draft", Method.POST, Map.of("page", 0, "user", 0));
   //  }
 
   @Test
@@ -182,13 +170,13 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
 
   //  @Test
   //  public void apiRevisionDraftSaveRejectsImproperData() {
-  //    assertEndpoint("/api/revision/draft/save", Method.PUT, Map.of("page_id", 0, "user_id", 0,
+  //    assertEndpoint("/api/revision/draft/save", Method.PUT, Map.of("page", 0, "user", 0,
   // "content", "Draft content"));
   //  }
 
   //  @Test
   //  public void apiRevisionDraftDeleteRejectsImproperData() {
-  //    assertEndpoint("/api/revision/draft/delete", Method.DELETE, Map.of("page_id", 0, "user_id",
+  //    assertEndpoint("/api/revision/draft/delete", Method.DELETE, Map.of("page", 0, "user",
   // 0));
   //  }
 
@@ -232,7 +220,8 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
   //
   //  @Test
   //  public void apiCategoryPermissionRejectsImproperData() {
-  //    assertEndpoint("/api/category/permission", Method.POST, Map.of()); // unspecified params
+  //    assertEndpoint("/api/category/permission", Method.POST, Map.of("category", 0, "user", 0,
+  // "permission", 0));
   //  }
   //
   //  @Test
@@ -244,37 +233,5 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
   //  public void apiCategoryUpdateNameRejectsImproperData() {
   //    assertEndpoint(
   //        "/api/category/update/name", Method.PUT, Map.of("id", 0, "name", "Updated Category"));
-  //  }
-
-  // /api/role/
-  //  @Test
-  //  public void apiRoleAllRejectsImproperData() {
-  //    assertEndpoint("/api/role/", Method.POST, Map.of());
-  //  }
-  //
-  //  @Test
-  //  public void apiRoleByidRejectsImproperData() {
-  //    assertEndpoint("/api/role/byid", Method.POST, Map.of("id", 0));
-  //  }
-  //
-  //  @Test
-  //  public void apiRoleUserRejectsImproperData() {
-  //    assertEndpoint("/api/role/user", Method.POST, Map.of("user", 0));
-  //  }
-  //
-  //  @Test
-  //  public void apiRoleCreateRejectsImproperData() {
-  //    assertEndpoint("/api/role/create", Method.PUT, Map.of("name", "New Role"));
-  //  }
-  //
-  //  @Test
-  //  public void apiRoleUpdateNameRejectsImproperData() {
-  //    assertEndpoint("/api/role/update/name", Method.PUT, Map.of("id", 0, "name", "Updated
-  // Role"));
-  //  }
-  //
-  //  @Test
-  //  public void apiRoleDeleteRejectsImproperData() {
-  //    assertEndpoint("/api/role/delete", Method.DELETE, Map.of("id", 0));
   //  }
 }
