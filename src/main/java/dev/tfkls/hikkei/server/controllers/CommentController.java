@@ -19,51 +19,46 @@ public class CommentController {
   }
 
   public void addComment(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class, "user", Integer.class, "content", String.class));
-      Integer id = body.getInteger("id");
-      Integer userId = body.getInteger("user");
-      String content = body.getString("content");
+    handle(
+        ctx,
+        Map.of("id", Integer.class, "user", Integer.class, "content", String.class),
+        body -> {
+          Integer id = body.getInteger("id");
+          Integer userId = body.getInteger("user");
+          String content = body.getString("content");
 
-      int idc = commentProvider.addComment(new CommentData(null, id, userId, content, null));
-      ctx.response().setStatusCode(201);
-      ctx.json(new JsonObject().put("id", idc));
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+          int idc = commentProvider.addComment(new CommentData(id, userId, content));
+          ctx.response().setStatusCode(201);
+          ctx.json(new JsonObject().put("id", idc));
+        });
   }
 
   public void deleteComment(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class));
-      Integer id = body.getInteger("id");
-
-      commentProvider.deleteComment(id);
-      ctx.response().setStatusCode(200).end();
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+    handle(
+        ctx,
+        Map.of("id", Integer.class),
+        body -> {
+          commentProvider.deleteComment(body.getInteger("id"));
+          ctx.response().setStatusCode(200).end();
+        });
   }
 
   private void getList(RoutingContext ctx, String type) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of(type, Integer.class));
-      Integer id = body.getInteger(type);
+    handle(
+        ctx,
+        Map.of(type, Integer.class),
+        body -> {
+          Integer id = body.getInteger(type);
 
-      List<CommentData> data =
-          type.equals("page") ? commentProvider.getByPage(id) : commentProvider.getByUser(id);
-      if (data == null) throw new BadDataException("Incorrect parameter value: id");
-      JsonArray items = new JsonArray();
-      for (CommentData item : data) items.add(Utils.commentToJson(item));
+          List<CommentData> data =
+              type.equals("page") ? commentProvider.getByPage(id) : commentProvider.getByUser(id);
+          if (data == null) throw new BadDataException("Incorrect parameter value: id");
+          JsonArray items = new JsonArray();
+          for (CommentData item : data) items.add(Utils.commentToJson(item));
 
-      ctx.response().setStatusCode(200);
-      ctx.json(items);
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+          ctx.response().setStatusCode(200);
+          ctx.json(items);
+        });
   }
 
   public void getByPage(RoutingContext ctx) {
@@ -75,17 +70,14 @@ public class CommentController {
   }
 
   public void getById(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class));
-      Integer id = body.getInteger("id");
-
-      CommentData data = commentProvider.getById(id);
-      if (data == null) throw new BadDataException("Incorrect parameter value: id");
-      ctx.response().setStatusCode(200);
-      ctx.json(commentToJson(data));
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+    handle(
+        ctx,
+        Map.of("id", Integer.class),
+        body -> {
+          CommentData data = commentProvider.getById(body.getInteger("id"));
+          if (data == null) throw new BadDataException("Incorrect parameter value: id");
+          ctx.response().setStatusCode(200);
+          ctx.json(commentToJson(data));
+        });
   }
 }

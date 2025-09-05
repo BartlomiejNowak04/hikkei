@@ -1,7 +1,6 @@
 package dev.tfkls.hikkei.server.controllers;
 
-import static dev.tfkls.hikkei.server.controllers.Utils.checkBody;
-import static dev.tfkls.hikkei.server.controllers.Utils.exceptionToCode;
+import static dev.tfkls.hikkei.server.controllers.Utils.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
@@ -21,104 +20,87 @@ public class PageController {
   }
 
   public void getRandomPage(RoutingContext ctx) {
-    try {
-      PageData data = pageProvider.getRandomPage();
-      if (data == null) throw new InternalErrorException("No pages available");
-      ctx.response().setStatusCode(200);
-      ctx.json(Utils.pageToJson(data));
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+    handle(
+        ctx,
+        Map.of(),
+        body -> {
+          PageData data = pageProvider.getRandomPage();
+          if (data == null) throw new InternalErrorException("No pages available");
+          ctx.response().setStatusCode(200);
+          ctx.json(Utils.pageToJson(data));
+        });
   }
 
   public void searchByTitle(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("title", String.class));
-      String title = body.getString("title");
-
-      List<PageData> data = pageProvider.searchByTitle(title);
-      JsonArray items = new JsonArray();
-      for (PageData item : data) items.add(Utils.pageToJson(item));
-      ctx.response().setStatusCode(200);
-      ctx.json(items);
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+    handle(
+        ctx,
+        Map.of("title", String.class),
+        body -> {
+          List<PageData> data = pageProvider.searchByTitle(body.getString("title"));
+          JsonArray items = new JsonArray();
+          for (PageData item : data) items.add(Utils.pageToJson(item));
+          ctx.response().setStatusCode(200);
+          ctx.json(items);
+        });
   }
 
   public void getPageByTitle(RoutingContext ctx, boolean fromUrl) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of(fromUrl ? "url" : "title", String.class));
-      String title = body.getString("title");
-      if (fromUrl) title = title.replace("_", " ");
+    handle(
+        ctx,
+        Map.of(fromUrl ? "url" : "title", String.class),
+        body -> {
+          String title = body.getString("title");
+          if (fromUrl) title = title.replace("_", " ");
 
-      PageData data = pageProvider.getByTitle(title);
-      if (data == null) throw new BadDataException("Invalid page title: " + title);
-      ctx.response().setStatusCode(200);
-      ctx.json(Utils.pageToJson(data));
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+          PageData data = pageProvider.getByTitle(title);
+          if (data == null) throw new BadDataException("Invalid page title: " + title);
+          ctx.response().setStatusCode(200);
+          ctx.json(Utils.pageToJson(data));
+        });
   }
 
   public void createPage(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(
-          body, Map.of("title", String.class, "category", Integer.class, "user", Integer.class));
-      String title = body.getString("title");
-      Integer category = body.getInteger("category");
-      Integer user = body.getInteger("user");
+    handle(
+        ctx,
+        Map.of("title", String.class, "category", Integer.class, "user", Integer.class),
+        body -> {
+          String title = body.getString("title");
+          Integer category = body.getInteger("category");
+          Integer user = body.getInteger("user");
 
-      int id = pageProvider.createPage(new PageData(null, user, title, category, null, null));
-      ctx.response().setStatusCode(201);
-      ctx.json(new JsonObject().put("id", id));
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+          int id = pageProvider.createPage(new PageData(user, title, category));
+          ctx.response().setStatusCode(201);
+          ctx.json(new JsonObject().put("id", id));
+        });
   }
 
   public void updateTitle(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("title", String.class, "id", Integer.class));
-      String title = body.getString("title");
-      Integer id = body.getInteger("id");
-
-      pageProvider.updatePageTitle(id, title);
-      ctx.response().setStatusCode(204).end();
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+    handle(
+        ctx,
+        Map.of("title", String.class, "id", Integer.class),
+        body -> {
+          pageProvider.updatePageTitle(body.getInteger("id"), body.getString("title"));
+          ctx.response().setStatusCode(204).end();
+        });
   }
 
   public void updateCategory(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("category", Integer.class, "id", Integer.class));
-      Integer category = body.getInteger("category");
-      Integer id = body.getInteger("id");
-
-      pageProvider.updatePageCategory(id, category);
-      ctx.response().setStatusCode(204).end();
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+    handle(
+        ctx,
+        Map.of("category", Integer.class, "id", Integer.class),
+        body -> {
+          pageProvider.updatePageCategory(body.getInteger("id"), body.getInteger("category"));
+          ctx.response().setStatusCode(204).end();
+        });
   }
 
   public void toggleArchive(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("value", Boolean.class, "id", Integer.class));
-      Boolean val = body.getBoolean("value");
-      Integer id = body.getInteger("id");
-
-      pageProvider.toggleArchive(id, val);
-      ctx.response().setStatusCode(204).end();
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+    handle(
+        ctx,
+        Map.of("value", Boolean.class, "id", Integer.class),
+        body -> {
+          pageProvider.toggleArchive(body.getInteger("id"), body.getBoolean("value"));
+          ctx.response().setStatusCode(204).end();
+        });
   }
 }

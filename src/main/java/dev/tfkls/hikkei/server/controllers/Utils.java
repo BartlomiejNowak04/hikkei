@@ -4,19 +4,12 @@ import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.revision.RevisionData;
+import dev.tfkls.hikkei.util.ThrowingConsumer;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.RoutingContext;
 import java.util.Map;
 
 public class Utils {
-  public static int exceptionToCode(Exception e) {
-    if (e == null) return 500;
-    return switch (e.getClass().getSimpleName()) {
-      case "BadDataException" -> 400;
-      case "InternalErrorException" -> 500;
-      default -> 500;
-    };
-  }
-
   public static void checkBody(JsonObject body, Map<String, Class<?>> arguments)
       throws BadDataException {
     if (body == null) throw new BadDataException("No data provided");
@@ -34,6 +27,23 @@ public class Utils {
       } catch (ClassCastException e) {
         throw new BadDataException("Incorrect parameter: " + argument);
       }
+    }
+  }
+
+  public static void handle(
+      RoutingContext ctx, Map<String, Class<?>> params, ThrowingConsumer<JsonObject> handler) {
+    try {
+      JsonObject body;
+      try {
+        body = ctx.body().asJsonObject();
+      } catch (Exception e) {
+        throw new BadDataException("Invalid body provided");
+      }
+
+      if (params != null) checkBody(body, params);
+      handler.accept(body);
+    } catch (Exception e) {
+      ctx.fail(e);
     }
   }
 

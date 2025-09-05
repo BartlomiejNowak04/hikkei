@@ -24,54 +24,45 @@ public class RevisionController {
   }
 
   public void addRevision(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class, "content", String.class, "user", Integer.class));
-      Integer id = body.getInteger("id");
-      String content = body.getString("content");
-      Integer user = body.getInteger("user");
-
-      byte[] filename = versionProvider.storeContent(content);
-      int idr =
-          revisionProvider.createRevision(new RevisionData(id, null, user, filename, null, null));
-      ctx.response().setStatusCode(201);
-      ctx.json(new JsonObject().put("id", idr));
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+    handle(
+        ctx,
+        Map.of("id", Integer.class, "content", String.class, "user", Integer.class),
+        body -> {
+          byte[] filename = versionProvider.storeContent(body.getString("content"));
+          int idr =
+              revisionProvider.createRevision(
+                  new RevisionData(body.getInteger("id"), body.getInteger("user"), filename));
+          ctx.response().setStatusCode(201);
+          ctx.json(new JsonObject().put("id", idr));
+        });
   }
 
   public void changeStatus(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class, "status", Boolean.class));
-      Integer id = body.getInteger("id");
-      Boolean status = body.getBoolean("status");
-
-      revisionProvider.changeState(id, status);
-      ctx.response().setStatusCode(204).end();
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+    handle(
+        ctx,
+        Map.of("id", Integer.class, "status", Boolean.class),
+        body -> {
+          revisionProvider.changeState(body.getInteger("id"), body.getBoolean("status"));
+          ctx.response().setStatusCode(204).end();
+        });
   }
 
   private void getList(RoutingContext ctx, String type) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of(type, Integer.class));
-      Integer id = body.getInteger(type);
+    handle(
+        ctx,
+        Map.of(type, Integer.class),
+        body -> {
+          Integer id = body.getInteger(type);
 
-      List<RevisionData> data =
-          type.equals("page") ? revisionProvider.getByPage(id) : revisionProvider.getByUser(id);
-      if (data == null) throw new BadDataException("Incorrect parameter value: id");
-      JsonArray items = new JsonArray();
-      for (RevisionData item : data) items.add(revisionToJson(item));
+          List<RevisionData> data =
+              type.equals("page") ? revisionProvider.getByPage(id) : revisionProvider.getByUser(id);
+          if (data == null) throw new BadDataException("Incorrect parameter value: id");
+          JsonArray items = new JsonArray();
+          for (RevisionData item : data) items.add(revisionToJson(item));
 
-      ctx.response().setStatusCode(200);
-      ctx.json(items);
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+          ctx.response().setStatusCode(200);
+          ctx.json(items);
+        });
   }
 
   public void getByPage(RoutingContext ctx) {
@@ -86,40 +77,39 @@ public class RevisionController {
   public void Render(RoutingContext ctx) {}
 
   public void getCurrentContent(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class));
-      Integer id = body.getInteger("id");
+    handle(
+        ctx,
+        Map.of("id", Integer.class),
+        body -> {
+          Integer id = body.getInteger("id");
 
-      List<RevisionData> revisions = revisionProvider.getByPage(id);
-      revisions.removeIf(rev -> rev.approved() == null || !rev.approved());
+          List<RevisionData> revisions = revisionProvider.getByPage(id);
+          revisions.removeIf(rev -> rev.approved() == null || !rev.approved());
 
-      String data = "";
-      if (!revisions.isEmpty()) {
-        data = versionProvider.getVersion(revisions.getFirst().file());
-        if (data == null)
-          throw new InternalErrorException("Couldn't retrieve content for page " + id);
-      }
-      ctx.response().setStatusCode(200);
-      // TODO: transform the data appropriately
-      ctx.json(new JsonObject().put("content", data));
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+          String data = "";
+          if (!revisions.isEmpty()) {
+            data = versionProvider.getVersion(revisions.getFirst().file());
+            if (data == null)
+              throw new InternalErrorException("Couldn't retrieve content for page " + id);
+          }
+          ctx.response().setStatusCode(200);
+          // TODO: transform the data appropriately
+          ctx.json(new JsonObject().put("content", data));
+        });
   }
 
   public void getById(RoutingContext ctx) {
-    try {
-      JsonObject body = ctx.body().asJsonObject();
-      checkBody(body, Map.of("id", Integer.class));
-      Integer id = body.getInteger("id");
-
-      RevisionData data = revisionProvider.getById(id);
-      if (data == null) throw new BadDataException("Incorrect parameter value: id");
-      ctx.response().setStatusCode(200);
-      ctx.json(revisionToJson(data));
-    } catch (Exception e) {
-      ctx.fail(exceptionToCode(e), e);
-    }
+    handle(
+        ctx,
+        Map.of("id", Integer.class),
+        body -> {
+          RevisionData data = revisionProvider.getById(body.getInteger("id"));
+          if (data == null) throw new BadDataException("Incorrect parameter value: id");
+          if (data == RevisionData.DELETED) ctx.response().setStatusCode(404).end();
+          else {
+            ctx.response().setStatusCode(200);
+            ctx.json(revisionToJson(data));
+          }
+        });
   }
 }
