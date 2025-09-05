@@ -21,13 +21,14 @@ public class FilesystemFileProvider implements FileProvider {
   public StoredFile getContent(byte[] id) throws BadDataException, InternalErrorException {
     try {
       String decoded = new String(id);
-      int dot = decoded.lastIndexOf('.');
-      Path filePath = dir.resolve(decoded).normalize();
+      int stop = decoded.lastIndexOf('$');
+      if (stop == -1) stop = decoded.length();
+      Path filePath = dir.resolve(decoded.substring(0, stop)).normalize();
       if (!filePath.startsWith(dir)) throw new BadDataException("Invalid data id");
 
       return new StoredFile(
           Files.readAllBytes(filePath),
-          dot == -1 ? null : decoded.substring(dot + 1).replace('$', '/'));
+          stop == decoded.length() ? null : decoded.substring(stop + 1));
     } catch (NoSuchFileException e) {
       throw new BadDataException("Invalid data id");
     } catch (IOException e) {
@@ -38,11 +39,11 @@ public class FilesystemFileProvider implements FileProvider {
   @Override
   public byte[] storeContent(byte[] data, String mime) throws InternalErrorException {
     try {
-      String filename = UUID.randomUUID() + (mime == null ? "" : "." + mime.replace('/', '$'));
+      String filename = UUID.randomUUID().toString();
       Path filePath = dir.resolve(filename);
 
       Files.write(filePath, data);
-      return filename.getBytes();
+      return (filename + (mime == null ? "" : "$" + mime)).getBytes();
     } catch (IOException e) {
       throw new InternalErrorException("Filesystem internal error");
     }

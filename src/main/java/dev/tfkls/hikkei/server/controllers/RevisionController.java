@@ -28,7 +28,11 @@ public class RevisionController {
         ctx,
         Map.of("id", Integer.class, "content", String.class, "user", Integer.class),
         body -> {
-          byte[] filename = versionProvider.storeContent(body.getString("content"));
+          byte[] previous = null;
+          List<RevisionData> revs = revisionProvider.getByPage(body.getInteger("id"));
+          if (revs != null && !revs.isEmpty()) previous = revs.getFirst().file();
+          byte[] filename = versionProvider.storeVersion(body.getString("content"), previous);
+
           int idr =
               revisionProvider.createRevision(
                   new RevisionData(body.getInteger("id"), body.getInteger("user"), filename));
