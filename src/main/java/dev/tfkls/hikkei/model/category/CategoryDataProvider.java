@@ -4,6 +4,7 @@ import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import java.util.List;
+import java.util.Map;
 
 public interface CategoryDataProvider {
   int createCategory(CategoryData data) throws InternalErrorException, BadDataException;
@@ -18,4 +19,6 @@ public interface CategoryDataProvider {
       throws InternalErrorException, BadDataException;
 
   void deleteCategory(int id) throws InternalErrorException;
+
+  Map<Integer, PermissionLevel> getUsersPermissions(int categoryId) throws InternalErrorException;
 }

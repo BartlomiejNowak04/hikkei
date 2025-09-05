@@ -12,7 +12,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JDBCCategoryDataProvider implements CategoryDataProvider {
   private final Connection connection;
@@ -58,4 +60,28 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
 
   @Override
   public void deleteCategory(int id) throws InternalErrorException {}
+
+  @Override
+  public Map<Integer, PermissionLevel> getUsersPermissions(int categoryId)
+      throws InternalErrorException {
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT 1 FROM categories WHERE id = ?")) {
+      st.setInt(1, categoryId);
+      if (!st.executeQuery().next()) return null;
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT * FROM user_category_current WHERE category_id = ?")) {
+      st.setInt(1, categoryId);
+      ResultSet rs = st.executeQuery();
+      HashMap<Integer, PermissionLevel> res = new HashMap<>();
+      while (rs.next())
+        res.put(rs.getInt("user_id"), PermissionLevel.valueOf(rs.getString("permission")));
+      return res;
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+  }
 }

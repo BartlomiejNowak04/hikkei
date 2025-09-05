@@ -4,12 +4,15 @@ import static dev.tfkls.hikkei.provider.JDBC.Config.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.AuthData;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JDBCUserDataProvider implements UserDataProvider {
   private final Connection connection;
@@ -186,6 +189,24 @@ public class JDBCUserDataProvider implements UserDataProvider {
       st.setInt(1, userId);
       st.setString(2, authType);
       st.executeUpdate();
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+  }
+
+  @Override
+  public Map<Integer, PermissionLevel> getCategoriesPermissions(int userId)
+      throws InternalErrorException {
+    if (!doesUserExist(userId)) return null;
+
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT * FROM user_category_current WHERE user_id = ?")) {
+      st.setInt(1, userId);
+      ResultSet rs = st.executeQuery();
+      HashMap<Integer, PermissionLevel> res = new HashMap<>();
+      while (rs.next())
+        res.put(rs.getInt("category_id"), PermissionLevel.valueOf(rs.getString("permission")));
+      return res;
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
     }

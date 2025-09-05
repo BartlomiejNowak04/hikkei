@@ -2,7 +2,9 @@ package dev.tfkls.hikkei.model.user;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import java.util.List;
+import java.util.Map;
 
 public interface UserDataProvider {
   boolean doesUserExist(int userId) throws InternalErrorException;
@@ -26,4 +28,6 @@ public interface UserDataProvider {
 
   void removeUserAuthMethod(int userId, String authType)
       throws BadDataException, InternalErrorException;
+
+  Map<Integer, PermissionLevel> getCategoriesPermissions(int userId) throws InternalErrorException;
 }
