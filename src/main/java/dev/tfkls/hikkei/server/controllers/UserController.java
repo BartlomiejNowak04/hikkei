@@ -8,6 +8,7 @@ import dev.tfkls.hikkei.model.file.StoredFile;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
 import java.nio.file.Files;
@@ -21,6 +22,25 @@ public class UserController {
   public UserController(UserDataProvider provider, FileProvider fileProvider) {
     this.userProvider = provider;
     this.fileProvider = fileProvider;
+  }
+
+  public void getUser(RoutingContext ctx) {
+    handle(
+        ctx,
+        Map.of("id", Integer.class),
+        body -> {
+          UserData data = userProvider.getUserData(body.getInteger("id"));
+          if (data == null) {
+            ctx.response().setStatusCode(400);
+            ctx.json(new JsonObject().put("message", "Incorrect parameter: id"));
+          } else if (data == UserData.DELETED) {
+            ctx.response().setStatusCode(404);
+            ctx.json(new JsonObject().put("message", "This user is deleted"));
+          } else {
+            ctx.response().setStatusCode(200);
+            ctx.json(userToJson(data));
+          }
+        });
   }
 
   public void updatePfp(RoutingContext ctx) {
@@ -43,7 +63,7 @@ public class UserController {
         byte[] tag = fileProvider.storeContent(data, mime);
         userProvider.updateUserPicture(id, tag);
       }
-      ctx.response().setStatusCode(200).end();
+      ctx.response().setStatusCode(204).end();
     } catch (Exception e) {
       ctx.fail(e);
     }
@@ -55,7 +75,8 @@ public class UserController {
         Map.of("id", Integer.class),
         body -> {
           UserData user = userProvider.getUserData(body.getInteger("id"));
-          if (user == null) throw new BadDataException("Incorrect parameter: id");
+          if (user == null || user == UserData.DELETED)
+            throw new BadDataException("Incorrect parameter: id");
           if (user.picture() == null) ctx.response().setStatusCode(204).end();
           else {
             StoredFile file = fileProvider.getContent(user.picture());
@@ -64,6 +85,37 @@ public class UserController {
                 .setStatusCode(200)
                 .end(Buffer.buffer(file.data()));
           }
+        });
+  }
+
+  public void createUser(RoutingContext ctx) {
+    handle(
+        ctx,
+        Map.of("name", String.class),
+        body -> {
+          int id = userProvider.createUser(new UserData(body.getString("name")));
+          ctx.response().setStatusCode(201);
+          ctx.json(new JsonObject().put("id", id));
+        });
+  }
+
+  public void updateName(RoutingContext ctx) {
+    handle(
+        ctx,
+        Map.of("name", String.class, "id", Integer.class),
+        body -> {
+          userProvider.updateUsername(body.getInteger("id"), body.getString("name"));
+          ctx.response().setStatusCode(204).end();
+        });
+  }
+
+  public void deleteUser(RoutingContext ctx) {
+    handle(
+        ctx,
+        Map.of("id", Integer.class),
+        body -> {
+          userProvider.deleteUser(body.getInteger("id"));
+          ctx.response().setStatusCode(204).end();
         });
   }
 }

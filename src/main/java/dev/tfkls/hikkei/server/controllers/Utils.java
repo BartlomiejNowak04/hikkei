@@ -4,6 +4,7 @@ import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.revision.RevisionData;
+import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.util.ThrowingConsumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -74,5 +75,13 @@ public class Utils {
         .put("user_id", comment.userId())
         .put("content", comment.content())
         .put("date", comment.date() == null ? null : comment.date().toString());
+  }
+
+  public static JsonObject userToJson(UserData user) {
+    return new JsonObject()
+        .put("id", user.id())
+        .put("username", user.username())
+        .put("picture", user.picture())
+        .put("joined", user.joinedAt() == null ? null : user.joinedAt().toString());
   }
 }

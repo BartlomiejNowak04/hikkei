@@ -11,13 +11,13 @@ public class UserRouteHandler extends RouteHandler {
     UserController controller = new UserController(userProvider, fileProvider);
 
     //    router.post("/login").blockingHandler(null);
-    //    router.post("/byid").blockingHandler(null);
+    router.post("/byid").blockingHandler(controller::getUser);
     router.post("/pfp").blockingHandler(controller::getPfp);
-    //
-    //    router.put("/create").blockingHandler(null);
-    //    router.put("/update/name").blockingHandler(null);
+
+    router.put("/create").blockingHandler(controller::createUser);
+    router.put("/update/name").blockingHandler(controller::updateName);
     router.put("/update/pfp").blockingHandler(controller::updatePfp);
-    //
-    //    router.delete("/delete").blockingHandler(null);
+
+    router.delete("/delete").blockingHandler(controller::deleteUser);
   }
 }

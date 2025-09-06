@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.revision.RevisionData;
+import dev.tfkls.hikkei.model.user.UserData;
 import io.vertx.core.json.JsonObject;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,19 @@ class ToJsonMethodsTest {
     assertEquals(1, json.getInteger("user_id"));
     assertEquals("Hello world", json.getString("content"));
     assertEquals(now, LocalDateTime.parse(json.getString("date")));
+  }
+
+  @Test
+  void userToJsonShouldMapCorrectly() {
+    LocalDateTime now = LocalDateTime.now();
+    UserData user = new UserData(10, "name", new byte[0], now);
+
+    JsonObject json = userToJson(user);
+
+    assertEquals(10, json.getInteger("id"));
+    assertEquals("name", json.getString("username"));
+    assertArrayEquals(new byte[0], json.getBinary("picture"));
+    assertEquals(now, LocalDateTime.parse(json.getString("joined")));
   }
 
   @Test
@@ -112,5 +126,21 @@ class ToJsonMethodsTest {
     assertNull(json.getValue("content"));
     assertTrue(json.containsKey("date"));
     assertNull(json.getValue("date"));
+  }
+
+  @Test
+  void userToJsonHandlesNullFields() {
+    UserData user = new UserData(null, null, null, null);
+
+    JsonObject json = userToJson(user);
+
+    assertTrue(json.containsKey("id"));
+    assertNull(json.getValue("id"));
+    assertTrue(json.containsKey("username"));
+    assertNull(json.getValue("username"));
+    assertTrue(json.containsKey("picture"));
+    assertNull(json.getValue("picture"));
+    assertTrue(json.containsKey("joined"));
+    assertNull(json.getValue("joined"));
   }
 }

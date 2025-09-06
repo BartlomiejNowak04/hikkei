@@ -57,31 +57,30 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
   //    assertEndpoint("/api/user/login", Method.POST, Map.of());
   //  }
   //
-  //  @Test
-  //  public void apiUserByidRejectsImproperData() {
-  //    assertEndpoint("/api/user/byid", Method.POST, Map.of("id", 0));
-  //  }
-  //
+  @Test
+  public void apiUserByidRejectsImproperData() {
+    assertEndpoint("/api/user/byid", Method.POST, Map.of("id", 0));
+  }
+
   @Test
   public void apiUserPfpRejectsImproperData() {
     assertEndpoint("/api/user/pfp", Method.POST, Map.of("id", 0));
   }
 
-  //
-  //  @Test
-  //  public void apiUserCreateRejectsImproperData() {
-  //    assertEndpoint("/api/user/create", Method.PUT, Map.of("name", "example"));
-  //  }
-  //
-  //  @Test
-  //  public void apiUserUpdateNameRejectsImproperData() {
-  //    assertEndpoint("/api/user/update/name", Method.PUT, Map.of("id", 0, "name", "newName"));
-  //  }
-  //
-  //  @Test
-  //  public void apiUserDeleteRejectsImproperData() {
-  //    assertEndpoint("/api/user/delete", Method.DELETE, Map.of("id", 0));
-  //  }
+  @Test
+  public void apiUserCreateRejectsImproperData() {
+    assertEndpoint("/api/user/create", Method.PUT, Map.of("name", "example"));
+  }
+
+  @Test
+  public void apiUserUpdateNameRejectsImproperData() {
+    assertEndpoint("/api/user/update/name", Method.PUT, Map.of("id", 0, "name", "newName"));
+  }
+
+  @Test
+  public void apiUserDeleteRejectsImproperData() {
+    assertEndpoint("/api/user/delete", Method.DELETE, Map.of("id", 0));
+  }
 
   // /api/page/
   @Test
