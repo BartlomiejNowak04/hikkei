@@ -55,4 +55,21 @@ public class FilesystemVersionProvider implements VersionProvider {
     getVersion(previous);
     return storeContent(content);
   }
+
+  @Override
+  public void deleteVersion(byte[] id) throws InternalErrorException {
+    if (id == null || id.length != 16) return;
+    ByteBuffer buffer = ByteBuffer.wrap(id);
+    long high = buffer.getLong();
+    long low = buffer.getLong();
+    UUID uuid = new UUID(high, low);
+
+    Path file = dir.resolve(uuid.toString());
+    if (!Files.exists(file)) return;
+    try {
+      Files.delete(file);
+    } catch (IOException e) {
+      throw new InternalErrorException("Filesystem internal error");
+    }
+  }
 }

@@ -81,6 +81,7 @@ The frontend application communicates with the backend server through an API. Be
     - PUT `update/status`: approve or reject a revision, params: Integer id, Boolean status
     - PUT `draft/save`: save a draft revision, params: Integer page, Integer user, String content
     - DELETE `draft/delete`: delete a draft revision, params: Integer page, Integer user
+    - DELETE `delete`: delete a revision, params: Integer id
 - `/api/comment/`:
     - POST `user`: get user's comments, params: Integer user
     - POST `page`: get page's comments, params: Integer page

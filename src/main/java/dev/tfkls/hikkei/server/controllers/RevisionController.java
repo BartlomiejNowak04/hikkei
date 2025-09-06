@@ -109,11 +109,59 @@ public class RevisionController {
         body -> {
           RevisionData data = revisionProvider.getById(body.getInteger("id"));
           if (data == null) throw new BadDataException("Incorrect parameter value: id");
-          if (data == RevisionData.DELETED) ctx.response().setStatusCode(404).end();
+          else if (data == RevisionData.DELETED) ctx.response().setStatusCode(404).end();
           else {
             ctx.response().setStatusCode(200);
             ctx.json(revisionToJson(data));
           }
+        });
+  }
+
+  public void getDraft(RoutingContext ctx) {
+    handle(
+        ctx,
+        Map.of("user", Integer.class, "page", Integer.class),
+        body -> {
+          byte[] id = revisionProvider.getDraft(body.getInteger("user"), body.getInteger("page"));
+          if (id == null) throw new BadDataException("Incorrect draft id");
+          String content = versionProvider.getVersion(id);
+          if (content == null) throw new BadDataException("Incorrect draft id");
+          ctx.response().setStatusCode(200);
+          ctx.json(new JsonObject().put("content", content));
+        });
+  }
+
+  public void saveDraft(RoutingContext ctx) {
+    handle(
+        ctx,
+        Map.of("user", Integer.class, "page", Integer.class, "content", String.class),
+        body -> {
+          byte[] id = revisionProvider.getDraft(body.getInteger("user"), body.getInteger("page"));
+          byte[] nid = versionProvider.storeVersion(body.getString("content"), id);
+          revisionProvider.saveDraft(body.getInteger("user"), body.getInteger("page"), nid);
+          ctx.response().setStatusCode(204).end();
+        });
+  }
+
+  public void deleteDraft(RoutingContext ctx) {
+    handle(
+        ctx,
+        Map.of("user", Integer.class, "page", Integer.class),
+        body -> {
+          byte[] id =
+              revisionProvider.deleteDraft(body.getInteger("user"), body.getInteger("page"));
+          versionProvider.deleteVersion(id);
+          ctx.response().setStatusCode(204).end();
+        });
+  }
+
+  public void deleteRevision(RoutingContext ctx) {
+    handle(
+        ctx,
+        Map.of("id", Integer.class),
+        body -> {
+          revisionProvider.deleteRevision(body.getInteger("id"));
+          ctx.response().setStatusCode(204).end();
         });
   }
 }

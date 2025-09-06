@@ -16,12 +16,13 @@ public class RevisionRouteHandler extends RouteHandler {
     //    router.post("/render").blockingHandler(controller::Render);
     router.post("/content").blockingHandler(controller::getCurrentContent);
     router.post("/byid").blockingHandler(controller::getById);
-    //    router.post("/draft").blockingHandler(null);
+    router.post("/draft").blockingHandler(controller::getDraft);
 
     router.put("/create").blockingHandler(controller::addRevision);
     router.put("/update/status").blockingHandler(controller::changeStatus);
-    //    router.put("/draft/save").blockingHandler(null);
+    router.put("/draft/save").blockingHandler(controller::saveDraft);
 
-    //    router.delete("/draft/delete").blockingHandler(null);
+    router.delete("/draft/delete").blockingHandler(controller::deleteDraft);
+    router.delete("/delete").blockingHandler(controller::deleteRevision);
   }
 }

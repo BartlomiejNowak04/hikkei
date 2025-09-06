@@ -10,4 +10,6 @@ public interface VersionProvider {
 
   byte[] storeVersion(String content, byte[] previous)
       throws BadDataException, InternalErrorException;
+
+  void deleteVersion(byte[] id) throws InternalErrorException;
 }

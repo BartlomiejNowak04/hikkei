@@ -150,10 +150,10 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     assertEndpoint("/api/revision/byid", Method.POST, Map.of("id", 0));
   }
 
-  //  @Test
-  //  public void apiRevisionDraftRejectsImproperData() {
-  //    assertEndpoint("/api/revision/draft", Method.POST, Map.of("page", 0, "user", 0));
-  //  }
+  @Test
+  public void apiRevisionDraftRejectsImproperData() {
+    assertEndpoint("/api/revision/draft", Method.POST, Map.of("page", 0, "user", 0));
+  }
 
   @Test
   public void apiRevisionCreateRejectsImproperData() {
@@ -168,17 +168,23 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     assertEndpoint("/api/revision/update/status", Method.PUT, Map.of("id", 0, "status", true));
   }
 
-  //  @Test
-  //  public void apiRevisionDraftSaveRejectsImproperData() {
-  //    assertEndpoint("/api/revision/draft/save", Method.PUT, Map.of("page", 0, "user", 0,
-  // "content", "Draft content"));
-  //  }
+  @Test
+  public void apiRevisionDraftSaveRejectsImproperData() {
+    assertEndpoint(
+        "/api/revision/draft/save",
+        Method.PUT,
+        Map.of("page", 0, "user", 0, "content", "Draft content"));
+  }
 
-  //  @Test
-  //  public void apiRevisionDraftDeleteRejectsImproperData() {
-  //    assertEndpoint("/api/revision/draft/delete", Method.DELETE, Map.of("page", 0, "user",
-  // 0));
-  //  }
+  @Test
+  public void apiRevisionDraftDeleteRejectsImproperData() {
+    assertEndpoint("/api/revision/draft/delete", Method.DELETE, Map.of("page", 0, "user", 0));
+  }
+
+  @Test
+  public void apiRevisionDeleteRejectsImproperData() {
+    assertEndpoint("/api/revision/delete", Method.DELETE, Map.of("id", 0));
+  }
 
   // /api/comment/
   @Test
