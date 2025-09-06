@@ -56,6 +56,7 @@ The frontend application communicates with the backend server through an API. Be
     - POST `login`: log a user in
     - POST `byid`: get user by id, params: Integer id
     - POST `pfp`: get user's profile picture, params: Integer id
+    - POST `categories`: get categories that a user has a permission set for, params: Integer user
     - PUT `create`: create a user, params: String name
     - PUT `update/name`: update username, params: Integer id, String name
     - PUT `update/pfp`: update profile picture, params: Integer id, Picture pfp
@@ -91,7 +92,8 @@ The frontend application communicates with the backend server through an API. Be
 - `/api/category/`:
     - POST `/`: get all categories
     - POST `byid`: get category by id, params: Integer id
-    - POST `permission`: modify user's permissions to given category, params: Integer category, Integer user, String permission
+    - POST `users`: get users that have a set permission in a category, params: Integer category
+    - PUT `permission`: modify user's permissions to given category, params: Integer category, Integer user, String permission
     - PUT `create`: create a category, params: String name
     - PUT `update/name`: update category name, params: Integer id, String name
     - DELETE `delete`: delete a category, params: Integer id

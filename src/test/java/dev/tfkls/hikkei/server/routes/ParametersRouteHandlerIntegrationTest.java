@@ -73,6 +73,11 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
   }
 
   @Test
+  public void apiUserCategoriesRejectsImproperData() {
+    assertEndpoint("/api/user/categories", Method.POST, Map.of("user", 0));
+  }
+
+  @Test
   public void apiUserUpdateNameRejectsImproperData() {
     assertEndpoint("/api/user/update/name", Method.PUT, Map.of("id", 0, "name", "newName"));
   }
@@ -225,10 +230,15 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
   }
 
   @Test
+  public void apiCategoryUsersRejectsImproperData() {
+    assertEndpoint("/api/category/users", Method.POST, Map.of("category", 0));
+  }
+
+  @Test
   public void apiCategoryPermissionRejectsImproperData() {
     assertEndpoint(
         "/api/category/permission",
-        Method.POST,
+        Method.PUT,
         Map.of("category", 0, "user", 0, "permission", "perm"));
   }
 

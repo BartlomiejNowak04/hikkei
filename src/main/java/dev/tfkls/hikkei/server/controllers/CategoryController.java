@@ -6,6 +6,8 @@ import dev.tfkls.hikkei.model.category.CategoryData;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
+import dev.tfkls.hikkei.model.user.UserData;
+import dev.tfkls.hikkei.model.user.UserDataProvider;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.web.RoutingContext;
 import java.util.List;
@@ -13,9 +15,11 @@ import java.util.Map;
 
 public class CategoryController {
   private final CategoryDataProvider categoryProvider;
+  private final UserDataProvider userProvider;
 
-  public CategoryController(CategoryDataProvider categoryProvider) {
+  public CategoryController(CategoryDataProvider categoryProvider, UserDataProvider userProvider) {
     this.categoryProvider = categoryProvider;
+    this.userProvider = userProvider;
   }
 
   public void getCategories(RoutingContext ctx) {
@@ -43,6 +47,24 @@ public class CategoryController {
             ctx.response().setStatusCode(200);
             ctx.json(categoryToJson(data));
           }
+        });
+  }
+
+  public void getUsersWithPermissions(RoutingContext ctx) {
+    handle(
+        ctx,
+        Map.of("category", Integer.class),
+        body -> {
+          Map<Integer, PermissionLevel> vals =
+              categoryProvider.getUsersPermissions(body.getInteger("category"));
+          JsonArray items = new JsonArray();
+          for (Map.Entry<Integer, PermissionLevel> val : vals.entrySet()) {
+            UserData data = userProvider.getUserData(val.getKey());
+            if (data == null || data == UserData.DELETED) continue;
+            items.add(userToJson(data).put("permission", val.getValue().toString()));
+          }
+          ctx.response().setStatusCode(200);
+          ctx.json(items);
         });
   }
 

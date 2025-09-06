@@ -46,12 +46,14 @@ public class MainVerticle extends VerticleBase {
 
   @Override
   public Future<?> start() {
-    UserRouteHandler userRoute = new UserRouteHandler(vertx, userProvider, fileProvider);
+    UserRouteHandler userRoute =
+        new UserRouteHandler(vertx, userProvider, fileProvider, categoryProvider);
     PageRouteHandler pageRoute = new PageRouteHandler(vertx, pageProvider);
     RevisionRouteHandler revisionRoute =
         new RevisionRouteHandler(vertx, revisionProvider, versionProvider);
     CommentRouteHandler commentRoute = new CommentRouteHandler(vertx, commentProvider);
-    CategoryRouteHandler categoryRoute = new CategoryRouteHandler(vertx, categoryProvider);
+    CategoryRouteHandler categoryRoute =
+        new CategoryRouteHandler(vertx, categoryProvider, userProvider);
 
     Router router = Router.router(vertx);
     router.route("/api/*").failureHandler(new FailureHandler());

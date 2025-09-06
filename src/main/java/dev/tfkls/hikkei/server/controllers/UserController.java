@@ -2,12 +2,16 @@ package dev.tfkls.hikkei.server.controllers;
 
 import static dev.tfkls.hikkei.server.controllers.Utils.*;
 
+import dev.tfkls.hikkei.model.category.CategoryData;
+import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.file.StoredFile;
+import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
@@ -18,10 +22,13 @@ import java.util.Map;
 public class UserController {
   private final UserDataProvider userProvider;
   private final FileProvider fileProvider;
+  private final CategoryDataProvider categoryProvider;
 
-  public UserController(UserDataProvider provider, FileProvider fileProvider) {
+  public UserController(
+      UserDataProvider provider, FileProvider fileProvider, CategoryDataProvider categoryProvider) {
     this.userProvider = provider;
     this.fileProvider = fileProvider;
+    this.categoryProvider = categoryProvider;
   }
 
   public void getUser(RoutingContext ctx) {
@@ -85,6 +92,24 @@ public class UserController {
                 .setStatusCode(200)
                 .end(Buffer.buffer(file.data()));
           }
+        });
+  }
+
+  public void getCategoriesWithPermissions(RoutingContext ctx) {
+    handle(
+        ctx,
+        Map.of("user", Integer.class),
+        body -> {
+          Map<Integer, PermissionLevel> vals =
+              userProvider.getCategoriesPermissions(body.getInteger("user"));
+          JsonArray items = new JsonArray();
+          for (Map.Entry<Integer, PermissionLevel> val : vals.entrySet()) {
+            CategoryData data = categoryProvider.getById(val.getKey());
+            if (data == null || data == CategoryData.DELETED) continue;
+            items.add(categoryToJson(data).put("permission", val.getValue().toString()));
+          }
+          ctx.response().setStatusCode(200);
+          ctx.json(items);
         });
   }
 
