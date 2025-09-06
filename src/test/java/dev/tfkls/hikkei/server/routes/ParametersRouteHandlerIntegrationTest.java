@@ -98,10 +98,10 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     assertEndpoint("/api/page/search", Method.POST, Map.of("title", "search phrase"));
   }
 
-  //  @Test
-  //  public void apiPageCategoryRejectsImproperData() {
-  //    assertEndpoint("/api/page/category", Method.POST, Map.of("category", 0));
-  //  }
+  @Test
+  public void apiPageCategoryRejectsImproperData() {
+    assertEndpoint("/api/page/category", Method.POST, Map.of("category", 0));
+  }
 
   @Test
   public void apiPageCreateRejectsImproperData() {
@@ -214,30 +214,32 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
   }
 
   // /api/category/
-  //  @Test
-  //  public void apiCategoryAllRejectsImproperData() {
-  //    assertEndpoint("/api/category/", Method.POST, Map.of());
-  //  }
-  //
-  //  @Test
-  //  public void apiCategoryByidRejectsImproperData() {
-  //    assertEndpoint("/api/category/byid", Method.POST, Map.of("id", 0));
-  //  }
-  //
-  //  @Test
-  //  public void apiCategoryPermissionRejectsImproperData() {
-  //    assertEndpoint("/api/category/permission", Method.POST, Map.of("category", 0, "user", 0,
-  // "permission", 0));
-  //  }
-  //
-  //  @Test
-  //  public void apiCategoryCreateRejectsImproperData() {
-  //    assertEndpoint("/api/category/create", Method.PUT, Map.of("name", "New Category"));
-  //  }
-  //
-  //  @Test
-  //  public void apiCategoryUpdateNameRejectsImproperData() {
-  //    assertEndpoint(
-  //        "/api/category/update/name", Method.PUT, Map.of("id", 0, "name", "Updated Category"));
-  //  }
+  @Test
+  public void apiCategoryAllRejectsImproperData() {
+    assertEndpoint("/api/category/", Method.POST, Map.of());
+  }
+
+  @Test
+  public void apiCategoryByidRejectsImproperData() {
+    assertEndpoint("/api/category/byid", Method.POST, Map.of("id", 0));
+  }
+
+  @Test
+  public void apiCategoryPermissionRejectsImproperData() {
+    assertEndpoint(
+        "/api/category/permission",
+        Method.POST,
+        Map.of("category", 0, "user", 0, "permission", "perm"));
+  }
+
+  @Test
+  public void apiCategoryCreateRejectsImproperData() {
+    assertEndpoint("/api/category/create", Method.PUT, Map.of("name", "New Category"));
+  }
+
+  @Test
+  public void apiCategoryUpdateNameRejectsImproperData() {
+    assertEndpoint(
+        "/api/category/update/name", Method.PUT, Map.of("id", 0, "name", "Updated Category"));
+  }
 }

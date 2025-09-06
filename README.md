@@ -91,9 +91,10 @@ The frontend application communicates with the backend server through an API. Be
 - `/api/category/`:
     - POST `/`: get all categories
     - POST `byid`: get category by id, params: Integer id
-    - POST `permission`: modify user's permissions to given category, params: Integer category, Integer user, Integer permission
+    - POST `permission`: modify user's permissions to given category, params: Integer category, Integer user, String permission
     - PUT `create`: create a category, params: String name
     - PUT `update/name`: update category name, params: Integer id, String name
+    - DELETE `delete`: delete a category, params: Integer id
 
 
 ## Setup

@@ -13,7 +13,7 @@ public class PageRouteHandler extends RouteHandler {
     router.post("/bytitle").blockingHandler(ctx -> controller.getPageByTitle(ctx, false));
     router.post("/byurl").blockingHandler(ctx -> controller.getPageByTitle(ctx, true));
     router.post("/search").blockingHandler(controller::searchByTitle);
-    //    router.post("/category").blockingHandler(null);
+    router.post("/category").blockingHandler(controller::getByCategory);
 
     router.put("/create").blockingHandler(controller::createPage);
     router.put("/update/title").blockingHandler(controller::updateTitle);

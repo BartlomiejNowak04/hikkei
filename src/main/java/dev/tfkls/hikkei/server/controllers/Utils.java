@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.server.controllers;
 
+import dev.tfkls.hikkei.model.category.CategoryData;
 import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.page.PageData;
@@ -55,7 +56,7 @@ public class Utils {
         .put("title", page.title())
         .put("category", page.category())
         .put("archived", page.archived())
-        .put("created", page.created());
+        .put("created", page.created() == null ? null : page.created().toString());
   }
 
   public static JsonObject revisionToJson(RevisionData revision) {
@@ -83,5 +84,12 @@ public class Utils {
         .put("username", user.username())
         .put("picture", user.picture())
         .put("joined", user.joinedAt() == null ? null : user.joinedAt().toString());
+  }
+
+  public static JsonObject categoryToJson(CategoryData category) {
+    return new JsonObject()
+        .put("id", category.id())
+        .put("name", category.name())
+        .put("created", category.created() == null ? null : category.created().toString());
   }
 }

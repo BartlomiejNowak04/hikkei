@@ -59,6 +59,19 @@ public class PageController {
         });
   }
 
+  public void getByCategory(RoutingContext ctx) {
+    handle(
+        ctx,
+        Map.of("category", Integer.class),
+        body -> {
+          List<PageData> data = pageProvider.getByCategory(body.getInteger("category"));
+          JsonArray items = new JsonArray();
+          for (PageData item : data) items.add(Utils.pageToJson(item));
+          ctx.response().setStatusCode(200);
+          ctx.json(items);
+        });
+  }
+
   public void createPage(RoutingContext ctx) {
     handle(
         ctx,

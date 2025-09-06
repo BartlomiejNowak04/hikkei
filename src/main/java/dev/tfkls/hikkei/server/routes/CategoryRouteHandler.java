@@ -9,11 +9,13 @@ public class CategoryRouteHandler extends RouteHandler {
     super(vertx);
     CategoryController controller = new CategoryController(categoryProvider);
 
-    //    router.post("/").blockingHandler(null);
-    //    router.post("/byid").blockingHandler(null);
-    //    router.post("/permission").blockingHandler(null);
-    //
-    //    router.put("/create").blockingHandler(null);
-    //    router.put("/update/name").blockingHandler(null);
+    router.post("/").blockingHandler(controller::getCategories);
+    router.post("/byid").blockingHandler(controller::getById);
+    router.post("/permission").blockingHandler(controller::modifyPermission);
+
+    router.put("/create").blockingHandler(controller::createPermission);
+    router.put("/update/name").blockingHandler(controller::updateName);
+
+    router.delete("/delete").blockingHandler(controller::deleteCategory);
   }
 }
