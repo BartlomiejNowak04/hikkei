@@ -39,13 +39,13 @@ public class JDBCPageDataProviderIntegrationTest extends JDBCIntegrationTest {
 
   @Test
   void createAndRetrievePage() throws InternalErrorException, BadDataException {
-    PageData page = new PageData(null, 1, "Test Title", 1, false, null);
+    PageData page = new PageData(null, 1, "test", 1, false, null);
     int pageId = provider.createPage(page);
     assertTrue(provider.doesPageExist(pageId));
 
     PageData retrieved = provider.getById(pageId);
-    assertEquals("Test Title", retrieved.title());
-    assertEquals(1, retrieved.category());
+    assertEquals(page.title(), retrieved.title());
+    assertEquals(page.category(), retrieved.category());
     assertFalse(retrieved.archived());
   }
 

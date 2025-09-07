@@ -17,6 +17,8 @@ public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest 
   private JDBCCommentDataProvider provider;
   private int pageId;
   private int userId;
+  private int pageId2;
+  private int userId2;
 
   @BeforeAll
   void init() throws SQLException {
@@ -32,6 +34,11 @@ public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest 
     stUsr.setString(1, "testname");
     stUsr.executeUpdate();
 
+    PreparedStatement stUsr2 =
+        connection.prepareStatement("INSERT INTO users_with_data (username) VALUES (?)");
+    stUsr2.setString(1, "testname2");
+    stUsr2.executeUpdate();
+
     PreparedStatement stPage =
         connection.prepareStatement(
             "INSERT INTO pages_with_data (title, category, user_id) VALUES (?, ?, ?)");
@@ -40,8 +47,18 @@ public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest 
     stPage.setInt(3, 1);
     stPage.executeUpdate();
 
+    PreparedStatement stPage2 =
+        connection.prepareStatement(
+            "INSERT INTO pages_with_data (title, category, user_id) VALUES (?, ?, ?)");
+    stPage2.setString(1, "test-page-2");
+    stPage2.setInt(2, 1);
+    stPage2.setInt(3, 1);
+    stPage2.executeUpdate();
+
     pageId = 1;
     userId = 1;
+    pageId2 = 2;
+    userId2 = 2;
   }
 
   @Test
@@ -82,8 +99,7 @@ public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest 
 
   @Test
   void addCommentSuccess() throws BadDataException, InternalErrorException {
-    CommentData comment =
-        new CommentData(-1, pageId, userId, "This is a test comment", LocalDateTime.now());
+    CommentData comment = new CommentData(-1, pageId, userId, "test", LocalDateTime.now());
     int commentId = provider.addComment(comment);
 
     assertTrue(commentId > 0);
@@ -91,14 +107,13 @@ public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest 
 
   @Test
   void addCommentFailsWithInvalidPage() {
-    CommentData comment =
-        new CommentData(-1, -9999, userId, "Invalid page comment", LocalDateTime.now());
+    CommentData comment = new CommentData(-1, -9999, userId, "invalid", LocalDateTime.now());
     assertThrows(BadDataException.class, () -> provider.addComment(comment));
   }
 
   @Test
   void deleteCommentSuccess() throws BadDataException, InternalErrorException {
-    CommentData comment = new CommentData(-1, pageId, userId, "To be deleted", LocalDateTime.now());
+    CommentData comment = new CommentData(-1, pageId, userId, "delete", LocalDateTime.now());
     int commentId = provider.addComment(comment);
 
     assertDoesNotThrow(() -> provider.deleteComment(commentId));
@@ -106,10 +121,72 @@ public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest 
 
   @Test
   void deleteCommentWorksForInvalidId() {
-    try {
-      provider.deleteComment(-1);
-    } catch (Exception e) {
-      fail();
-    }
+    assertDoesNotThrow(() -> provider.deleteComment(-1));
+  }
+
+  @Test
+  void getByIdSuccess() throws BadDataException, InternalErrorException {
+    CommentData comment = new CommentData(-1, pageId, userId, "get-by-id", LocalDateTime.now());
+    int commentId = provider.addComment(comment);
+    CommentData retrievedComment = provider.getById(commentId);
+    assertNotNull(retrievedComment);
+    assertEquals(comment.pageId(), retrievedComment.pageId());
+    assertEquals(comment.userId(), retrievedComment.userId());
+    assertEquals(commentId, retrievedComment.id());
+    assertEquals(comment.content(), retrievedComment.content());
+  }
+
+  @Test
+  void getByIdFailsWithInvalidId() {
+    assertThrows(InternalErrorException.class, () -> provider.getById(-1));
+  }
+
+  @Test
+  void deleteCommentActuallyDeletes() throws BadDataException, InternalErrorException {
+    CommentData comment = new CommentData(-1, pageId, userId, "delete-v2", LocalDateTime.now());
+    int commentId = provider.addComment(comment);
+
+    provider.deleteComment(commentId);
+    CommentData retrievedComment = provider.getById(commentId);
+    assertNotNull(retrievedComment);
+    assertEquals(retrievedComment, CommentData.DELETED);
+  }
+
+  @Test
+  void getByPageSuccess() throws BadDataException, InternalErrorException {
+    CommentData comment = new CommentData(-1, pageId2, userId, "page", LocalDateTime.now());
+    int commentId = provider.addComment(comment);
+    CommentData comment2 = new CommentData(-1, pageId2, userId, "page2", LocalDateTime.now());
+    int commentId2 = provider.addComment(comment2);
+
+    List<CommentData> comments = provider.getByPage(pageId2);
+    assertNotNull(comments);
+    assertEquals(comments.size(), 2);
+    assertEquals(commentId2, comments.getFirst().id());
+    assertEquals(commentId, comments.getLast().id());
+  }
+
+  @Test
+  void getByPageFailsWithInvalidPage() throws InternalErrorException {
+    assertNull(provider.getByPage(-1));
+  }
+
+  @Test
+  void getByUserSuccess() throws BadDataException, InternalErrorException {
+    CommentData comment = new CommentData(-1, pageId, userId2, "user", LocalDateTime.now());
+    int commentId = provider.addComment(comment);
+    CommentData comment2 = new CommentData(-1, pageId, userId2, "user2", LocalDateTime.now());
+    int commentId2 = provider.addComment(comment2);
+
+    List<CommentData> comments = provider.getByUser(userId2);
+    assertNotNull(comments);
+    assertEquals(comments.size(), 2);
+    assertEquals(commentId2, comments.getFirst().id());
+    assertEquals(commentId, comments.getLast().id());
+  }
+
+  @Test
+  void getByUserFailsWithInvalidUser() throws InternalErrorException {
+    assertNull(provider.getByUser(-1));
   }
 }
