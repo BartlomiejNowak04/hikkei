@@ -5,13 +5,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import dev.tfkls.hikkei.model.category.CategoryData;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
-import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.file.StoredFile;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.UserData;
@@ -37,9 +34,8 @@ public class UserRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
   @Test
   void byIdNoUserTest() throws Exception {
     when(userProvider.getUserData(1)).thenReturn(null);
-
-    JsonObject body = callEndpointObject("/api/user/byid", Method.POST, id1, 400);
-    assertEquals("Incorrect parameter: id", body.getString("message"));
+    testException(
+        "/api/user/byid", Method.POST, id1, new BadDataException("Incorrect parameter: id"));
   }
 
   @Test
@@ -65,17 +61,15 @@ public class UserRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
   @Test
   void pfpNoUserTest() throws Exception {
     when(userProvider.getUserData(1)).thenReturn(null);
-
-    JsonObject body = callEndpointObject("/api/user/pfp", Method.POST, id1, 400);
-    assertEquals("Incorrect parameter: id", body.getString("message"));
+    testException(
+        "/api/user/pfp", Method.POST, id1, new BadDataException("Incorrect parameter: id"));
   }
 
   @Test
   void pfpDeletedUserTest() throws Exception {
     when(userProvider.getUserData(1)).thenReturn(UserData.DELETED);
-
-    JsonObject body = callEndpointObject("/api/user/pfp", Method.POST, id1, 400);
-    assertEquals("Incorrect parameter: id", body.getString("message"));
+    testException(
+        "/api/user/pfp", Method.POST, id1, new BadDataException("Incorrect parameter: id"));
   }
 
   @Test
@@ -99,8 +93,11 @@ public class UserRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
   @Test
   void categoriesNoUserTest() throws Exception {
     when(userProvider.getCategoriesPermissions(1)).thenReturn(null);
-    JsonObject body = callEndpointObject("/api/user/categories", Method.POST, user1, 400);
-    assertEquals("Incorrect parameter: user", body.getString("message"));
+    testException(
+        "/api/user/categories",
+        Method.POST,
+        user1,
+        new BadDataException("Incorrect parameter: user"));
   }
 
   @Test
@@ -154,8 +151,11 @@ public class UserRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
 
   @Test
   void updatePfpNoIdTest() {
-    JsonObject body = callEndpointObject("/api/user/update/pfp", Method.PUT, null, 400);
-    assertEquals("Missing required parameter: id", body.getString("message"));
+    testException(
+        "/api/user/update/pfp",
+        Method.PUT,
+        null,
+        new BadDataException("Missing required parameter: id"));
   }
 
   @Test
@@ -220,63 +220,6 @@ public class UserRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
         .put("/api/user/update/pfp")
         .then()
         .statusCode(204);
-  }
-
-  @Test
-  void updatePfpBadDataTest() throws Exception {
-    when(userProvider.doesUserExist(1)).thenReturn(true);
-    doThrow(new BadDataException("test")).when(userProvider).updateUserPicture(anyInt(), any());
-    given()
-        .multiPart("id", 1)
-        .multiPart("file", "mock.png", new ByteArrayInputStream(new byte[] {1, 2, 3}), "image/png")
-        .when()
-        .put("/api/user/update/pfp")
-        .then()
-        .statusCode(400)
-        .body("message", equalTo("test"));
-  }
-
-  @Test
-  void updatePfpInternalErrorTest() throws Exception {
-    when(userProvider.doesUserExist(1)).thenThrow(new InternalErrorException("test"));
-    given()
-        .multiPart("id", 1)
-        .multiPart("file", "mock.png", new ByteArrayInputStream(new byte[] {1, 2, 3}), "image/png")
-        .when()
-        .put("/api/user/update/pfp")
-        .then()
-        .statusCode(500)
-        .body("message", equalTo("test"));
-  }
-
-  @Test
-  void updatePfpInternalErrorTest2() throws Exception {
-    when(userProvider.doesUserExist(1)).thenReturn(true);
-    doThrow(new InternalErrorException("test"))
-        .when(userProvider)
-        .updateUserPicture(anyInt(), any());
-    given()
-        .multiPart("id", 1)
-        .multiPart("file", "mock.png", new ByteArrayInputStream(new byte[] {1, 2, 3}), "image/png")
-        .when()
-        .put("/api/user/update/pfp")
-        .then()
-        .statusCode(500)
-        .body("message", equalTo("test"));
-  }
-
-  @Test
-  void updatePfpInternalErrorTest3() throws Exception {
-    when(userProvider.doesUserExist(1)).thenReturn(true);
-    doThrow(new InternalErrorException("test")).when(fileProvider).storeContent(any(), any());
-    given()
-        .multiPart("id", 1)
-        .multiPart("file", "mock.png", new ByteArrayInputStream(new byte[] {1, 2, 3}), "image/png")
-        .when()
-        .put("/api/user/update/pfp")
-        .then()
-        .statusCode(500)
-        .body("message", equalTo("test"));
   }
 
   @Test

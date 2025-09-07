@@ -19,5 +19,7 @@ public class PageRouteHandler extends RouteHandler {
     router.put("/update/title").blockingHandler(controller::updateTitle);
     router.put("/update/category").blockingHandler(controller::updateCategory);
     router.put("/update/archive").blockingHandler(controller::toggleArchive);
+
+    router.delete("/delete").blockingHandler(controller::deletePage);
   }
 }

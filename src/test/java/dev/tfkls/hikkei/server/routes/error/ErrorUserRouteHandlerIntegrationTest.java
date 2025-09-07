@@ -1,7 +1,9 @@
-package dev.tfkls.hikkei.server.routes;
+package dev.tfkls.hikkei.server.routes.error;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
@@ -9,13 +11,15 @@ import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.UserData;
+import dev.tfkls.hikkei.server.routes.RouteHandlerIntegrationTest;
 import io.restassured.http.Method;
 import io.vertx.core.json.JsonObject;
+import java.io.ByteArrayInputStream;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-public class ProviderErrorRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest {
+public class ErrorUserRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest {
   private InternalErrorException ie;
   private BadDataException bad;
   private JsonObject id1;
@@ -31,12 +35,6 @@ public class ProviderErrorRouteHandlerIntegrationTest extends RouteHandlerIntegr
     user1 = new JsonObject().put("user", 1);
     name = new JsonObject().put("name", "newname");
     name1 = new JsonObject().put("name", "newname").put("id", 1);
-  }
-
-  private void testException(String endpoint, Method method, JsonObject body, Exception e) {
-    JsonObject bd =
-        callEndpointObject(endpoint, method, body, e instanceof InternalErrorException ? 500 : 400);
-    assertEquals(e.getMessage(), bd.getString("message"));
   }
 
   @Test
@@ -106,5 +104,62 @@ public class ProviderErrorRouteHandlerIntegrationTest extends RouteHandlerIntegr
   void deleteInternalErrorTest() throws Exception {
     doThrow(ie).when(userProvider).deleteUser(1);
     testException("/api/user/delete", Method.DELETE, id1, ie);
+  }
+
+  @Test
+  void updatePfpBadDataTest() throws Exception {
+    when(userProvider.doesUserExist(1)).thenReturn(true);
+    doThrow(new BadDataException("test")).when(userProvider).updateUserPicture(anyInt(), any());
+    given()
+        .multiPart("id", 1)
+        .multiPart("file", "mock.png", new ByteArrayInputStream(new byte[] {1, 2, 3}), "image/png")
+        .when()
+        .put("/api/user/update/pfp")
+        .then()
+        .statusCode(400)
+        .body("message", equalTo("test"));
+  }
+
+  @Test
+  void updatePfpInternalErrorTest() throws Exception {
+    when(userProvider.doesUserExist(1)).thenThrow(new InternalErrorException("test"));
+    given()
+        .multiPart("id", 1)
+        .multiPart("file", "mock.png", new ByteArrayInputStream(new byte[] {1, 2, 3}), "image/png")
+        .when()
+        .put("/api/user/update/pfp")
+        .then()
+        .statusCode(500)
+        .body("message", equalTo("test"));
+  }
+
+  @Test
+  void updatePfpInternalErrorTest2() throws Exception {
+    when(userProvider.doesUserExist(1)).thenReturn(true);
+    doThrow(new InternalErrorException("test"))
+        .when(userProvider)
+        .updateUserPicture(anyInt(), any());
+    given()
+        .multiPart("id", 1)
+        .multiPart("file", "mock.png", new ByteArrayInputStream(new byte[] {1, 2, 3}), "image/png")
+        .when()
+        .put("/api/user/update/pfp")
+        .then()
+        .statusCode(500)
+        .body("message", equalTo("test"));
+  }
+
+  @Test
+  void updatePfpInternalErrorTest3() throws Exception {
+    when(userProvider.doesUserExist(1)).thenReturn(true);
+    doThrow(new InternalErrorException("test")).when(fileProvider).storeContent(any(), any());
+    given()
+        .multiPart("id", 1)
+        .multiPart("file", "mock.png", new ByteArrayInputStream(new byte[] {1, 2, 3}), "image/png")
+        .when()
+        .put("/api/user/update/pfp")
+        .then()
+        .statusCode(500)
+        .body("message", equalTo("test"));
   }
 }

@@ -121,6 +121,11 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     assertEndpoint("/api/page/update/archive", Method.PUT, Map.of("id", 0, "value", true));
   }
 
+  @Test
+  public void apiPageDeleteRejectsImproperData() {
+    assertEndpoint("/api/page/delete", Method.DELETE, Map.of("id", 0));
+  }
+
   // /api/revision/
   @Test
   public void apiRevisionUserRejectsImproperData() {

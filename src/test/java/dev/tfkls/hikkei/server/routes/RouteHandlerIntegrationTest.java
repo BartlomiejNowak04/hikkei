@@ -1,10 +1,12 @@
 package dev.tfkls.hikkei.server.routes;
 
 import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
+import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
@@ -100,5 +102,11 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
       String endpoint, Method method, JsonObject body, int statusCode) {
     return new JsonArray(
         callEndpoint(endpoint, method, body, statusCode, "application/json").asString());
+  }
+
+  protected void testException(String endpoint, Method method, JsonObject body, Exception e) {
+    JsonObject bd =
+        callEndpointObject(endpoint, method, body, e instanceof InternalErrorException ? 500 : 400);
+    assertEquals(e.getMessage(), bd.getString("message"));
   }
 }

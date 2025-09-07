@@ -22,7 +22,7 @@ public class PageController {
   public void getRandomPage(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of(),
+        null,
         body -> {
           PageData data = pageProvider.getRandomPage();
           if (data == null) throw new InternalErrorException("No pages available");
@@ -49,7 +49,7 @@ public class PageController {
         ctx,
         Map.of(fromUrl ? "url" : "title", String.class),
         body -> {
-          String title = body.getString("title");
+          String title = body.getString(fromUrl ? "url" : "title");
           if (fromUrl) title = title.replace("_", " ");
 
           PageData data = pageProvider.getByTitle(title);
@@ -65,6 +65,7 @@ public class PageController {
         Map.of("category", Integer.class),
         body -> {
           List<PageData> data = pageProvider.getByCategory(body.getInteger("category"));
+          if (data == null) throw new BadDataException("Invalid category id");
           JsonArray items = new JsonArray();
           for (PageData item : data) items.add(Utils.pageToJson(item));
           ctx.response().setStatusCode(200);
@@ -113,6 +114,16 @@ public class PageController {
         Map.of("value", Boolean.class, "id", Integer.class),
         body -> {
           pageProvider.toggleArchive(body.getInteger("id"), body.getBoolean("value"));
+          ctx.response().setStatusCode(204).end();
+        });
+  }
+
+  public void deletePage(RoutingContext ctx) {
+    handle(
+        ctx,
+        Map.of("id", Integer.class),
+        body -> {
+          pageProvider.deletePage(body.getInteger("id"));
           ctx.response().setStatusCode(204).end();
         });
   }
