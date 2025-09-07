@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.server.routes;
 
+import static io.restassured.RestAssured.given;
 import static org.mockito.Mockito.mock;
 
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
@@ -12,7 +13,11 @@ import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.server.MainVerticle;
 import dev.tfkls.hikkei.test.IntegrationTest;
 import io.restassured.RestAssured;
+import io.restassured.http.Method;
+import io.restassured.response.ResponseBodyExtractionOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.BeforeAll;
@@ -70,5 +75,30 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
         categoryProvider,
         versionProvider,
         fileProvider);
+  }
+
+  protected ResponseBodyExtractionOptions callEndpoint(
+      String endpoint, Method method, JsonObject body, int statusCode, String contentType) {
+    return given()
+        .when()
+        .body(body == null ? "" : body.toString())
+        .request(method, endpoint)
+        .then()
+        .statusCode(statusCode)
+        .contentType(contentType)
+        .extract()
+        .body();
+  }
+
+  protected JsonObject callEndpointObject(
+      String endpoint, Method method, JsonObject body, int statusCode) {
+    return new JsonObject(
+        callEndpoint(endpoint, method, body, statusCode, "application/json").asString());
+  }
+
+  protected JsonArray callEndpointArray(
+      String endpoint, Method method, JsonObject body, int statusCode) {
+    return new JsonArray(
+        callEndpoint(endpoint, method, body, statusCode, "application/json").asString());
   }
 }

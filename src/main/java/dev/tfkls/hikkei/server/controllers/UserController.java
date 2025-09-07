@@ -61,6 +61,8 @@ public class UserController {
         throw new BadDataException("Incorrect parameter: id");
       }
       if (!userProvider.doesUserExist(id)) throw new BadDataException("Incorrect parameter: id");
+      if (ctx.fileUploads().size() != 1)
+        throw new BadDataException("Exactly one file must be supplied");
 
       for (FileUpload fileUpload : ctx.fileUploads()) {
         String mime = fileUpload.contentType();
@@ -102,6 +104,7 @@ public class UserController {
         body -> {
           Map<Integer, PermissionLevel> vals =
               userProvider.getCategoriesPermissions(body.getInteger("user"));
+          if (vals == null) throw new BadDataException("Incorrect parameter: user");
           JsonArray items = new JsonArray();
           for (Map.Entry<Integer, PermissionLevel> val : vals.entrySet()) {
             CategoryData data = categoryProvider.getById(val.getKey());

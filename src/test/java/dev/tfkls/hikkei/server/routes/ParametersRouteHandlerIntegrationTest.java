@@ -1,7 +1,6 @@
 package dev.tfkls.hikkei.server.routes;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import io.restassured.http.Method;
@@ -10,14 +9,9 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest {
-  private void callApi(String endpoint, Method method, String body, String message) {
-    given()
-        .when()
-        .body(body)
-        .request(method, endpoint)
-        .then()
-        .statusCode(400)
-        .body("message", equalTo(message));
+  private void callApi(String endpoint, Method method, JsonObject body, String message) {
+    JsonObject res = callEndpointObject(endpoint, method, body, 400);
+    assertEquals(message, res.getString("message"));
 
     verifyNoInteractions(userProvider);
     verifyNoInteractions(pageProvider);
@@ -39,15 +33,13 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
       if (constraints.get(current) instanceof String) value = 0;
       else value = "invalid";
 
-      callApi(
-          endpoint, method, json.put(current, value).toString(), "Incorrect parameter: " + current);
-      callApi(
-          endpoint, method, json.putNull(current).toString(), "Incorrect parameter: " + current);
+      callApi(endpoint, method, json.put(current, value), "Incorrect parameter: " + current);
+      callApi(endpoint, method, json.putNull(current), "Incorrect parameter: " + current);
       json.remove(current);
-      callApi(endpoint, method, json.toString(), "Missing required parameter: " + current);
+      callApi(endpoint, method, json, "Missing required parameter: " + current);
     }
 
-    callApi(endpoint, method, "", "No data provided");
+    callApi(endpoint, method, null, "No data provided");
   }
 
   // TODO: uncomment when implemented
