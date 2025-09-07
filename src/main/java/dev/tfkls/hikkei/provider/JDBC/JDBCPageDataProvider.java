@@ -89,7 +89,19 @@ public class JDBCPageDataProvider implements PageDataProvider {
 
   @Override
   public List<PageData> getByCategory(int categoryId) throws InternalErrorException {
-    return List.of();
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT * FROM pages_with_data WHERE category = ?")) {
+      st.setInt(1, categoryId);
+      try (ResultSet rs = st.executeQuery()) {
+        ArrayList<PageData> res = new ArrayList<>();
+        while (rs.next()) {
+          res.add(getPageData(rs));
+        }
+        return res;
+      }
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
   }
 
   @Override
@@ -173,9 +185,20 @@ public class JDBCPageDataProvider implements PageDataProvider {
   }
 
   @Override
-  public void deletePage(int pageId) throws InternalErrorException {}
+  public void deletePage(int pageId) throws InternalErrorException {
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "UPDATE pages SET deleted=true, date_deleted=now() WHERE id = ?")) {
+      st.setInt(1, pageId);
+      st.executeUpdate();
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+  }
 
   private PageData getPageData(ResultSet rs) throws SQLException {
+    if (rs.getBoolean("deleted")) return PageData.DELETED;
+
     return new PageData(
         rs.getInt("id"),
         rs.getInt("user_id"),

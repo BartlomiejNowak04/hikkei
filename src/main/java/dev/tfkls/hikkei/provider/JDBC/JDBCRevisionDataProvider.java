@@ -86,17 +86,69 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
 
   @Override
   public List<RevisionData> getByUser(int userId) throws InternalErrorException {
-    return List.of();
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT COUNT(*) FROM users WHERE id = ?")) {
+      st.setInt(1, userId);
+      ResultSet rs = st.executeQuery();
+      rs.next();
+      if (rs.getInt(1) == 0) return null;
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "SELECT * FROM revisions_with_data WHERE user_id = ? ORDER BY date DESC")) {
+      st.setInt(1, userId);
+      try (ResultSet rs = st.executeQuery()) {
+        ArrayList<RevisionData> res = new ArrayList<>();
+        while (rs.next()) res.add(getRevisionData(rs));
+        return res;
+      }
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
   }
 
   @Override
   public RevisionData getById(int id) throws InternalErrorException {
-    return null;
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT * FROM revisions_with_data WHERE id = ?")) {
+      st.setInt(1, id);
+      try (ResultSet rs = st.executeQuery()) {
+        if (!rs.next()) throw new InternalErrorException(invalid_revision);
+        return getRevisionData(rs);
+      }
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+  }
+
+  @Override
+  public void deleteRevision(int id) throws InternalErrorException {
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "UPDATE revisions SET deleted=true, date_deleted=now() WHERE id = ?")) {
+      st.setInt(1, id);
+      st.executeUpdate();
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
   }
 
   @Override
   public byte[] getDraft(int userId, int pageId) throws InternalErrorException {
-    return null;
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT * FROM drafts WHERE user_id = ? AND page_id = ?")) {
+      st.setInt(1, userId);
+      st.setInt(2, pageId);
+      try (ResultSet rs = st.executeQuery()) {
+        if (!rs.next()) return null;
+        return rs.getBytes("file");
+      }
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
   }
 
   @Override
@@ -108,9 +160,6 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
       throws InternalErrorException, BadDataException {
     return null;
   }
-
-  @Override
-  public void deleteRevision(int id) throws InternalErrorException {}
 
   private RevisionData getRevisionData(ResultSet rs) throws SQLException {
     return new RevisionData(

@@ -24,10 +24,11 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
   public int addComment(CommentData data) throws BadDataException, InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO comments (page_id, content) VALUES (?, ?)",
+            "INSERT INTO comments (page_id, user_id, content) VALUES (?, ?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
       st.setInt(1, data.pageId());
-      st.setString(2, data.content());
+      st.setInt(2, data.userId());
+      st.setString(3, data.content());
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
@@ -47,6 +48,7 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
         connection.prepareStatement(
             "UPDATE comments SET deleted=true, date_deleted=now() WHERE id = ?")) {
       st.setInt(1, id);
+      st.executeUpdate();
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
     }
@@ -54,7 +56,28 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
 
   @Override
   public CommentData getById(int id) throws InternalErrorException {
-    return null;
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT * FROM comments WHERE id = ?")) {
+      st.setInt(1, id);
+
+      try (ResultSet rs = st.executeQuery()) {
+        if (!rs.next()) throw new InternalErrorException(invalid_comment);
+
+        if (rs.getBoolean("deleted")) {
+          return CommentData.DELETED;
+        }
+
+        return new CommentData(
+            rs.getInt("id"),
+            rs.getInt("page_id"),
+            rs.getInt("user_id"),
+            rs.getString("content"),
+            rs.getTimestamp("date").toLocalDateTime());
+      }
+
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
   }
 
   @Override
@@ -74,7 +97,11 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
             "SELECT * FROM comments WHERE page_id = ? ORDER BY date DESC")) {
       st.setInt(1, pageId);
       try (ResultSet rs = st.executeQuery()) {
-        return getCommentDataFromResultSet(rs);
+        ArrayList<CommentData> res = new ArrayList<>();
+        while (rs.next()) {
+          res.add(getCommentData(rs));
+        }
+        return res;
       }
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
@@ -98,23 +125,24 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
             "SELECT * FROM comments WHERE user_id = ? ORDER BY date DESC")) {
       st.setInt(1, userId);
       try (ResultSet rs = st.executeQuery()) {
-        return getCommentDataFromResultSet(rs);
+        ArrayList<CommentData> res = new ArrayList<>();
+        while (rs.next()) {
+          res.add(getCommentData(rs));
+        }
+        return res;
       }
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
     }
   }
 
-  private List<CommentData> getCommentDataFromResultSet(ResultSet rs) throws SQLException {
-    ArrayList<CommentData> res = new ArrayList<>();
-    while (rs.next())
-      res.add(
-          new CommentData(
-              rs.getInt("id"),
-              rs.getInt("page_id"),
-              rs.getInt("user_id"),
-              rs.getString("content"),
-              rs.getTimestamp("date").toLocalDateTime()));
-    return res;
+  private CommentData getCommentData(ResultSet rs) throws SQLException {
+    if (rs.getBoolean("deleted")) return CommentData.DELETED;
+    return new CommentData(
+        rs.getInt("id"),
+        rs.getInt("page_id"),
+        rs.getInt("user_id"),
+        rs.getString("content"),
+        rs.getTimestamp("date").toLocalDateTime());
   }
 }
