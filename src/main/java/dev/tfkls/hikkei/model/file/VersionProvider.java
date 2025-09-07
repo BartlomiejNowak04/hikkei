@@ -4,7 +4,7 @@ import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 
 public interface VersionProvider {
-  String getVersion(byte[] id) throws BadDataException, InternalErrorException;
+  String getVersion(byte[] id) throws InternalErrorException;
 
   byte[] storeContent(String content) throws InternalErrorException;
 

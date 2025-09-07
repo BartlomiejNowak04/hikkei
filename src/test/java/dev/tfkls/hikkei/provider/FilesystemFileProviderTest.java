@@ -2,7 +2,6 @@ package dev.tfkls.hikkei.provider;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.file.StoredFile;
 import java.io.IOException;
 import java.nio.file.*;
@@ -50,25 +49,13 @@ class FilesystemFileProviderTest {
   }
 
   @Test
-  void testNoGoingUp() {
-    BadDataException e =
-        assertThrows(
-            BadDataException.class,
-            () -> {
-              provider.getContent("../etc/passwd".getBytes());
-            });
-    assertEquals("Invalid data id", e.getMessage());
+  void testNoGoingUp() throws Exception {
+    assertNull(provider.getContent("../etc/passwd".getBytes()));
   }
 
   @Test
-  void testNonExistentFileThrowsBadDataException() {
-    BadDataException e =
-        assertThrows(
-            BadDataException.class,
-            () -> {
-              provider.getContent("nonexistent".getBytes());
-            });
-    assertEquals("Invalid data id", e.getMessage());
+  void testNonExistentFileReturnsNull() throws Exception {
+    assertNull(provider.getContent("nonexistent".getBytes()));
   }
 
   @Test

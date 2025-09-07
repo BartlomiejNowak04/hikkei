@@ -59,8 +59,8 @@ public class ErrorUserRouteHandlerIntegrationTest extends RouteHandlerIntegratio
   @Test
   void pfpBadDataTest() throws Exception {
     when(userProvider.getUserData(1)).thenReturn(new UserData("test", new byte[0]));
-    when(fileProvider.getContent(new byte[0])).thenThrow(bad);
-    testException("/api/user/pfp", Method.POST, id1, bad);
+    when(fileProvider.getContent(new byte[0])).thenReturn(null);
+    testException("/api/user/pfp", Method.POST, id1, new InternalErrorException("File not found"));
   }
 
   @Test

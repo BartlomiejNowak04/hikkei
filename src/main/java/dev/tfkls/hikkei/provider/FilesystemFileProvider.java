@@ -1,6 +1,5 @@
 package dev.tfkls.hikkei.provider;
 
-import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.file.StoredFile;
@@ -18,19 +17,20 @@ public class FilesystemFileProvider implements FileProvider {
   }
 
   @Override
-  public StoredFile getContent(byte[] id) throws BadDataException, InternalErrorException {
+  public StoredFile getContent(byte[] id) throws InternalErrorException {
+    if (id == null) return null;
     try {
       String decoded = new String(id);
       int stop = decoded.lastIndexOf('$');
       if (stop == -1) stop = decoded.length();
       Path filePath = dir.resolve(decoded.substring(0, stop)).normalize();
-      if (!filePath.startsWith(dir)) throw new BadDataException("Invalid data id");
+      if (!filePath.startsWith(dir)) return null;
 
       return new StoredFile(
           Files.readAllBytes(filePath),
           stop == decoded.length() ? null : decoded.substring(stop + 1));
     } catch (NoSuchFileException e) {
-      throw new BadDataException("Invalid data id");
+      return null;
     } catch (IOException e) {
       throw new InternalErrorException("Filesystem internal error");
     }
@@ -44,6 +44,22 @@ public class FilesystemFileProvider implements FileProvider {
 
       Files.write(filePath, data);
       return (filename + (mime == null ? "" : "$" + mime)).getBytes();
+    } catch (IOException e) {
+      throw new InternalErrorException("Filesystem internal error");
+    }
+  }
+
+  @Override
+  public void deleteContent(byte[] id) throws InternalErrorException {
+    try {
+      String decoded = new String(id);
+      int stop = decoded.lastIndexOf('$');
+      if (stop == -1) stop = decoded.length();
+      Path filePath = dir.resolve(decoded.substring(0, stop)).normalize();
+      if (!filePath.startsWith(dir)) return;
+
+      if (!Files.exists(filePath)) return;
+      Files.delete(filePath);
     } catch (IOException e) {
       throw new InternalErrorException("Filesystem internal error");
     }

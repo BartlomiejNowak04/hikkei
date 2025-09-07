@@ -31,7 +31,12 @@ public class RevisionController {
           byte[] previous = null;
           List<RevisionData> revs = revisionProvider.getByPage(body.getInteger("id"));
           if (revs != null && !revs.isEmpty()) previous = revs.getFirst().file();
-          byte[] filename = versionProvider.storeVersion(body.getString("content"), previous);
+          byte[] filename;
+          try {
+            filename = versionProvider.storeVersion(body.getString("content"), previous);
+          } catch (BadDataException e) {
+            throw new InternalErrorException(e.getMessage());
+          }
 
           int idr =
               revisionProvider.createRevision(
@@ -123,9 +128,9 @@ public class RevisionController {
         Map.of("user", Integer.class, "page", Integer.class),
         body -> {
           byte[] id = revisionProvider.getDraft(body.getInteger("user"), body.getInteger("page"));
-          if (id == null) throw new BadDataException("Incorrect draft id");
-          String content = versionProvider.getVersion(id);
-          if (content == null) throw new BadDataException("Incorrect draft id");
+          String content = "";
+          if (id != null) content = versionProvider.getVersion(id);
+          if (content == null) throw new InternalErrorException("Incorrect draft id");
           ctx.response().setStatusCode(200);
           ctx.json(new JsonObject().put("content", content));
         });

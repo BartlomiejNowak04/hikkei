@@ -5,6 +5,7 @@ import static dev.tfkls.hikkei.server.controllers.Utils.*;
 import dev.tfkls.hikkei.model.category.CategoryData;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
+import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.file.StoredFile;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
@@ -89,6 +90,7 @@ public class UserController {
           if (user.picture() == null) ctx.response().setStatusCode(204).end();
           else {
             StoredFile file = fileProvider.getContent(user.picture());
+            if (file == null) throw new InternalErrorException("File not found");
             ctx.response()
                 .putHeader("Content-Type", file.mime())
                 .setStatusCode(200)

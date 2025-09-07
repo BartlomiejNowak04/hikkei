@@ -6,9 +6,7 @@ import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.*;
-import java.util.UUID;
 import org.junit.jupiter.api.*;
 
 public class FilesystemVersionProviderTest {
@@ -36,30 +34,22 @@ public class FilesystemVersionProviderTest {
   void storeVersionThrowsOnBadId() {
     BadDataException e =
         assertThrows(
-            BadDataException.class, () -> provider.storeVersion("some content", new byte[0]));
-    assertEquals("Invalid data id", e.getMessage());
+            BadDataException.class,
+            () -> provider.storeVersion("some content", "nonexistent".getBytes()));
+    assertEquals("Invalid version id", e.getMessage());
   }
 
   @Test
   void storeVersionCreatesFileAndReturnsId() throws Exception {
-    byte[] previous = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-    ByteBuffer buffer = ByteBuffer.wrap(previous);
-    long high = buffer.getLong();
-    long low = buffer.getLong();
-    UUID uuid = new UUID(high, low);
-    try (FileWriter writer = new FileWriter(tempDir.resolve(uuid.toString()).toString())) {
+    byte[] previous = "firstfile".getBytes();
+    try (FileWriter writer = new FileWriter(tempDir.resolve("firstfile").toFile())) {
       writer.write("content");
     }
 
     String content = "Hello, world!";
     byte[] id = provider.storeVersion(content, previous);
-    assertNotNull(id);
-    buffer = ByteBuffer.wrap(id);
-    high = buffer.getLong();
-    low = buffer.getLong();
-    uuid = new UUID(high, low);
 
-    Path storedFile = tempDir.resolve(uuid.toString());
+    Path storedFile = tempDir.resolve(new String(id));
     assertTrue(Files.exists(storedFile));
     assertEquals(content, Files.readString(storedFile));
   }
@@ -69,12 +59,8 @@ public class FilesystemVersionProviderTest {
     String content = "Hello, world!";
     byte[] id = provider.storeContent(content);
     assertNotNull(id);
-    ByteBuffer buffer = ByteBuffer.wrap(id);
-    long high = buffer.getLong();
-    long low = buffer.getLong();
-    UUID uuid = new UUID(high, low);
 
-    Path storedFile = tempDir.resolve(uuid.toString());
+    Path storedFile = tempDir.resolve(new String(id));
     assertTrue(Files.exists(storedFile));
     assertEquals(content, Files.readString(storedFile));
   }
@@ -89,13 +75,13 @@ public class FilesystemVersionProviderTest {
   }
 
   @Test
-  void getVersionThrowsBadDataExceptionForNullId() {
-    assertThrows(BadDataException.class, () -> provider.getVersion(null));
+  void getVersionReturnsNullForNullId() throws Exception {
+    assertNull(provider.getVersion(null));
   }
 
   @Test
-  void getVersionThrowsBadDataExceptionForNonexistentFile() {
+  void getVersionReturnsNullForNonexistentFile() throws Exception {
     byte[] fakeId = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
-    assertThrows(BadDataException.class, () -> provider.getVersion(fakeId));
+    assertNull(provider.getVersion(fakeId));
   }
 }
