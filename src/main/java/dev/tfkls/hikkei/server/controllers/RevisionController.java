@@ -93,6 +93,7 @@ public class RevisionController {
           Integer id = body.getInteger("id");
 
           List<RevisionData> revisions = revisionProvider.getByPage(id);
+          if (revisions == null) throw new BadDataException("Invalid page id");
           revisions.removeIf(rev -> rev.approved() == null || !rev.approved());
 
           String data = "";
@@ -130,7 +131,7 @@ public class RevisionController {
           byte[] id = revisionProvider.getDraft(body.getInteger("user"), body.getInteger("page"));
           String content = "";
           if (id != null) content = versionProvider.getVersion(id);
-          if (content == null) throw new InternalErrorException("Incorrect draft id");
+          if (content == null) throw new InternalErrorException("Incorrect data id");
           ctx.response().setStatusCode(200);
           ctx.json(new JsonObject().put("content", content));
         });
@@ -142,7 +143,12 @@ public class RevisionController {
         Map.of("user", Integer.class, "page", Integer.class, "content", String.class),
         body -> {
           byte[] id = revisionProvider.getDraft(body.getInteger("user"), body.getInteger("page"));
-          byte[] nid = versionProvider.storeVersion(body.getString("content"), id);
+          byte[] nid;
+          try {
+            nid = versionProvider.storeVersion(body.getString("content"), id);
+          } catch (BadDataException e) {
+            throw new InternalErrorException(e.getMessage());
+          }
           revisionProvider.saveDraft(body.getInteger("user"), body.getInteger("page"), nid);
           ctx.response().setStatusCode(204).end();
         });
@@ -153,8 +159,8 @@ public class RevisionController {
         ctx,
         Map.of("user", Integer.class, "page", Integer.class),
         body -> {
-          byte[] id =
-              revisionProvider.deleteDraft(body.getInteger("user"), body.getInteger("page"));
+          byte[] id = revisionProvider.getDraft(body.getInteger("user"), body.getInteger("page"));
+          revisionProvider.deleteDraft(body.getInteger("user"), body.getInteger("page"));
           versionProvider.deleteVersion(id);
           ctx.response().setStatusCode(204).end();
         });

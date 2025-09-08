@@ -20,7 +20,7 @@ public interface RevisionDataProvider {
   void saveDraft(int userId, int pageId, byte[] file)
       throws InternalErrorException, BadDataException;
 
-  byte[] deleteDraft(int userId, int pageId) throws InternalErrorException, BadDataException;
+  void deleteDraft(int userId, int pageId) throws InternalErrorException;
 
   void deleteRevision(int id) throws InternalErrorException;
 }

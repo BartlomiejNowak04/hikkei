@@ -156,9 +156,8 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
       throws InternalErrorException, BadDataException {}
 
   @Override
-  public byte[] deleteDraft(int userId, int pageId)
-      throws InternalErrorException, BadDataException {
-    return null;
+  public void deleteDraft(int userId, int pageId) throws InternalErrorException {
+    return;
   }
 
   private RevisionData getRevisionData(ResultSet rs) throws SQLException {
