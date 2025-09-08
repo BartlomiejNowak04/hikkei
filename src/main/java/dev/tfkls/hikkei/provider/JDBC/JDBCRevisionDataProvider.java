@@ -153,11 +153,48 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
 
   @Override
   public void saveDraft(int userId, int pageId, byte[] file)
-      throws InternalErrorException, BadDataException {}
+      throws InternalErrorException, BadDataException {
+    try (PreparedStatement st = connection.prepareStatement("SELECT * FROM users WHERE id = ?")) {
+      st.setInt(1, userId);
+      try (ResultSet rs = st.executeQuery()) {
+        if (!rs.next()) throw new BadDataException(invalid_user);
+      }
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+
+    try (PreparedStatement st = connection.prepareStatement("SELECT * FROM pages WHERE id = ?")) {
+      st.setInt(1, pageId);
+      try (ResultSet rs = st.executeQuery()) {
+        if (!rs.next()) throw new BadDataException(invalid_page);
+      }
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "INSERT INTO drafts(user_id, page_id, file) VALUES (?, ?, ?)"
+                + "ON CONFLICT DO UPDATE SET file = EXCLUDED.file")) {
+      st.setInt(1, userId);
+      st.setInt(2, pageId);
+      st.setBytes(3, file);
+      st.executeUpdate();
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+  }
 
   @Override
   public void deleteDraft(int userId, int pageId) throws InternalErrorException {
-    return;
+    try (PreparedStatement st =
+        connection.prepareStatement("DELETE FROM drafts WHERE user_id = ? AND page_id = ?")) {
+      st.setInt(1, userId);
+      st.setInt(2, pageId);
+      st.executeUpdate();
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
   }
 
   private RevisionData getRevisionData(ResultSet rs) throws SQLException {
