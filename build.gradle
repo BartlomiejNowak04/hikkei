@@ -57,6 +57,9 @@ dependencies {
   implementation "io.vertx:vertx-web"
   implementation 'io.github.cdimascio:dotenv-java:3.2.0'
 
+  implementation 'io.vertx-vertx-auth-common:5.0.4'
+  implementation 'io.vertx:vertx-auth-oauth2:5.0.4'
+
   implementation "io.mikael:urlbuilder:2.0.9"
 }
 
