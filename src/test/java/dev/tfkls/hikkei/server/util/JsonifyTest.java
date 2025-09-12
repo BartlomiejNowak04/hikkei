@@ -1,6 +1,5 @@
-package dev.tfkls.hikkei.server.controllers;
+package dev.tfkls.hikkei.server.util;
 
-import static dev.tfkls.hikkei.server.controllers.Utils.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.tfkls.hikkei.model.comment.CommentData;
@@ -11,14 +10,14 @@ import io.vertx.core.json.JsonObject;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 
-class ToJsonMethodsTest {
+class JsonifyTest {
 
   @Test
   void pageToJsonShouldMapCorrectly() {
     LocalDateTime now = LocalDateTime.now();
     PageData page = new PageData(1, 2, "Test Page", 42, false, now);
 
-    JsonObject json = pageToJson(page);
+    JsonObject json = Jsonify.pageToJson(page);
 
     assertEquals(1, json.getInteger("id"));
     assertEquals(2, json.getInteger("user_id"));
@@ -33,7 +32,7 @@ class ToJsonMethodsTest {
     LocalDateTime now = LocalDateTime.now();
     RevisionData revision = new RevisionData(5, 2, 1, new byte[] {0}, now, true);
 
-    JsonObject json = revisionToJson(revision);
+    JsonObject json = Jsonify.revisionToJson(revision);
 
     assertEquals(5, json.getInteger("id"));
     assertEquals(2, json.getInteger("page_id"));
@@ -48,7 +47,7 @@ class ToJsonMethodsTest {
     LocalDateTime now = LocalDateTime.now();
     CommentData comment = new CommentData(10, 1, 1, "Hello world", now);
 
-    JsonObject json = commentToJson(comment);
+    JsonObject json = Jsonify.commentToJson(comment);
 
     assertEquals(10, json.getInteger("id"));
     assertEquals(1, json.getInteger("page_id"));
@@ -62,7 +61,7 @@ class ToJsonMethodsTest {
     LocalDateTime now = LocalDateTime.now();
     UserData user = new UserData(10, "name", new byte[0], now);
 
-    JsonObject json = userToJson(user);
+    JsonObject json = Jsonify.userToJson(user);
 
     assertEquals(10, json.getInteger("id"));
     assertEquals("name", json.getString("username"));
@@ -74,7 +73,7 @@ class ToJsonMethodsTest {
   void pageToJsonHandlesNullFields() {
     PageData page = new PageData(null, null, null, null, null, null);
 
-    JsonObject json = pageToJson(page);
+    JsonObject json = Jsonify.pageToJson(page);
 
     assertTrue(json.containsKey("id"));
     assertNull(json.getValue("id"));
@@ -94,7 +93,7 @@ class ToJsonMethodsTest {
   void revisionToJsonHandlesNullFields() {
     RevisionData revision = new RevisionData(null, null, null, null, null, null);
 
-    JsonObject json = revisionToJson(revision);
+    JsonObject json = Jsonify.revisionToJson(revision);
 
     assertTrue(json.containsKey("id"));
     assertNull(json.getValue("id"));
@@ -114,7 +113,7 @@ class ToJsonMethodsTest {
   void commentToJsonHandlesNullFields() {
     CommentData comment = new CommentData(null, null, null, null, null);
 
-    JsonObject json = commentToJson(comment);
+    JsonObject json = Jsonify.commentToJson(comment);
 
     assertTrue(json.containsKey("id"));
     assertNull(json.getValue("id"));
@@ -132,7 +131,7 @@ class ToJsonMethodsTest {
   void userToJsonHandlesNullFields() {
     UserData user = new UserData(null, null, null, null);
 
-    JsonObject json = userToJson(user);
+    JsonObject json = Jsonify.userToJson(user);
 
     assertTrue(json.containsKey("id"));
     assertNull(json.getValue("id"));

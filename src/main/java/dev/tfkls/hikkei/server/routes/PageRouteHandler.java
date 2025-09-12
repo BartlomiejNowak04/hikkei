@@ -9,13 +9,13 @@ public class PageRouteHandler extends RouteHandler {
     super(vertx);
     PageController controller = new PageController(pageProvider);
 
-    router.post("/random").blockingHandler(controller::getRandomPage);
-    router.post("/bytitle").blockingHandler(ctx -> controller.getPageByTitle(ctx, false));
-    router.post("/byurl").blockingHandler(ctx -> controller.getPageByTitle(ctx, true));
-    router.post("/search").blockingHandler(controller::searchByTitle);
-    router.post("/category").blockingHandler(controller::getByCategory);
+    router.get("/random").blockingHandler(controller::getRandomPage);
+    router.get("/title/:title").blockingHandler(ctx -> controller.getPageByTitle(ctx, false));
+    router.get("/:url").blockingHandler(ctx -> controller.getPageByTitle(ctx, true));
+    router.get("/search/:title").blockingHandler(controller::searchByTitle);
+    router.get("/category/:id").blockingHandler(controller::getByCategory);
 
-    router.put("/create").blockingHandler(controller::createPage);
+    router.post("/create").blockingHandler(controller::createPage);
     router.put("/update/title").blockingHandler(controller::updateTitle);
     router.put("/update/category").blockingHandler(controller::updateCategory);
     router.put("/update/archive").blockingHandler(controller::toggleArchive);

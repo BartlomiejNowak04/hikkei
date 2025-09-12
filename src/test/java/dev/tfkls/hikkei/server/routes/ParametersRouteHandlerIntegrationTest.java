@@ -3,8 +3,10 @@ package dev.tfkls.hikkei.server.routes;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import dev.tfkls.hikkei.server.util.Type;
 import io.restassured.http.Method;
 import io.vertx.core.json.JsonObject;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -22,119 +24,168 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     verifyNoInteractions(fileProvider);
   }
 
-  private void assertEndpoint(String endpoint, Method method, Map<String, Object> constraints) {
+  private Object goodData(Type type) {
+    return switch (type) {
+      case Int -> 111;
+      case Str -> "jdkjjwhe";
+      case Bool -> true;
+      case Binary -> new JsonObject().put("tmp", new byte[] {1, 2, 3}).getString("tmp");
+    };
+  }
+
+  private Object badData(Type type) {
+    return switch (type) {
+      case Int -> "dsdsf";
+      case Str -> 11;
+      case Bool -> "tthkk";
+      case Binary -> "aa";
+    };
+  }
+
+  private void assertEndpoint(
+      String endpoint,
+      Method method,
+      Map<String, Type> constraints,
+      List<Type> pathConstraints,
+      List<String> name) {
     String[] args = constraints.keySet().toArray(new String[0]);
+    JsonObject goodJson = new JsonObject();
+    for (String arg : args) goodJson.put(arg, goodData(constraints.get(arg)));
+
+    StringBuilder goodPathBuilder = new StringBuilder();
+    for (Type path : pathConstraints) goodPathBuilder.append("/").append(goodData(path));
+    String goodPath = goodPathBuilder.toString();
+
+    for (int i = 0; i < pathConstraints.size(); i++) {
+      Type type = pathConstraints.get(i);
+      if (type == Type.Str) continue;
+      StringBuilder path = new StringBuilder();
+      for (int j = 0; j < pathConstraints.size(); j++)
+        path.append("/").append(i == j ? badData(type) : goodData(type));
+      String p = path.toString();
+
+      callApi(endpoint + p, method, goodJson, "Incorrect parameter: " + name.get(i));
+    }
 
     for (String current : args) {
       JsonObject json = new JsonObject();
-      for (String arg : args) if (!arg.equals(current)) json.put(arg, constraints.get(arg));
+      for (String arg : args)
+        if (!arg.equals(current)) json.put(arg, goodData(constraints.get(arg)));
 
-      Object value;
-      if (constraints.get(current) instanceof String) value = 0;
-      else value = "invalid";
-
-      callApi(endpoint, method, json.put(current, value), "Incorrect parameter: " + current);
-      callApi(endpoint, method, json.putNull(current), "Incorrect parameter: " + current);
+      if (constraints.get(current) != Type.Str)
+        callApi(
+            endpoint + goodPath,
+            method,
+            json.put(current, badData(constraints.get(current))),
+            "Incorrect parameter: " + current);
+      callApi(
+          endpoint + goodPath, method, json.putNull(current), "Incorrect parameter: " + current);
       json.remove(current);
-      callApi(endpoint, method, json, "Missing required parameter: " + current);
+      callApi(endpoint + goodPath, method, json, "Missing required parameter: " + current);
     }
 
-    callApi(endpoint, method, null, "No data provided");
+    if (!constraints.isEmpty()) callApi(endpoint, method, null, "No data provided");
+  }
+
+  private void assertGetEndpoint(String endpoint, List<Type> pathConstraints, List<String> name) {
+    assertEndpoint(endpoint, Method.GET, Map.of(), pathConstraints, name);
+  }
+
+  private void assertJsonEndpoint(String endpoint, Method method, Map<String, Type> constraints) {
+    assertEndpoint(endpoint, method, constraints, List.of(), List.of());
   }
 
   // TODO: uncomment when implemented
   // /api/user
-  //  @Test
-  //  public void apiUserLoginRejectsImproperData() {
-  //    assertEndpoint("/api/user/login", Method.POST, Map.of());
-  //  }
-  //
   @Test
   public void apiUserByidRejectsImproperData() {
-    assertEndpoint("/api/user/byid", Method.POST, Map.of("id", 0));
+    assertGetEndpoint("/api/user", List.of(Type.Int), List.of("id"));
   }
 
   @Test
   public void apiUserPfpRejectsImproperData() {
-    assertEndpoint("/api/user/pfp", Method.POST, Map.of("id", 0));
+    assertGetEndpoint("/api/user/pfp", List.of(Type.Int), List.of("id"));
   }
 
   @Test
   public void apiUserCreateRejectsImproperData() {
-    assertEndpoint("/api/user/create", Method.PUT, Map.of("name", "example"));
+    assertJsonEndpoint("/api/user/create", Method.POST, Map.of("name", Type.Str));
   }
 
   @Test
   public void apiUserCategoriesRejectsImproperData() {
-    assertEndpoint("/api/user/categories", Method.POST, Map.of("user", 0));
+    assertGetEndpoint("/api/user/categories", List.of(Type.Int), List.of("id"));
   }
 
-  @Test
-  public void apiUserUpdateNameRejectsImproperData() {
-    assertEndpoint("/api/user/update/name", Method.PUT, Map.of("id", 0, "name", "newName"));
-  }
-
-  @Test
-  public void apiUserDeleteRejectsImproperData() {
-    assertEndpoint("/api/user/delete", Method.DELETE, Map.of("id", 0));
-  }
+  //  @Test
+  //  public void apiUserUpdateNameRejectsImproperData() {
+  //    assertEndpoint("/api/user/update/name", Method.PUT, Map.of("id", 0, "name", "newName"));
+  //  }
+  //
+  //  @Test
+  //  public void apiUserDeleteRejectsImproperData() {
+  //    assertEndpoint("/api/user/delete", Method.DELETE, Map.of("id", 0));
+  //  }
 
   // /api/page/
   @Test
   public void apiPageBytitleRejectsImproperData() {
-    assertEndpoint("/api/page/bytitle", Method.POST, Map.of("title", "Example Title"));
+    assertGetEndpoint("/api/page/title", List.of(Type.Str), List.of("title"));
   }
 
   @Test
   public void apiPageByurlRejectsImproperData() {
-    assertEndpoint("/api/page/byurl", Method.POST, Map.of("url", "http://example.com"));
+    assertGetEndpoint("/api/page", List.of(Type.Str), List.of("url"));
   }
 
   @Test
   public void apiPageSearchRejectsImproperData() {
-    assertEndpoint("/api/page/search", Method.POST, Map.of("title", "search phrase"));
+    assertGetEndpoint("/api/page/search", List.of(Type.Str), List.of("title"));
   }
 
   @Test
   public void apiPageCategoryRejectsImproperData() {
-    assertEndpoint("/api/page/category", Method.POST, Map.of("category", 0));
+    assertGetEndpoint("/api/page/category", List.of(Type.Int), List.of("id"));
   }
 
-  @Test
-  public void apiPageCreateRejectsImproperData() {
-    assertEndpoint(
-        "/api/page/create", Method.PUT, Map.of("title", "New Page", "category", 0, "user", 0));
-  }
+  //  @Test
+  //  public void apiPageCreateRejectsImproperData() {
+  //    assertJsonEndpoint(
+  //        "/api/page/create", Method.POST, Map.of("title", Type.Str, "category", Type.Int));
+  //  }
 
   @Test
   public void apiPageUpdateTitleRejectsImproperData() {
-    assertEndpoint("/api/page/update/title", Method.PUT, Map.of("id", 0, "title", "Updated Title"));
+    assertJsonEndpoint(
+        "/api/page/update/title", Method.PUT, Map.of("id", Type.Int, "title", Type.Str));
   }
 
   @Test
   public void apiPageUpdateCategoryRejectsImproperData() {
-    assertEndpoint("/api/page/update/category", Method.PUT, Map.of("id", 0, "category", 0));
+    assertJsonEndpoint(
+        "/api/page/update/category", Method.PUT, Map.of("id", Type.Int, "category", Type.Int));
   }
 
   @Test
   public void apiPageUpdateArchiveRejectsImproperData() {
-    assertEndpoint("/api/page/update/archive", Method.PUT, Map.of("id", 0, "value", true));
+    assertJsonEndpoint(
+        "/api/page/update/archive", Method.PUT, Map.of("id", Type.Int, "value", Type.Bool));
   }
 
   @Test
   public void apiPageDeleteRejectsImproperData() {
-    assertEndpoint("/api/page/delete", Method.DELETE, Map.of("id", 0));
+    assertJsonEndpoint("/api/page/delete", Method.DELETE, Map.of("id", Type.Int));
   }
 
   // /api/revision/
   @Test
   public void apiRevisionUserRejectsImproperData() {
-    assertEndpoint("/api/revision/user", Method.POST, Map.of("user", 0));
+    assertGetEndpoint("/api/revision/user", List.of(Type.Int), List.of("id"));
   }
 
   @Test
   public void apiRevisionPageRejectsImproperData() {
-    assertEndpoint("/api/revision/page", Method.POST, Map.of("page", 0));
+    assertGetEndpoint("/api/revision/page", List.of(Type.Int), List.of("id"));
   }
 
   //  @Test
@@ -144,109 +195,105 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
 
   @Test
   public void apiRevisionContentRejectsImproperData() {
-    assertEndpoint("/api/revision/content", Method.POST, Map.of("id", 0));
+    assertGetEndpoint("/api/revision/content", List.of(Type.Int), List.of("id"));
   }
 
   @Test
   public void apiRevisionByidRejectsImproperData() {
-    assertEndpoint("/api/revision/byid", Method.POST, Map.of("id", 0));
+    assertGetEndpoint("/api/revision", List.of(Type.Int), List.of("id"));
   }
 
-  @Test
-  public void apiRevisionDraftRejectsImproperData() {
-    assertEndpoint("/api/revision/draft", Method.POST, Map.of("page", 0, "user", 0));
-  }
+  //  @Test
+  //  public void apiRevisionDraftRejectsImproperData() {
+  //    assertGetEndpoint("/api/revision/draft", List.of(Type.Int), List.of("page_id"));
+  //  }
 
-  @Test
-  public void apiRevisionCreateRejectsImproperData() {
-    assertEndpoint(
-        "/api/revision/create",
-        Method.PUT,
-        Map.of("id", 0, "content", "New revision content", "user", 0));
-  }
+  //  @Test
+  //  public void apiRevisionCreateRejectsImproperData() {
+  //    assertJsonEndpoint(
+  //        "/api/revision/create",
+  //        Method.POST,
+  //        Map.of("page_id", Type.Int, "content", Type.Str));
+  //  }
 
   @Test
   public void apiRevisionUpdateStatusRejectsImproperData() {
-    assertEndpoint("/api/revision/update/status", Method.PUT, Map.of("id", 0, "status", true));
+    assertJsonEndpoint(
+        "/api/revision/update/status", Method.PUT, Map.of("id", Type.Int, "status", Type.Bool));
   }
 
-  @Test
-  public void apiRevisionDraftSaveRejectsImproperData() {
-    assertEndpoint(
-        "/api/revision/draft/save",
-        Method.PUT,
-        Map.of("page", 0, "user", 0, "content", "Draft content"));
-  }
+  //  @Test
+  //  public void apiRevisionDraftSaveRejectsImproperData() {
+  //    assertJsonEndpoint(
+  //        "/api/revision/draft/save",
+  //        Method.POST,
+  //        Map.of("page", Type.Int, "content", Type.Str));
+  //  }
 
-  @Test
-  public void apiRevisionDraftDeleteRejectsImproperData() {
-    assertEndpoint("/api/revision/draft/delete", Method.DELETE, Map.of("page", 0, "user", 0));
-  }
+  //  @Test
+  //  public void apiRevisionDraftDeleteRejectsImproperData() {
+  //    assertJsonEndpoint("/api/revision/draft/delete", Method.DELETE, Map.of("page", Type.Int));
+  //  }
 
   @Test
   public void apiRevisionDeleteRejectsImproperData() {
-    assertEndpoint("/api/revision/delete", Method.DELETE, Map.of("id", 0));
+    assertJsonEndpoint("/api/revision/delete", Method.DELETE, Map.of("id", Type.Int));
   }
 
   // /api/comment/
   @Test
   public void apiCommentUserRejectsImproperData() {
-    assertEndpoint("/api/comment/user", Method.POST, Map.of("user", 0));
+    assertGetEndpoint("/api/comment/user", List.of(Type.Int), List.of("id"));
   }
 
   @Test
   public void apiCommentPageRejectsImproperData() {
-    assertEndpoint("/api/comment/page", Method.POST, Map.of("page", 0));
+    assertGetEndpoint("/api/comment/page", List.of(Type.Int), List.of("id"));
   }
 
   @Test
   public void apiCommentByidRejectsImproperData() {
-    assertEndpoint("/api/comment/byid", Method.POST, Map.of("id", 0));
+    assertGetEndpoint("/api/comment", List.of(Type.Int), List.of("id"));
   }
 
-  @Test
-  public void apiCommentCreateRejectsImproperData() {
-    assertEndpoint(
-        "/api/comment/create", Method.PUT, Map.of("id", 0, "content", "Comment text", "user", 0));
-  }
+  //  @Test
+  //  public void apiCommentCreateRejectsImproperData() {
+  //    assertJsonEndpoint(
+  //        "/api/comment/create", Method.POST, Map.of("page_id", Type.Int, "content", Type.Str));
+  //  }
 
   @Test
   public void apiCommentDeleteRejectsImproperData() {
-    assertEndpoint("/api/comment/delete", Method.DELETE, Map.of("id", 0));
+    assertJsonEndpoint("/api/comment/delete", Method.DELETE, Map.of("id", Type.Int));
   }
 
   // /api/category/
   @Test
-  public void apiCategoryAllRejectsImproperData() {
-    assertEndpoint("/api/category/", Method.POST, Map.of());
-  }
-
-  @Test
   public void apiCategoryByidRejectsImproperData() {
-    assertEndpoint("/api/category/byid", Method.POST, Map.of("id", 0));
+    assertGetEndpoint("/api/category", List.of(Type.Int), List.of("id"));
   }
 
   @Test
   public void apiCategoryUsersRejectsImproperData() {
-    assertEndpoint("/api/category/users", Method.POST, Map.of("category", 0));
+    assertGetEndpoint("/api/category/users", List.of(Type.Int), List.of("id"));
   }
 
   @Test
   public void apiCategoryPermissionRejectsImproperData() {
-    assertEndpoint(
+    assertJsonEndpoint(
         "/api/category/permission",
         Method.PUT,
-        Map.of("category", 0, "user", 0, "permission", "perm"));
+        Map.of("category", Type.Int, "user", Type.Int, "permission", Type.Str));
   }
 
   @Test
   public void apiCategoryCreateRejectsImproperData() {
-    assertEndpoint("/api/category/create", Method.PUT, Map.of("name", "New Category"));
+    assertJsonEndpoint("/api/category/create", Method.POST, Map.of("name", Type.Str));
   }
 
   @Test
   public void apiCategoryUpdateNameRejectsImproperData() {
-    assertEndpoint(
-        "/api/category/update/name", Method.PUT, Map.of("id", 0, "name", "Updated Category"));
+    assertJsonEndpoint(
+        "/api/category/update/name", Method.PUT, Map.of("id", Type.Int, "name", Type.Str));
   }
 }

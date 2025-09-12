@@ -1,6 +1,6 @@
 package dev.tfkls.hikkei.server.controllers;
 
-import static dev.tfkls.hikkei.server.controllers.Utils.*;
+import static dev.tfkls.hikkei.server.util.ParamFlow.handle;
 
 import dev.tfkls.hikkei.model.category.CategoryData;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
@@ -11,6 +11,8 @@ import dev.tfkls.hikkei.model.file.StoredFile;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
+import dev.tfkls.hikkei.server.util.Jsonify;
+import dev.tfkls.hikkei.server.util.Type;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -35,7 +37,8 @@ public class UserController {
   public void getUser(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of("id", Integer.class),
+        null,
+        Map.of("id", Type.Int),
         body -> {
           UserData data = userProvider.getUserData(body.getInteger("id"));
           if (data == null) {
@@ -46,21 +49,14 @@ public class UserController {
             ctx.json(new JsonObject().put("message", "This user is deleted"));
           } else {
             ctx.response().setStatusCode(200);
-            ctx.json(userToJson(data));
+            ctx.json(Jsonify.userToJson(data));
           }
         });
   }
 
   public void updatePfp(RoutingContext ctx) {
     try {
-      String user = ctx.request().getFormAttribute("id");
-      if (user == null) throw new BadDataException("Missing required parameter: id");
-      int id;
-      try {
-        id = Integer.parseInt(user);
-      } catch (NumberFormatException e) {
-        throw new BadDataException("Incorrect parameter: id");
-      }
+      Integer id = ctx.get("id");
       if (!userProvider.doesUserExist(id)) throw new BadDataException("Incorrect parameter: id");
       if (ctx.fileUploads().size() != 1)
         throw new BadDataException("Exactly one file must be supplied");
@@ -82,7 +78,8 @@ public class UserController {
   public void getPfp(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of("id", Integer.class),
+        null,
+        Map.of("id", Type.Int),
         body -> {
           UserData user = userProvider.getUserData(body.getInteger("id"));
           if (user == null || user == UserData.DELETED)
@@ -102,16 +99,17 @@ public class UserController {
   public void getCategoriesWithPermissions(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of("user", Integer.class),
+        null,
+        Map.of("id", Type.Int),
         body -> {
           Map<Integer, PermissionLevel> vals =
-              userProvider.getCategoriesPermissions(body.getInteger("user"));
-          if (vals == null) throw new BadDataException("Incorrect parameter: user");
+              userProvider.getCategoriesPermissions(body.getInteger("id"));
+          if (vals == null) throw new BadDataException("Incorrect parameter: id");
           JsonArray items = new JsonArray();
           for (Map.Entry<Integer, PermissionLevel> val : vals.entrySet()) {
             CategoryData data = categoryProvider.getById(val.getKey());
             if (data == null || data == CategoryData.DELETED) continue;
-            items.add(categoryToJson(data).put("permission", val.getValue().toString()));
+            items.add(Jsonify.categoryToJson(data).put("permission", val.getValue().toString()));
           }
           ctx.response().setStatusCode(200);
           ctx.json(items);
@@ -121,7 +119,8 @@ public class UserController {
   public void createUser(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of("name", String.class),
+        Map.of("name", Type.Str),
+        null,
         body -> {
           int id = userProvider.createUser(new UserData(body.getString("name")));
           ctx.response().setStatusCode(201);
@@ -132,9 +131,11 @@ public class UserController {
   public void updateName(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of("name", String.class, "id", Integer.class),
+        Map.of("name", Type.Str),
+        null,
         body -> {
-          userProvider.updateUsername(body.getInteger("id"), body.getString("name"));
+          Integer id = ctx.get("id");
+          userProvider.updateUsername(id, body.getString("name"));
           ctx.response().setStatusCode(204).end();
         });
   }
@@ -142,9 +143,11 @@ public class UserController {
   public void deleteUser(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of("id", Integer.class),
+        null,
+        null,
         body -> {
-          userProvider.deleteUser(body.getInteger("id"));
+          Integer id = ctx.get("id");
+          userProvider.deleteUser(id);
           ctx.response().setStatusCode(204).end();
         });
   }

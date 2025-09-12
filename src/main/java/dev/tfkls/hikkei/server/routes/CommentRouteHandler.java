@@ -9,11 +9,11 @@ public class CommentRouteHandler extends RouteHandler {
     super(vertx);
     CommentController controller = new CommentController(commentProvider);
 
-    router.post("/user").blockingHandler(controller::getByUser);
-    router.post("/page").blockingHandler(controller::getByPage);
-    router.post("/byid").blockingHandler(controller::getById);
+    router.get("/user/:id").blockingHandler(controller::getByUser);
+    router.get("/page/:id").blockingHandler(controller::getByPage);
+    router.get("/:id").blockingHandler(controller::getById);
 
-    router.put("/create").blockingHandler(controller::addComment);
+    router.post("/create").blockingHandler(controller::addComment);
 
     router.delete("/delete").blockingHandler(controller::deleteComment);
   }

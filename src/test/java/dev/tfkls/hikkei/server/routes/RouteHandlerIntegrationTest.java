@@ -98,15 +98,27 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
         callEndpoint(endpoint, method, body, statusCode, "application/json").asString());
   }
 
+  protected JsonObject callGetEndpointObject(String endpoint, int statusCode) {
+    return callEndpointObject(endpoint, Method.GET, null, statusCode);
+  }
+
   protected JsonArray callEndpointArray(
       String endpoint, Method method, JsonObject body, int statusCode) {
     return new JsonArray(
         callEndpoint(endpoint, method, body, statusCode, "application/json").asString());
   }
 
+  protected JsonArray callGetEndpointArray(String endpoint, int statusCode) {
+    return callEndpointArray(endpoint, Method.GET, null, statusCode);
+  }
+
   protected void testException(String endpoint, Method method, JsonObject body, Exception e) {
     JsonObject bd =
         callEndpointObject(endpoint, method, body, e instanceof InternalErrorException ? 500 : 400);
     assertEquals(e.getMessage(), bd.getString("message"));
+  }
+
+  protected void testGetException(String endpoint, Exception e) {
+    testException(endpoint, Method.GET, null, e);
   }
 }

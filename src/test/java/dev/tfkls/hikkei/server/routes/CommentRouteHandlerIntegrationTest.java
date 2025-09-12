@@ -18,10 +18,8 @@ public class CommentRouteHandlerIntegrationTest extends RouteHandlerIntegrationT
     when(commentProvider.getByUser(42)).thenReturn(List.of(comment1, comment2));
 
     given()
-        .contentType("application/json")
-        .body("{\"user\": 42}")
         .when()
-        .post("/api/comment/user")
+        .get("/api/comment/user/42")
         .then()
         .statusCode(200)
         .body("$", hasSize(2))
@@ -44,10 +42,8 @@ public class CommentRouteHandlerIntegrationTest extends RouteHandlerIntegrationT
     when(commentProvider.getByUser(42)).thenReturn(null);
 
     given()
-        .contentType("application/json")
-        .body("{\"user\": 42}")
         .when()
-        .post("/api/comment/user")
+        .get("/api/comment/user/42")
         .then()
         .statusCode(400)
         .body("message", equalTo("Incorrect parameter value: id"));

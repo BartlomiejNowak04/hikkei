@@ -1,54 +1,13 @@
-package dev.tfkls.hikkei.server.controllers;
+package dev.tfkls.hikkei.server.util;
 
 import dev.tfkls.hikkei.model.category.CategoryData;
 import dev.tfkls.hikkei.model.comment.CommentData;
-import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.model.user.UserData;
-import dev.tfkls.hikkei.util.ThrowingConsumer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.RoutingContext;
-import java.util.Map;
 
-public class Utils {
-  public static void checkBody(JsonObject body, Map<String, Class<?>> arguments)
-      throws BadDataException {
-    if (body == null) throw new BadDataException("No data provided");
-
-    for (Map.Entry<String, Class<?>> pair : arguments.entrySet()) {
-      String argument = pair.getKey();
-      Class<?> type = pair.getValue();
-      if (!body.containsKey(argument))
-        throw new BadDataException("Missing required parameter: " + argument);
-
-      Object arg = body.getValue(argument);
-      if (arg == null) throw new BadDataException("Incorrect parameter: " + argument);
-      try {
-        type.cast(arg);
-      } catch (ClassCastException e) {
-        throw new BadDataException("Incorrect parameter: " + argument);
-      }
-    }
-  }
-
-  public static void handle(
-      RoutingContext ctx, Map<String, Class<?>> params, ThrowingConsumer<JsonObject> handler) {
-    try {
-      JsonObject body;
-      try {
-        body = ctx.body().asJsonObject();
-      } catch (Exception e) {
-        throw new BadDataException("Invalid body provided");
-      }
-
-      if (params != null) checkBody(body, params);
-      handler.accept(body);
-    } catch (Exception e) {
-      ctx.fail(e);
-    }
-  }
-
+public class Jsonify {
   public static JsonObject pageToJson(PageData page) {
     return new JsonObject()
         .put("id", page.id())

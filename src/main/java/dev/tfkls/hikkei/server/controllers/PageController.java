@@ -1,11 +1,12 @@
 package dev.tfkls.hikkei.server.controllers;
 
-import static dev.tfkls.hikkei.server.controllers.Utils.*;
-
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
+import dev.tfkls.hikkei.server.util.Jsonify;
+import dev.tfkls.hikkei.server.util.ParamFlow;
+import dev.tfkls.hikkei.server.util.Type;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -20,34 +21,37 @@ public class PageController {
   }
 
   public void getRandomPage(RoutingContext ctx) {
-    handle(
+    ParamFlow.handle(
         ctx,
+        null,
         null,
         body -> {
           PageData data = pageProvider.getRandomPage();
           if (data == null) throw new InternalErrorException("No pages available");
           ctx.response().setStatusCode(200);
-          ctx.json(Utils.pageToJson(data));
+          ctx.json(Jsonify.pageToJson(data));
         });
   }
 
   public void searchByTitle(RoutingContext ctx) {
-    handle(
+    ParamFlow.handle(
         ctx,
-        Map.of("title", String.class),
+        null,
+        Map.of("title", Type.Str),
         body -> {
           List<PageData> data = pageProvider.searchByTitle(body.getString("title"));
           JsonArray items = new JsonArray();
-          for (PageData item : data) items.add(Utils.pageToJson(item));
+          for (PageData item : data) items.add(Jsonify.pageToJson(item));
           ctx.response().setStatusCode(200);
           ctx.json(items);
         });
   }
 
   public void getPageByTitle(RoutingContext ctx, boolean fromUrl) {
-    handle(
+    ParamFlow.handle(
         ctx,
-        Map.of(fromUrl ? "url" : "title", String.class),
+        null,
+        Map.of(fromUrl ? "url" : "title", Type.Str),
         body -> {
           String title = body.getString(fromUrl ? "url" : "title");
           if (fromUrl) title = title.replace("_", " ");
@@ -55,28 +59,30 @@ public class PageController {
           PageData data = pageProvider.getByTitle(title);
           if (data == null) throw new BadDataException("Invalid page title: " + title);
           ctx.response().setStatusCode(200);
-          ctx.json(Utils.pageToJson(data));
+          ctx.json(Jsonify.pageToJson(data));
         });
   }
 
   public void getByCategory(RoutingContext ctx) {
-    handle(
+    ParamFlow.handle(
         ctx,
-        Map.of("category", Integer.class),
+        null,
+        Map.of("id", Type.Int),
         body -> {
-          List<PageData> data = pageProvider.getByCategory(body.getInteger("category"));
+          List<PageData> data = pageProvider.getByCategory(body.getInteger("id"));
           if (data == null) throw new BadDataException("Invalid category id");
           JsonArray items = new JsonArray();
-          for (PageData item : data) items.add(Utils.pageToJson(item));
+          for (PageData item : data) items.add(Jsonify.pageToJson(item));
           ctx.response().setStatusCode(200);
           ctx.json(items);
         });
   }
 
   public void createPage(RoutingContext ctx) {
-    handle(
+    ParamFlow.handle(
         ctx,
-        Map.of("title", String.class, "category", Integer.class, "user", Integer.class),
+        Map.of("title", Type.Str, "category", Type.Str),
+        null,
         body -> {
           String title = body.getString("title");
           Integer category = body.getInteger("category");
@@ -89,9 +95,10 @@ public class PageController {
   }
 
   public void updateTitle(RoutingContext ctx) {
-    handle(
+    ParamFlow.handle(
         ctx,
-        Map.of("title", String.class, "id", Integer.class),
+        Map.of("title", Type.Str, "id", Type.Int),
+        null,
         body -> {
           pageProvider.updatePageTitle(body.getInteger("id"), body.getString("title"));
           ctx.response().setStatusCode(204).end();
@@ -99,9 +106,10 @@ public class PageController {
   }
 
   public void updateCategory(RoutingContext ctx) {
-    handle(
+    ParamFlow.handle(
         ctx,
-        Map.of("category", Integer.class, "id", Integer.class),
+        Map.of("category", Type.Int, "id", Type.Int),
+        null,
         body -> {
           pageProvider.updatePageCategory(body.getInteger("id"), body.getInteger("category"));
           ctx.response().setStatusCode(204).end();
@@ -109,9 +117,10 @@ public class PageController {
   }
 
   public void toggleArchive(RoutingContext ctx) {
-    handle(
+    ParamFlow.handle(
         ctx,
-        Map.of("value", Boolean.class, "id", Integer.class),
+        Map.of("value", Type.Bool, "id", Type.Int),
+        null,
         body -> {
           pageProvider.toggleArchive(body.getInteger("id"), body.getBoolean("value"));
           ctx.response().setStatusCode(204).end();
@@ -119,9 +128,10 @@ public class PageController {
   }
 
   public void deletePage(RoutingContext ctx) {
-    handle(
+    ParamFlow.handle(
         ctx,
-        Map.of("id", Integer.class),
+        Map.of("id", Type.Int),
+        null,
         body -> {
           pageProvider.deletePage(body.getInteger("id"));
           ctx.response().setStatusCode(204).end();

@@ -53,48 +53,48 @@ convention, and follow the overall good commit guidelines which are described in
 ## Backend API
 The frontend application communicates with the backend server through an API. Below is the description of available endpoints.
 - `/api/user/`:
-    - POST `login`: log a user in
-    - POST `byid`: get user by id, params: Integer id
-    - POST `pfp`: get user's profile picture, params: Integer id
-    - POST `categories`: get categories that a user has a permission set for, params: Integer user
-    - PUT `create`: create a user, params: String name
-    - PUT `update/name`: update username, params: Integer id, String name
-    - PUT `update/pfp`: update profile picture, params: Integer id, Picture pfp
-    - DELETE `delete`: delete a user, params: Integer id
+    - GET `:id`: get user by id
+    - GET `pfp/:id`: get user's profile picture
+    - GET `categories/:id`: get categories that a user has a permission set for
+    - POST `create`: create a user, params: String name
+    - PUT `update/name`: update logged in user's username, params: String name
+    - PUT `update/pfp`: update profile picture, send the picture as multi-part file
+    - DELETE `delete`: delete the account
 - `/api/page/`:
-    - POST `random`: get a random page
-    - POST `bytitle`: get page with a given title, params: String title
-    - POST `byurl`: get page with a given url, params: String url
-    - POST `search`: search for pages with a phrase in title, params: String title
-    - POST `category`: get pages within a category, params: Integer category
-    - PUT `create`: create a page, params: String title, Integer category, Integer user
+    - GET `random`: get a random page
+    - GET `title/:title`: get page with a given title
+    - GET `:url`: get page with a given url
+    - GET `search/:title`: search for pages with a phrase in title
+    - GET `category/:id`: get pages within a category
+    - POST `create`: create a page, params: String title, Integer category
     - PUT `update/title`: update page title, params: Integer id, String title
     - PUT `update/category`: update page category, params: Integer id, Integer category
     - PUT `update/archive`: archive or de-archive page, params: Integer id, Boolean value
+    - DELETE `delete`: delete a page, params: Integer id
 - `/api/revision/`:
-    - POST `user`: get user's revisions, params: Integer user
-    - POST `page`: get page's revisions, params: Integer page
+    - GET `user/:id`: get user's revisions
+    - GET `page/:id`: get page's revisions
     - POST `render`: render passed content, params: String content
-    - POST `content`: get current content for a page, params: Integer id
-    - POST `byid`: get revision by id, params: Integer id
-    - POST `draft`: get user's draft revision for a page, params: Integer page, Integer user
-    - PUT `create`: create a revision, params: Integer id (page's id), String content, Integer user
+    - GET `content/:id`: get current content for a page
+    - GET `:id`: get revision by id
+    - GET `draft/:page_id`: get user's draft revision for a page
+    - POST `create`: create a revision, params: Integer page_id, String content
     - PUT `update/status`: approve or reject a revision, params: Integer id, Boolean status
-    - PUT `draft/save`: save a draft revision, params: Integer page, Integer user, String content
-    - DELETE `draft/delete`: delete a draft revision, params: Integer page, Integer user
+    - POST `draft/save`: save a draft revision, params: Integer page, String content
+    - DELETE `draft/delete`: delete a draft revision, params: Integer page
     - DELETE `delete`: delete a revision, params: Integer id
 - `/api/comment/`:
-    - POST `user`: get user's comments, params: Integer user
-    - POST `page`: get page's comments, params: Integer page
-    - POST `byid`: get comment by id, params: Integer id
-    - PUT `create`: create a comment, params: Integer id (page's id), String content, Integer user
+    - GET `user/:id`: get user's comments
+    - GET `page/:id`: get page's comments
+    - GET `:id`: get comment by id
+    - POST `create`: create a comment, params: Integer page_id, String content
     - DELETE `delete`: delete a comment, params: Integer id
 - `/api/category/`:
-    - POST `/`: get all categories
-    - POST `byid`: get category by id, params: Integer id
-    - POST `users`: get users that have a set permission in a category, params: Integer category
+    - GET `/`: get all categories
+    - GET `:id`: get category by id
+    - GET `users/:id`: get users that have a set permission in a category
     - PUT `permission`: modify user's permissions to given category, params: Integer category, Integer user, String permission
-    - PUT `create`: create a category, params: String name
+    - POST `create`: create a category, params: String name
     - PUT `update/name`: update category name, params: Integer id, String name
     - DELETE `delete`: delete a category, params: Integer id
 

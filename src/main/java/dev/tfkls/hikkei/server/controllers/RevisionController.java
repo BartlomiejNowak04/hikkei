@@ -1,12 +1,14 @@
 package dev.tfkls.hikkei.server.controllers;
 
-import static dev.tfkls.hikkei.server.controllers.Utils.*;
+import static dev.tfkls.hikkei.server.util.ParamFlow.handle;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
+import dev.tfkls.hikkei.server.util.Jsonify;
+import dev.tfkls.hikkei.server.util.Type;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -26,10 +28,11 @@ public class RevisionController {
   public void addRevision(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of("id", Integer.class, "content", String.class, "user", Integer.class),
+        Map.of("page_id", Type.Int, "content", Type.Str),
+        null,
         body -> {
           byte[] previous = null;
-          List<RevisionData> revs = revisionProvider.getByPage(body.getInteger("id"));
+          List<RevisionData> revs = revisionProvider.getByPage(body.getInteger("page_id"));
           if (revs != null && !revs.isEmpty()) previous = revs.getFirst().file();
           byte[] filename;
           try {
@@ -40,7 +43,7 @@ public class RevisionController {
 
           int idr =
               revisionProvider.createRevision(
-                  new RevisionData(body.getInteger("id"), body.getInteger("user"), filename));
+                  new RevisionData(body.getInteger("page_id"), ctx.get("id"), filename));
           ctx.response().setStatusCode(201);
           ctx.json(new JsonObject().put("id", idr));
         });
@@ -49,7 +52,8 @@ public class RevisionController {
   public void changeStatus(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of("id", Integer.class, "status", Boolean.class),
+        Map.of("id", Type.Int, "status", Type.Bool),
+        null,
         body -> {
           revisionProvider.changeState(body.getInteger("id"), body.getBoolean("status"));
           ctx.response().setStatusCode(204).end();
@@ -59,15 +63,16 @@ public class RevisionController {
   private void getList(RoutingContext ctx, String type) {
     handle(
         ctx,
-        Map.of(type, Integer.class),
+        null,
+        Map.of("id", Type.Int),
         body -> {
-          Integer id = body.getInteger(type);
+          Integer id = body.getInteger("id");
 
           List<RevisionData> data =
               type.equals("page") ? revisionProvider.getByPage(id) : revisionProvider.getByUser(id);
           if (data == null) throw new BadDataException("Incorrect parameter value: id");
           JsonArray items = new JsonArray();
-          for (RevisionData item : data) items.add(revisionToJson(item));
+          for (RevisionData item : data) items.add(Jsonify.revisionToJson(item));
 
           ctx.response().setStatusCode(200);
           ctx.json(items);
@@ -88,7 +93,8 @@ public class RevisionController {
   public void getCurrentContent(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of("id", Integer.class),
+        null,
+        Map.of("id", Type.Int),
         body -> {
           Integer id = body.getInteger("id");
 
@@ -111,14 +117,15 @@ public class RevisionController {
   public void getById(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of("id", Integer.class),
+        null,
+        Map.of("id", Type.Int),
         body -> {
           RevisionData data = revisionProvider.getById(body.getInteger("id"));
           if (data == null) throw new BadDataException("Incorrect parameter value: id");
           else if (data == RevisionData.DELETED) ctx.response().setStatusCode(404).end();
           else {
             ctx.response().setStatusCode(200);
-            ctx.json(revisionToJson(data));
+            ctx.json(Jsonify.revisionToJson(data));
           }
         });
   }
@@ -126,9 +133,10 @@ public class RevisionController {
   public void getDraft(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of("user", Integer.class, "page", Integer.class),
+        null,
+        Map.of("page_id", Type.Int),
         body -> {
-          byte[] id = revisionProvider.getDraft(body.getInteger("user"), body.getInteger("page"));
+          byte[] id = revisionProvider.getDraft(ctx.get("id"), body.getInteger("page_id"));
           String content = "";
           if (id != null) content = versionProvider.getVersion(id);
           if (content == null) throw new InternalErrorException("Incorrect data id");
@@ -140,16 +148,17 @@ public class RevisionController {
   public void saveDraft(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of("user", Integer.class, "page", Integer.class, "content", String.class),
+        Map.of("page", Type.Int, "content", Type.Str),
+        null,
         body -> {
-          byte[] id = revisionProvider.getDraft(body.getInteger("user"), body.getInteger("page"));
+          byte[] id = revisionProvider.getDraft(ctx.get("id"), body.getInteger("page"));
           byte[] nid;
           try {
             nid = versionProvider.storeVersion(body.getString("content"), id);
           } catch (BadDataException e) {
             throw new InternalErrorException(e.getMessage());
           }
-          revisionProvider.saveDraft(body.getInteger("user"), body.getInteger("page"), nid);
+          revisionProvider.saveDraft(ctx.get("id"), body.getInteger("page"), nid);
           ctx.response().setStatusCode(204).end();
         });
   }
@@ -157,10 +166,11 @@ public class RevisionController {
   public void deleteDraft(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of("user", Integer.class, "page", Integer.class),
+        Map.of("page", Type.Int),
+        null,
         body -> {
-          byte[] id = revisionProvider.getDraft(body.getInteger("user"), body.getInteger("page"));
-          revisionProvider.deleteDraft(body.getInteger("user"), body.getInteger("page"));
+          byte[] id = revisionProvider.getDraft(ctx.get("id"), body.getInteger("page"));
+          revisionProvider.deleteDraft(ctx.get("id"), body.getInteger("page"));
           versionProvider.deleteVersion(id);
           ctx.response().setStatusCode(204).end();
         });
@@ -169,7 +179,8 @@ public class RevisionController {
   public void deleteRevision(RoutingContext ctx) {
     handle(
         ctx,
-        Map.of("id", Integer.class),
+        Map.of("id", Type.Int),
+        null,
         body -> {
           revisionProvider.deleteRevision(body.getInteger("id"));
           ctx.response().setStatusCode(204).end();
