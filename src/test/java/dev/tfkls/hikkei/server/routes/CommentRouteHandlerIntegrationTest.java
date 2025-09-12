@@ -1,53 +1,85 @@
 package dev.tfkls.hikkei.server.routes;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 import dev.tfkls.hikkei.model.comment.CommentData;
+import dev.tfkls.hikkei.model.exceptions.BadDataException;
+import io.restassured.http.Method;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import java.time.LocalDateTime;
 import java.util.List;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class CommentRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest {
-  @Test
-  void testGetByUserReturnsComments() throws Exception {
-    CommentData comment1 = new CommentData(1, 10, 1, "First comment", null);
-    CommentData comment2 = new CommentData(2, 10, 1, "Second comment", null);
+  private CommentData cd;
 
-    when(commentProvider.getByUser(42)).thenReturn(List.of(comment1, comment2));
+  @BeforeAll
+  void init() {
+    cd = new CommentData(1, 1, 1, "test", LocalDateTime.now());
+  }
 
-    given()
-        .when()
-        .get("/api/comment/user/42")
-        .then()
-        .statusCode(200)
-        .body("$", hasSize(2))
-        .body("[0].id", equalTo(1))
-        .body("[0].page_id", equalTo(10))
-        .body("[0].user_id", equalTo(1))
-        .body("[0].content", equalTo("First comment"))
-        .body("[0].date", equalTo(null))
-        .body("[1].id", equalTo(2))
-        .body("[1].page_id", equalTo(10))
-        .body("[1].user_id", equalTo(1))
-        .body("[1].content", equalTo("Second comment"))
-        .body("[1].date", equalTo(null));
-
-    verify(commentProvider, times(1)).getByUser(42);
+  private void assertComment(JsonObject body, CommentData comment) {
+    assertEquals(comment.id(), body.getInteger("id"));
+    assertEquals(comment.pageId(), body.getInteger("page_id"));
+    assertEquals(comment.userId(), body.getInteger("user_id"));
+    assertEquals(comment.content(), body.getString("content"));
+    assertEquals(comment.date().toString(), body.getString("date"));
   }
 
   @Test
-  void testGetByUserNullResponseReturns400() throws Exception {
-    when(commentProvider.getByUser(42)).thenReturn(null);
+  void userNoUserTest() throws Exception {
+    when(commentProvider.getByUser(1)).thenReturn(null);
+    testGetException("/api/comment/user/1", new BadDataException("Incorrect parameter value: id"));
+  }
 
-    given()
-        .when()
-        .get("/api/comment/user/42")
-        .then()
-        .statusCode(400)
-        .body("message", equalTo("Incorrect parameter value: id"));
+  @Test
+  void userWorkingTest() throws Exception {
+    when(commentProvider.getByUser(1)).thenReturn(List.of(cd));
+    JsonArray body = callGetEndpointArray("api/comment/user/1", 200);
+    assertEquals(1, body.size());
+    assertComment(body.getJsonObject(0), cd);
+  }
 
-    verify(commentProvider, times(1)).getByUser(42);
+  @Test
+  void pageNoPageTest() throws Exception {
+    when(commentProvider.getByPage(1)).thenReturn(null);
+    testGetException("/api/comment/page/1", new BadDataException("Incorrect parameter value: id"));
+  }
+
+  @Test
+  void pageWorkingTest() throws Exception {
+    when(commentProvider.getByPage(1)).thenReturn(List.of(cd));
+    JsonArray body = callGetEndpointArray("api/comment/page/1", 200);
+    assertEquals(1, body.size());
+    assertComment(body.getJsonObject(0), cd);
+  }
+
+  @Test
+  void byIdNoCommentTest() throws Exception {
+    when(commentProvider.getById(1)).thenReturn(null);
+    testGetException("/api/comment/1", new BadDataException("Incorrect parameter value: id"));
+  }
+
+  @Test
+  void byIdWorkingTest() throws Exception {
+    when(commentProvider.getById(1)).thenReturn(cd);
+    JsonObject body = callGetEndpointObject("/api/comment/1", 200);
+    assertComment(body, cd);
+  }
+
+  //  @Test
+  //  void createWorkingTest() throws Exception {
+  //    when(commentProvider.addComment(any())).thenReturn(1);
+  //    JsonObject body = callEndpointObject("/api/comment/create", Method.POST, new
+  // JsonObject().put("page_id", 1).put("content", "gfdd"), 201);
+  //    assertEquals(1, body.getInteger("id"));
+  //  }
+
+  @Test
+  void deleteWorkingTest() {
+    callEndpoint("/api/comment/delete", Method.DELETE, new JsonObject().put("id", 1), 204, "");
   }
 }

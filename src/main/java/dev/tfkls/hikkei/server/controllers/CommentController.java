@@ -42,7 +42,7 @@ public class CommentController {
         null,
         body -> {
           commentProvider.deleteComment(body.getInteger("id"));
-          ctx.response().setStatusCode(200).end();
+          ctx.response().setStatusCode(204).end();
         });
   }
 
