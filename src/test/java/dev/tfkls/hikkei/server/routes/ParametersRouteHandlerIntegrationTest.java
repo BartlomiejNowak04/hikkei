@@ -296,4 +296,9 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     assertJsonEndpoint(
         "/api/category/update/name", Method.PUT, Map.of("id", Type.Int, "name", Type.Str));
   }
+
+  @Test
+  public void apiCategoryDeleteRejectsImproperData() {
+    assertJsonEndpoint("/api/category/delete", Method.DELETE, Map.of("id", Type.Int));
+  }
 }

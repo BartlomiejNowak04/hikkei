@@ -90,7 +90,7 @@ The frontend application communicates with the backend server through an API. Be
     - POST `create`: create a comment, params: Integer page_id, String content
     - DELETE `delete`: delete a comment, params: Integer id
 - `/api/category/`:
-    - GET `/`: get all categories
+    - GET `all`: get all categories
     - GET `:id`: get category by id
     - GET `users/:id`: get users that have a set permission in a category
     - PUT `permission`: modify user's permissions to given category, params: Integer category, Integer user, String permission

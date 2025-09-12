@@ -10,6 +10,7 @@ import dev.tfkls.hikkei.server.util.Jsonify;
 import dev.tfkls.hikkei.server.util.ParamFlow;
 import dev.tfkls.hikkei.server.util.Type;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,7 @@ public class CategoryController {
         body -> {
           Map<Integer, PermissionLevel> vals =
               categoryProvider.getUsersPermissions(body.getInteger("id"));
+          if (vals == null) throw new BadDataException("Invalid parameter: id");
           JsonArray items = new JsonArray();
           for (Map.Entry<Integer, PermissionLevel> val : vals.entrySet()) {
             UserData data = userProvider.getUserData(val.getKey());
@@ -99,8 +101,9 @@ public class CategoryController {
         Map.of("name", Type.Str),
         null,
         body -> {
-          categoryProvider.createCategory(new CategoryData(body.getString("name")));
-          ctx.response().setStatusCode(204).end();
+          int idc = categoryProvider.createCategory(new CategoryData(body.getString("name")));
+          ctx.response().setStatusCode(201);
+          ctx.json(new JsonObject().put("id", idc));
         });
   }
 
@@ -122,6 +125,7 @@ public class CategoryController {
         null,
         body -> {
           categoryProvider.deleteCategory(body.getInteger("id"));
+          ctx.response().setStatusCode(204).end();
         });
   }
 }

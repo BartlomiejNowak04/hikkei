@@ -11,7 +11,7 @@ public class CategoryRouteHandler extends RouteHandler {
     super(vertx);
     CategoryController controller = new CategoryController(categoryProvider, userProvider);
 
-    router.get("/").blockingHandler(controller::getCategories);
+    router.get("/all").blockingHandler(controller::getCategories);
     router.get("/:id").blockingHandler(controller::getById);
     router.get("/users/:id").blockingHandler(controller::getUsersWithPermissions);
 
