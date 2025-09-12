@@ -3,6 +3,7 @@ package dev.tfkls.hikkei.provider;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.tfkls.hikkei.model.file.StoredFile;
+import dev.tfkls.hikkei.provider.filesystem.FilesystemFileProvider;
 import java.io.IOException;
 import java.nio.file.*;
 import org.junit.jupiter.api.*;

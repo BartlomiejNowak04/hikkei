@@ -1,4 +1,4 @@
-package dev.tfkls.hikkei.provider;
+package dev.tfkls.hikkei.provider.filesystem;
 
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.file.FileProvider;

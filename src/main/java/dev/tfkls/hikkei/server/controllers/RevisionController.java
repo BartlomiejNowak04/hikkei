@@ -4,6 +4,7 @@ import static dev.tfkls.hikkei.server.util.ParamFlow.handle;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.file.StoredVersion;
 import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
@@ -104,9 +105,10 @@ public class RevisionController {
 
           String data = "";
           if (!revisions.isEmpty()) {
-            data = versionProvider.getVersion(revisions.getFirst().file());
-            if (data == null)
+            StoredVersion file = versionProvider.getVersion(revisions.getFirst().file());
+            if (file == null || file.data() == null)
               throw new InternalErrorException("Couldn't retrieve content for page " + id);
+            data = file.data();
           }
           ctx.response().setStatusCode(200);
           // TODO: transform the data appropriately
@@ -138,8 +140,12 @@ public class RevisionController {
         body -> {
           byte[] id = revisionProvider.getDraft(ctx.get("id"), body.getInteger("page_id"));
           String content = "";
-          if (id != null) content = versionProvider.getVersion(id);
-          if (content == null) throw new InternalErrorException("Incorrect data id");
+          if (id != null) {
+            StoredVersion file = versionProvider.getVersion(id);
+            if (file == null || file.data() == null)
+              throw new InternalErrorException("Incorrect data id");
+            content = file.data();
+          }
           ctx.response().setStatusCode(200);
           ctx.json(new JsonObject().put("content", content));
         });

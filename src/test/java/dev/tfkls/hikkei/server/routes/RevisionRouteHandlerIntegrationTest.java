@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
+import dev.tfkls.hikkei.model.file.StoredVersion;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import io.restassured.http.Method;
 import io.vertx.core.json.JsonArray;
@@ -92,7 +93,7 @@ public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegration
   @Test
   void currentWorkingTest() throws Exception {
     when(revisionProvider.getByPage(1)).thenReturn(new ArrayList<>(Collections.singleton(rd)));
-    when(versionProvider.getVersion(any())).thenReturn("test");
+    when(versionProvider.getVersion(any())).thenReturn(new StoredVersion("test", null));
     JsonObject body = callGetEndpointObject("/api/revision/content/1", 200);
     assertEquals("test", body.getString("content"));
   }

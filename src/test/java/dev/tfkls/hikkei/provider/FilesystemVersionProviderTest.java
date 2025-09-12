@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.file.StoredVersion;
+import dev.tfkls.hikkei.provider.filesystem.FilesystemVersionProvider;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.*;
@@ -57,7 +59,7 @@ public class FilesystemVersionProviderTest {
   @Test
   void storeContentCreatesFileAndReturnsId() throws InternalErrorException, IOException {
     String content = "Hello, world!";
-    byte[] id = provider.storeContent(content);
+    byte[] id = provider.storeContent(content, null);
     assertNotNull(id);
 
     Path storedFile = tempDir.resolve(new String(id));
@@ -68,10 +70,11 @@ public class FilesystemVersionProviderTest {
   @Test
   void getVersionReadsStoredContent() throws InternalErrorException, BadDataException {
     String content = "Versioned content test";
-    byte[] id = provider.storeContent(content);
+    byte[] id = provider.storeContent(content, "testtype");
 
-    String readContent = provider.getVersion(id);
-    assertEquals(content, readContent);
+    StoredVersion readContent = provider.getVersion(id);
+    assertEquals(content, readContent.data());
+    assertEquals("testtype", readContent.mime());
   }
 
   @Test
