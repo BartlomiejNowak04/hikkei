@@ -2,6 +2,7 @@ plugins {
   id 'java'
   id 'application'
   id 'com.diffplug.spotless' version '7.0.2'
+  id 'jacoco'
 }
 
 spotless {
@@ -83,6 +84,7 @@ test {
   }
   jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
   jvmArgs += "-Xshare:off"
+  finalizedBy jacocoTestReport
 }
 
 application {
