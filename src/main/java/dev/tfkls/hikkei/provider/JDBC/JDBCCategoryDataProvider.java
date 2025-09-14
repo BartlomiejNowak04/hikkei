@@ -25,6 +25,9 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
 
   @Override
   public int createCategory(CategoryData data) throws InternalErrorException, BadDataException {
+    if (data == null) throw new BadDataException(invalid_data);
+    if (data.name() == null) throw new BadDataException(invalid_name);
+
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO categories_with_data (name) VALUES (?)",
@@ -43,7 +46,8 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
 
   @Override
   public List<CategoryData> getCategories() throws InternalErrorException {
-    try (PreparedStatement st = connection.prepareStatement("SELECT * FROM categories_with_data")) {
+    try (PreparedStatement st =
+        connection.prepareStatement("SELECT * FROM categories_with_data WHERE deleted = false")) {
       try (ResultSet rs = st.executeQuery()) {
         ArrayList<CategoryData> res = new ArrayList<>();
         while (rs.next()) {
@@ -72,6 +76,8 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
 
   @Override
   public void changeName(int id, String name) throws InternalErrorException, BadDataException {
+    if (name == null) throw new BadDataException(invalid_name);
+
     try (PreparedStatement st =
         connection.prepareStatement("SELECT * FROM categories WHERE id = ?")) {
       st.setInt(1, id);
@@ -93,7 +99,7 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
 
   @Override
   public void updatePermission(int categoryId, int userId, PermissionLevel level)
-      throws InternalErrorException, BadDataException {
+      throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement("SELECT * FROM categories WHERE id = ?")) {
       st.setInt(1, categoryId);
@@ -114,7 +120,7 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
             "INSERT INTO user_category(user_id, category_id, permission) VALUES (?, ?, ?)")) {
       st.setInt(1, userId);
       st.setInt(2, categoryId);
-      st.setString(3, level.toString());
+      st.setString(3, level == null ? null : level.toString());
       st.executeUpdate();
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);

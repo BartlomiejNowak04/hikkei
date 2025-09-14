@@ -137,11 +137,6 @@ public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest 
   }
 
   @Test
-  void getByIdFailsWithInvalidId() {
-    assertThrows(InternalErrorException.class, () -> provider.getById(-1));
-  }
-
-  @Test
   void deleteCommentActuallyDeletes() throws BadDataException, InternalErrorException {
     CommentData comment = new CommentData(-1, pageId, userId, "delete-v2", LocalDateTime.now());
     int commentId = provider.addComment(comment);

@@ -22,6 +22,10 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
 
   @Override
   public int createRevision(RevisionData data) throws BadDataException, InternalErrorException {
+    if (data == null) throw new BadDataException(invalid_data);
+    if (data.pageId() == null) throw new BadDataException(invalid_page);
+    if (data.file() == null) throw new BadDataException(invalid_datafile);
+
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO revisions_with_data (page_id, user_id, file) VALUES (?, ?, ?)",
@@ -38,6 +42,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
     } catch (SQLException e) {
       String message = e.getMessage();
       if (message.contains("revisions_page_id_fkey")) throw new BadDataException(invalid_page);
+      if (message.contains("revisions_user_id_fkey")) throw new BadDataException(invalid_user);
       throw new InternalErrorException(internal_error);
     }
   }
@@ -49,7 +54,6 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
             "INSERT INTO revision_approved (approved, revision_id) values (?, ?)")) {
       st.setBoolean(1, state);
       st.setInt(2, id);
-      if (st.executeUpdate() < 1) throw new BadDataException(invalid_revision);
     } catch (SQLException e) {
       String message = e.getMessage();
       if (message.contains("revision_approved_revision_id_fkey"))
@@ -72,7 +76,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
 
     try (PreparedStatement st =
         connection.prepareStatement(
-            "SELECT * FROM revisions_with_data WHERE page_id = ? ORDER BY date DESC")) {
+            "SELECT * FROM revisions_with_data WHERE page_id = ? AND deleted = false ORDER BY date DESC")) {
       st.setInt(1, pageId);
       try (ResultSet rs = st.executeQuery()) {
         ArrayList<RevisionData> res = new ArrayList<>();
@@ -98,7 +102,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
 
     try (PreparedStatement st =
         connection.prepareStatement(
-            "SELECT * FROM revisions_with_data WHERE user_id = ? ORDER BY date DESC")) {
+            "SELECT * FROM revisions_with_data WHERE user_id = ? AND deleted = false ORDER BY date DESC")) {
       st.setInt(1, userId);
       try (ResultSet rs = st.executeQuery()) {
         ArrayList<RevisionData> res = new ArrayList<>();
@@ -116,7 +120,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
         connection.prepareStatement("SELECT * FROM revisions_with_data WHERE id = ?")) {
       st.setInt(1, id);
       try (ResultSet rs = st.executeQuery()) {
-        if (!rs.next()) throw new InternalErrorException(invalid_revision);
+        if (!rs.next()) return null;
         return getRevisionData(rs);
       }
     } catch (SQLException e) {
@@ -154,6 +158,8 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
   @Override
   public void saveDraft(int userId, int pageId, byte[] file)
       throws InternalErrorException, BadDataException {
+    if (file == null) throw new BadDataException(invalid_datafile);
+
     try (PreparedStatement st = connection.prepareStatement("SELECT * FROM users WHERE id = ?")) {
       st.setInt(1, userId);
       try (ResultSet rs = st.executeQuery()) {
@@ -198,6 +204,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
   }
 
   private RevisionData getRevisionData(ResultSet rs) throws SQLException {
+    if (rs.getBoolean("deleted")) return RevisionData.DELETED;
     return new RevisionData(
         rs.getInt("id"),
         rs.getInt("page_id"),

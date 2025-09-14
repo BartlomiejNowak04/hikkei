@@ -22,6 +22,10 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
 
   @Override
   public int addComment(CommentData data) throws BadDataException, InternalErrorException {
+    if (data == null) throw new BadDataException(invalid_data);
+    if (data.pageId() == null) throw new BadDataException(invalid_page);
+    if (data.content() == null) throw new BadDataException(invalid_content);
+
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO comments (page_id, user_id, content) VALUES (?, ?, ?)",
@@ -38,6 +42,7 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
     } catch (SQLException e) {
       String message = e.getMessage();
       if (message.contains("comments_page_id_fkey")) throw new BadDataException(invalid_page);
+      if (message.contains("comments_user_id_fkey")) throw new BadDataException(invalid_user);
       throw new InternalErrorException(internal_error);
     }
   }
@@ -61,18 +66,8 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
       st.setInt(1, id);
 
       try (ResultSet rs = st.executeQuery()) {
-        if (!rs.next()) throw new InternalErrorException(invalid_comment);
-
-        if (rs.getBoolean("deleted")) {
-          return CommentData.DELETED;
-        }
-
-        return new CommentData(
-            rs.getInt("id"),
-            rs.getInt("page_id"),
-            rs.getInt("user_id"),
-            rs.getString("content"),
-            rs.getTimestamp("date").toLocalDateTime());
+        if (!rs.next()) return null;
+        return getCommentData(rs);
       }
 
     } catch (SQLException e) {
@@ -94,7 +89,7 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
 
     try (PreparedStatement st =
         connection.prepareStatement(
-            "SELECT * FROM comments WHERE page_id = ? ORDER BY date DESC")) {
+            "SELECT * FROM comments WHERE page_id = ? AND deleted = false ORDER BY date DESC")) {
       st.setInt(1, pageId);
       try (ResultSet rs = st.executeQuery()) {
         ArrayList<CommentData> res = new ArrayList<>();
@@ -109,7 +104,7 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
   }
 
   @Override
-  public List<CommentData> getByUser(int userId) throws InternalErrorException {
+  public List<CommentData> getByUser(Integer userId) throws InternalErrorException {
     try (PreparedStatement st =
         connection.prepareStatement("SELECT COUNT(*) FROM users WHERE id = ?")) {
       st.setInt(1, userId);
@@ -122,7 +117,7 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
 
     try (PreparedStatement st =
         connection.prepareStatement(
-            "SELECT * FROM comments WHERE user_id = ? ORDER BY date DESC")) {
+            "SELECT * FROM comments WHERE user_id = ? AND deleted = false ORDER BY date DESC")) {
       st.setInt(1, userId);
       try (ResultSet rs = st.executeQuery()) {
         ArrayList<CommentData> res = new ArrayList<>();

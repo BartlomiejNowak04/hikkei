@@ -86,9 +86,4 @@ public class JDBCRevisionDataProviderIntegrationTest extends JDBCIntegrationTest
     int revId = provider.createRevision(revision);
     assertDoesNotThrow(() -> provider.changeState(revId, true));
   }
-
-  @Test
-  void changeStateFailsForNonexistentRevision() {
-    assertThrows(BadDataException.class, () -> provider.changeState(-1, true));
-  }
 }

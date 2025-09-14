@@ -47,7 +47,8 @@ public class JDBCPageDataProvider implements PageDataProvider {
   @Override
   public List<PageData> searchByTitle(String title) throws InternalErrorException {
     try (PreparedStatement st =
-        connection.prepareStatement("SELECT * FROM pages_with_data WHERE title ILIKE ?")) {
+        connection.prepareStatement(
+            "SELECT * FROM pages_with_data WHERE title ILIKE ? AND deleted = false")) {
       st.setString(1, "%" + title + "%");
       try (ResultSet rs = st.executeQuery()) {
         ArrayList<PageData> res = new ArrayList<>();
@@ -109,6 +110,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
     if (data == null) throw new BadDataException(invalid_data);
     if (data.title() == null) throw new BadDataException(invalid_title);
     if (data.category() == null) throw new BadDataException(invalid_category);
+
     try (PreparedStatement st =
         connection.prepareStatement(
             "INSERT INTO pages_with_data (user_id, title, category) VALUES (?, ?, ?)",
@@ -119,8 +121,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
-        if (!rs.next())
-          throw new InternalErrorException("Couldn't create a new page " + data.title());
+        if (!rs.next()) throw new InternalErrorException(internal_page);
         return rs.getInt(1);
       }
     } catch (SQLException e) {

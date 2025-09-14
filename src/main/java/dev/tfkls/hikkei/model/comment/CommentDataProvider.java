@@ -13,5 +13,5 @@ public interface CommentDataProvider {
 
   List<CommentData> getByPage(int pageId) throws InternalErrorException;
 
-  List<CommentData> getByUser(int userId) throws InternalErrorException;
+  List<CommentData> getByUser(Integer userId) throws InternalErrorException;
 }
