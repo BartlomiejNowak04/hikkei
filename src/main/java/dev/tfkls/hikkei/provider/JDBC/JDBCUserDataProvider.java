@@ -120,6 +120,8 @@ public class JDBCUserDataProvider implements UserDataProvider {
     } catch (SQLException e) {
       String message = e.getMessage();
       if (message.contains("already taken")) throw new BadDataException(taken_name);
+      if (message.contains("table users is marked as deleted"))
+        throw new BadDataException(invalid_user);
       throw new InternalErrorException(internal_error);
     }
   }
@@ -136,6 +138,9 @@ public class JDBCUserDataProvider implements UserDataProvider {
       st.setInt(2, userId);
       st.executeUpdate();
     } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("table users is marked as deleted"))
+        throw new BadDataException(invalid_user);
       throw new InternalErrorException(internal_error);
     }
   }
@@ -169,6 +174,8 @@ public class JDBCUserDataProvider implements UserDataProvider {
       st.executeUpdate();
     } catch (SQLException e) {
       String message = e.getMessage();
+      if (message.contains("table users is marked as deleted"))
+        throw new BadDataException(invalid_user);
       if (message.contains("auth_pkey")) throw new BadDataException(taken_type);
       if (message.contains("auth_user_id_fkey")) throw new BadDataException(invalid_user);
       // This exception should be buried - it would give the information that the provided token is
@@ -190,6 +197,9 @@ public class JDBCUserDataProvider implements UserDataProvider {
       st.setString(2, authType);
       st.executeUpdate();
     } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("table users is marked as deleted"))
+        throw new BadDataException(invalid_user);
       throw new InternalErrorException(internal_error);
     }
   }

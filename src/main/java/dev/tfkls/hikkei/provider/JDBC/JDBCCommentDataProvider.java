@@ -41,8 +41,15 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
       }
     } catch (SQLException e) {
       String message = e.getMessage();
+
       if (message.contains("comments_page_id_fkey")) throw new BadDataException(invalid_page);
+      if (message.contains("table pages is marked as deleted"))
+        throw new BadDataException(invalid_page);
+
       if (message.contains("comments_user_id_fkey")) throw new BadDataException(invalid_user);
+      if (message.contains("table users is marked as deleted"))
+        throw new BadDataException(invalid_user);
+
       throw new InternalErrorException(internal_error);
     }
   }

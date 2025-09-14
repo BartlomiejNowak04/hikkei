@@ -129,6 +129,10 @@ public class JDBCPageDataProvider implements PageDataProvider {
       if (message.contains("already taken")) throw new BadDataException(taken_title);
       if (message.contains("page_category_category_fkey"))
         throw new BadDataException(invalid_category);
+      if (message.contains("table users is marked as deleted"))
+        throw new BadDataException(invalid_user);
+      if (message.contains("table categories is marked as deleted"))
+        throw new BadDataException(invalid_category);
       throw new InternalErrorException(internal_error);
     }
   }
@@ -147,6 +151,8 @@ public class JDBCPageDataProvider implements PageDataProvider {
     } catch (SQLException e) {
       String message = e.getMessage();
       if (message.contains("already taken")) throw new BadDataException(taken_title);
+      if (message.contains("table pages is marked as deleted"))
+        throw new BadDataException(invalid_page);
       throw new InternalErrorException(internal_error);
     }
   }
@@ -165,6 +171,10 @@ public class JDBCPageDataProvider implements PageDataProvider {
     } catch (SQLException e) {
       String message = e.getMessage();
       if (message.contains("pages_category_fkey")) throw new BadDataException(invalid_category);
+      if (message.contains("table categories is marked as deleted"))
+        throw new BadDataException(invalid_category);
+      if (message.contains("table pages is marked as deleted"))
+        throw new BadDataException(invalid_page);
       throw new InternalErrorException(internal_error);
     }
   }

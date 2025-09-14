@@ -43,6 +43,10 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
       String message = e.getMessage();
       if (message.contains("revisions_page_id_fkey")) throw new BadDataException(invalid_page);
       if (message.contains("revisions_user_id_fkey")) throw new BadDataException(invalid_user);
+      if (message.contains("table pages is marked as deleted"))
+        throw new BadDataException(invalid_page);
+      if (message.contains("table users is marked as deleted"))
+        throw new BadDataException(invalid_user);
       throw new InternalErrorException(internal_error);
     }
   }
@@ -57,6 +61,8 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
     } catch (SQLException e) {
       String message = e.getMessage();
       if (message.contains("revision_approved_revision_id_fkey"))
+        throw new BadDataException(invalid_revision);
+      if (message.contains("table revisions is marked as deleted"))
         throw new BadDataException(invalid_revision);
       throw new InternalErrorException(internal_error);
     }
@@ -187,18 +193,28 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
       st.setBytes(3, file);
       st.executeUpdate();
     } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("table users is marked as deleted"))
+        throw new BadDataException(invalid_user);
+      if (message.contains("table pages is marked as deleted"))
+        throw new BadDataException(invalid_page);
       throw new InternalErrorException(internal_error);
     }
   }
 
   @Override
-  public void deleteDraft(int userId, int pageId) throws InternalErrorException {
+  public void deleteDraft(int userId, int pageId) throws InternalErrorException, BadDataException {
     try (PreparedStatement st =
         connection.prepareStatement("DELETE FROM drafts WHERE user_id = ? AND page_id = ?")) {
       st.setInt(1, userId);
       st.setInt(2, pageId);
       st.executeUpdate();
     } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("table users is marked as deleted"))
+        throw new BadDataException(invalid_user);
+      if (message.contains("table pages is marked as deleted"))
+        throw new BadDataException(invalid_page);
       throw new InternalErrorException(internal_error);
     }
   }

@@ -99,7 +99,7 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
 
   @Override
   public void updatePermission(int categoryId, int userId, PermissionLevel level)
-      throws InternalErrorException {
+      throws InternalErrorException, BadDataException {
     try (PreparedStatement st =
         connection.prepareStatement("SELECT * FROM categories WHERE id = ?")) {
       st.setInt(1, categoryId);
@@ -123,6 +123,11 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
       st.setString(3, level == null ? null : level.toString());
       st.executeUpdate();
     } catch (SQLException e) {
+      String message = e.getMessage();
+      if (message.contains("table users is marked as deleted"))
+        throw new BadDataException(invalid_user);
+      if (message.contains("table categories is marked as deleted"))
+        throw new BadDataException(invalid_category);
       throw new InternalErrorException(internal_error);
     }
   }
