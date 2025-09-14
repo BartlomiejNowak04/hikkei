@@ -117,10 +117,10 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
 
     try (PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO user_category(user_id, category_id, permission) VALUES (?, ?, ?)")) {
+            "INSERT INTO user_category(user_id, category_id, permission) VALUES (?, ?, ?::PermissionLevel)")) {
       st.setInt(1, userId);
       st.setInt(2, categoryId);
-      st.setObject(3, level == null ? null : level.toString());
+      st.setString(3, level == null ? null : level.toString());
       st.executeUpdate();
     } catch (SQLException e) {
       String message = e.getMessage();

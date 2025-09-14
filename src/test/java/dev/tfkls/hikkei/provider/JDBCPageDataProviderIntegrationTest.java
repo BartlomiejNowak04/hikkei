@@ -6,7 +6,6 @@ import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.provider.JDBC.JDBCPageDataProvider;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
@@ -19,17 +18,8 @@ public class JDBCPageDataProviderIntegrationTest extends JDBCIntegrationTest {
   void initProvider() throws SQLException {
     provider = new JDBCPageDataProvider(connection);
 
-    try (PreparedStatement st =
-        connection.prepareStatement("INSERT INTO categories_with_data (name) VALUES (?)")) {
-      st.setString(1, "TestCategory");
-      st.executeUpdate();
-    }
-
-    try (PreparedStatement st =
-        connection.prepareStatement("INSERT INTO users_with_data (username) VALUES (?)")) {
-      st.setString(1, "TestUser");
-      st.executeUpdate();
-    }
+    create_category("test-category");
+    create_user("testname", null);
   }
 
   @Test

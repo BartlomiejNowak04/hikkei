@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
 import java.util.List;
+import java.util.Objects;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -118,9 +119,10 @@ public abstract class JDBCIntegrationTest extends IntegrationTest {
   }
 
   protected void delete(String type, int id) throws SQLException {
+    String table = Objects.equals(type, "category") ? "categories" : type + "s";
     try (PreparedStatement st =
         connection.prepareStatement(
-            "UPDATE " + type + "s SET deleted=true, date_deleted=now() WHERE id=?")) {
+            "UPDATE " + table + " SET deleted=true, date_deleted=now() WHERE id=?")) {
       st.setInt(1, id);
       st.executeUpdate();
     }

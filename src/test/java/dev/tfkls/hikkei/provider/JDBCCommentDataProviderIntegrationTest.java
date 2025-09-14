@@ -24,41 +24,11 @@ public class JDBCCommentDataProviderIntegrationTest extends JDBCIntegrationTest 
   void init() throws SQLException {
     provider = new JDBCCommentDataProvider(connection);
 
-    PreparedStatement stCat =
-        connection.prepareStatement("INSERT INTO categories_with_data (name) VALUES (?)");
-    stCat.setString(1, "test-category");
-    stCat.executeUpdate();
-
-    PreparedStatement stUsr =
-        connection.prepareStatement("INSERT INTO users_with_data (username) VALUES (?)");
-    stUsr.setString(1, "testname");
-    stUsr.executeUpdate();
-
-    PreparedStatement stUsr2 =
-        connection.prepareStatement("INSERT INTO users_with_data (username) VALUES (?)");
-    stUsr2.setString(1, "testname2");
-    stUsr2.executeUpdate();
-
-    PreparedStatement stPage =
-        connection.prepareStatement(
-            "INSERT INTO pages_with_data (title, category, user_id) VALUES (?, ?, ?)");
-    stPage.setString(1, "test-page");
-    stPage.setInt(2, 1);
-    stPage.setInt(3, 1);
-    stPage.executeUpdate();
-
-    PreparedStatement stPage2 =
-        connection.prepareStatement(
-            "INSERT INTO pages_with_data (title, category, user_id) VALUES (?, ?, ?)");
-    stPage2.setString(1, "test-page-2");
-    stPage2.setInt(2, 1);
-    stPage2.setInt(3, 1);
-    stPage2.executeUpdate();
-
-    pageId = 1;
-    userId = 1;
-    pageId2 = 2;
-    userId2 = 2;
+    create_category("test-category");
+    userId = create_user("testname", null);
+    userId2 = create_user("testname2", null);
+    pageId = create_page("test-page", 1, 1);
+    pageId2 = create_page("test-page-2", 1, 1);
   }
 
   @Test
