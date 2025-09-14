@@ -31,7 +31,7 @@ public class FilesystemVersionProvider implements VersionProvider {
       throws BadDataException, InternalErrorException {
     StoredVersion prev = getVersion(previous);
     if (previous != null && prev == null) throw new BadDataException("Invalid version id");
-    return storeContent(content, prev.mime());
+    return storeContent(content, prev == null ? null : prev.mime());
   }
 
   @Override

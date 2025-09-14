@@ -27,7 +27,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
             "INSERT INTO revisions_with_data (page_id, user_id, file) VALUES (?, ?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
       st.setInt(1, data.pageId());
-      st.setInt(2, data.userId());
+      st.setObject(2, data.userId());
       st.setObject(3, data.file());
       st.executeUpdate();
 
