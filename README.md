@@ -120,7 +120,7 @@ CREATE DATABASE [POSTGRES_NAME] OWNER [POSTGRES_USER];
 ```
 The database's schema can be created using the `create.sql` file located in `src/main/resources/dev/tfkls/hikkei/database`. The file `drop.sql` provides a clean-up functionality. It is customary to perform a clean-up before database initialisation. This can be achieved like this:
 ```sql
-psql -h [hostname] -p [post] -d [database_name] -U [username]
+psql -h [hostname] -p [port] -d [database_name] -U [username]
 \i drop.sql
 \i create.sql
 ```
