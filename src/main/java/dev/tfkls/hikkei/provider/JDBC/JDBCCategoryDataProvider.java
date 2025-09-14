@@ -120,7 +120,7 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
             "INSERT INTO user_category(user_id, category_id, permission) VALUES (?, ?, ?)")) {
       st.setInt(1, userId);
       st.setInt(2, categoryId);
-      st.setString(3, level == null ? null : level.toString());
+      st.setObject(3, level == null ? null : level.toString());
       st.executeUpdate();
     } catch (SQLException e) {
       String message = e.getMessage();
