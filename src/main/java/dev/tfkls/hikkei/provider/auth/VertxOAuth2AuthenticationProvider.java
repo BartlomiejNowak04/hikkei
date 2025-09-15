@@ -3,7 +3,6 @@ package dev.tfkls.hikkei.provider.auth;
 import dev.tfkls.hikkei.model.auth.AuthenticationCallback;
 import dev.tfkls.hikkei.model.auth.AuthenticationProvider;
 import dev.tfkls.hikkei.util.BoundedMap;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.User;
@@ -23,19 +22,24 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
   public static int DEFAULT_CONCURRENT_REQUESTS_LIMIT = 1000;
 
   public VertxOAuth2AuthenticationProvider(
-      Vertx vertx, OAuth2Auth oauthAuth, Function<JsonObject, String> infoAccessor) {
-    this(vertx, oauthAuth, infoAccessor, DEFAULT_CONCURRENT_REQUESTS_LIMIT);
+      Vertx vertx,
+      OAuth2Auth oauthAuth,
+      URI redirectUri,
+      Function<JsonObject, String> infoAccessor) {
+    this(vertx, oauthAuth, redirectUri, infoAccessor, DEFAULT_CONCURRENT_REQUESTS_LIMIT);
   }
 
   public VertxOAuth2AuthenticationProvider(
       Vertx vertx,
       OAuth2Auth oauthAuth,
+      URI redirectUri,
       Function<JsonObject, String> infoAccessor,
       int concurrentRequestsLimit) {
     this.vertx = vertx;
     this.oauthAuth = oauthAuth;
     this.authRequests = new BoundedMap<>(concurrentRequestsLimit);
     this.infoAccessor = infoAccessor;
+    this.callbackUri = redirectUri;
   }
 
   private final Vertx vertx;
@@ -47,42 +51,35 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
   private final BoundedMap<UUID, AuthenticationCallback> authRequests;
 
   @Override
-  public Handler<RoutingContext> registerProvider(URI baseUri) {
-    if (this.callbackUri != null) {
-      return null;
+  public void handle(RoutingContext ctx) {
+    UUID state;
+    AuthenticationCallback callback;
+    try {
+      state = UUID.fromString(ctx.request().getParam("state"));
+      callback = authRequests.remove(state).orElseThrow();
+    } catch (IllegalArgumentException | NullPointerException | NoSuchElementException ex) {
+      ctx.fail(400);
+      return;
     }
-    this.callbackUri = baseUri;
+    String code;
+    try {
+      code = Objects.requireNonNull(ctx.request().getParam("code"));
+    } catch (NullPointerException ex) {
+      ctx.fail(400);
+      return;
+    }
 
-    return ctx -> {
-      UUID state;
-      AuthenticationCallback callback;
-      try {
-        state = UUID.fromString(ctx.request().getParam("state"));
-        callback = authRequests.remove(state).orElseThrow();
-      } catch (IllegalArgumentException | NullPointerException | NoSuchElementException ex) {
-        ctx.fail(400);
-        return;
-      }
-      String code;
-      try {
-        code = Objects.requireNonNull(ctx.request().getParam("code"));
-      } catch (NullPointerException ex) {
-        ctx.fail(400);
-        return;
-      }
+    try {
+      User userObj =
+          oauthAuth
+              .authenticate(
+                  new Oauth2Credentials().setCode(code).setRedirectUri(callbackUri.toString()))
+              .await();
 
-      try {
-        User userObj =
-            oauthAuth
-                .authenticate(
-                    new Oauth2Credentials().setCode(code).setRedirectUri(callbackUri.toString()))
-                .await();
-
-        callback.onAuthenticate(infoAccessor.apply(oauthAuth.userInfo(userObj).await()), ctx);
-      } catch (Exception ex) {
-        ctx.fail(400);
-      }
-    };
+      callback.onAuthenticate(infoAccessor.apply(oauthAuth.userInfo(userObj).await()), ctx);
+    } catch (Exception ex) {
+      ctx.fail(400);
+    }
   }
 
   @Override

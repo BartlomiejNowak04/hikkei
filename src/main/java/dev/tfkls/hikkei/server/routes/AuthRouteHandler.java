@@ -27,16 +27,17 @@ public class AuthRouteHandler extends RouteHandler {
   private final URI baseUri;
   private final AuthController controller;
 
+  URI getProviderURI(String providerName) {
+    try {
+      return new URI(baseUri + "/auth/callback/" + providerName);
+    } catch (URISyntaxException e) {
+      throw new IllegalArgumentException("Invalid providerName was given, can't create an URI.", e);
+    }
+  }
+
   AuthRouteHandler registerProvider(String name, AuthenticationProvider provider) {
     controller.registerProvider(name, provider);
-    try {
-      router
-          .route("/auth/callback/" + name)
-          .blockingHandler(
-              provider.registerProvider(new URI(baseUri.toString() + "/auth/callback/" + name)));
-    } catch (URISyntaxException e) {
-      throw new IllegalStateException("Provided baseUri has a query or fragment component", e);
-    }
+    router.route("/auth/callback/" + name).blockingHandler(provider);
     router.route("/auth/login/" + name).blockingHandler(ctx -> controller.handleLogin(name, ctx));
     router
         .route("/auth/register/" + name)

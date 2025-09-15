@@ -60,17 +60,17 @@ public class CategoryRouteHandlerIntegrationTest extends RouteHandlerIntegration
 
   @Test
   void usersWorkingTest() throws Exception {
-    when(categoryProvider.getUsersPermissions(1)).thenReturn(Map.of(1, PermissionLevel.Admin));
+    when(categoryProvider.getUsersPermissions(1)).thenReturn(Map.of(1, PermissionLevel.ADMIN));
     when(userProvider.getUserData(1)).thenReturn(new UserData("aaa"));
     JsonArray body = callGetEndpointArray("/api/category/users/1", 200);
     assertEquals(1, body.size());
     assertEquals("aaa", body.getJsonObject(0).getString("username"));
-    assertEquals(PermissionLevel.Admin.toString(), body.getJsonObject(0).getString("permission"));
+    assertEquals(PermissionLevel.ADMIN.toString(), body.getJsonObject(0).getString("permission"));
   }
 
   @Test
   void usersNoDeletedTest() throws Exception {
-    when(categoryProvider.getUsersPermissions(1)).thenReturn(Map.of(1, PermissionLevel.Admin));
+    when(categoryProvider.getUsersPermissions(1)).thenReturn(Map.of(1, PermissionLevel.ADMIN));
     when(userProvider.getUserData(1)).thenReturn(UserData.DELETED);
     JsonArray body = callGetEndpointArray("/api/category/users/1", 200);
     assertEquals(0, body.size());

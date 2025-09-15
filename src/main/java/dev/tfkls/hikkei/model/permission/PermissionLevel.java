@@ -1,10 +1,10 @@
 package dev.tfkls.hikkei.model.permission;
 
 public enum PermissionLevel {
-  NoAccess,
-  Untrusted,
-  Trusted,
-  Moderator,
-  Admin,
-  SuperAdmin;
+  NO_ACCESS,
+  UNTRUSTED,
+  TRUSTED,
+  MODERATOR,
+  ADMIN,
+  SUPER_ADMIN;
 }

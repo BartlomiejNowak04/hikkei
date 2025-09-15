@@ -50,7 +50,7 @@ public class ErrorCategoryRouteHandlerIntegrationTest extends RouteHandlerIntegr
   @Test
   void usersInternalErrorTest2() throws Exception {
     when(categoryProvider.getUsersPermissions(anyInt()))
-        .thenReturn(Map.of(1, PermissionLevel.Admin));
+        .thenReturn(Map.of(1, PermissionLevel.ADMIN));
     when(userProvider.getUserData(1)).thenThrow(ie);
     testGetException("/api/category/users/1", ie);
   }

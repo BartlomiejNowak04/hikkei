@@ -94,11 +94,11 @@ public class UserRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
         .thenReturn(
             Map.of(
                 1,
-                PermissionLevel.Admin,
+                PermissionLevel.ADMIN,
                 2,
-                PermissionLevel.NoAccess,
+                PermissionLevel.NO_ACCESS,
                 3,
-                PermissionLevel.Moderator));
+                PermissionLevel.MODERATOR));
     when(categoryProvider.getById(1)).thenReturn(new CategoryData(1, "aa", time));
     when(categoryProvider.getById(2)).thenReturn(null);
     when(categoryProvider.getById(2)).thenReturn(CategoryData.DELETED);
@@ -107,7 +107,7 @@ public class UserRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
     assertEquals("aa", body.getJsonObject(0).getString("name"));
     assertEquals(1, body.getJsonObject(0).getInteger("id"));
     assertEquals(time.toString(), body.getJsonObject(0).getString("created"));
-    assertEquals(PermissionLevel.Admin.toString(), body.getJsonObject(0).getString("permission"));
+    assertEquals(PermissionLevel.ADMIN.toString(), body.getJsonObject(0).getString("permission"));
   }
 
   @Test

@@ -91,14 +91,14 @@ public class JDBCCategoryDataProviderIntegrationTest extends JDBCIntegrationTest
     InternalErrorException ex =
         assertThrows(
             InternalErrorException.class,
-            () -> provider.updatePermission(-1, 1, PermissionLevel.Admin));
+            () -> provider.updatePermission(-1, 1, PermissionLevel.ADMIN));
     assertEquals(Config.invalid_category, ex.getMessage());
 
     int catId = create_category("permcat");
     InternalErrorException ex2 =
         assertThrows(
             InternalErrorException.class,
-            () -> provider.updatePermission(catId, -1, PermissionLevel.Trusted));
+            () -> provider.updatePermission(catId, -1, PermissionLevel.TRUSTED));
     assertEquals(Config.invalid_user, ex2.getMessage());
   }
 
@@ -107,10 +107,10 @@ public class JDBCCategoryDataProviderIntegrationTest extends JDBCIntegrationTest
     int catId = create_category("permcat2");
     int userId = create_user("permuser", null);
 
-    provider.updatePermission(catId, userId, PermissionLevel.Moderator);
+    provider.updatePermission(catId, userId, PermissionLevel.MODERATOR);
     Map<Integer, PermissionLevel> perms = provider.getUsersPermissions(catId);
     assertTrue(perms.containsKey(userId));
-    assertEquals(PermissionLevel.Moderator, perms.get(userId));
+    assertEquals(PermissionLevel.MODERATOR, perms.get(userId));
   }
 
   @Test
