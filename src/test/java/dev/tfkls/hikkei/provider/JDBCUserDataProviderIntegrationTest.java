@@ -1,16 +1,20 @@
 package dev.tfkls.hikkei.provider;
 
+import static dev.tfkls.hikkei.provider.JDBC.Config.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.AuthData;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.provider.JDBC.Config;
 import dev.tfkls.hikkei.provider.JDBC.JDBCUserDataProvider;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -242,5 +246,31 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     delete("user", id);
     e = assertThrows(BadDataException.class, () -> provider.removeUserAuthMethod(-1, "a"));
     assertEquals(Config.invalid_user, e.getMessage());
+  }
+
+  @Test
+  void getCategoriesPermissionReturnsNullForNonexistentUser() throws Exception {
+    assertNull(provider.getCategoriesPermissions(-1));
+  }
+
+  @Test
+  void getCategoriesPermissionSuccess() throws Exception {
+    int userId = create_user("gcps", null);
+    int catId = create_category("gcps");
+
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "INSERT INTO user_category(user_id, category_id, permission) VALUES (?, ?, ?::PermissionLevel)")) {
+      st.setInt(1, userId);
+      st.setInt(2, catId);
+      st.setString(3, PermissionLevel.Admin.name());
+      st.executeUpdate();
+    } catch (SQLException ignored) {
+    }
+
+    Map<Integer, PermissionLevel> permissions = provider.getCategoriesPermissions(userId);
+    assertEquals(1, permissions.size());
+    assertTrue(permissions.containsKey(catId));
+    assertEquals(PermissionLevel.Admin, permissions.get(catId));
   }
 }

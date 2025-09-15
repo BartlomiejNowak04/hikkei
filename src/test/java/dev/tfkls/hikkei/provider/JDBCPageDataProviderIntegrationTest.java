@@ -1,5 +1,7 @@
 package dev.tfkls.hikkei.provider;
 
+import static dev.tfkls.hikkei.provider.JDBC.Config.invalid_category;
+import static dev.tfkls.hikkei.provider.JDBC.Config.taken_title;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
@@ -95,12 +97,39 @@ public class JDBCPageDataProviderIntegrationTest extends JDBCIntegrationTest {
   void duplicateTitleThrows() throws InternalErrorException, BadDataException {
     PageData page = new PageData(null, 1, "DuplicateTitle", 1, false, null);
     provider.createPage(page);
-    assertThrows(BadDataException.class, () -> provider.createPage(page));
+    assertThrows(BadDataException.class, () -> provider.createPage(page), taken_title);
   }
 
   @Test
   void invalidCategoryThrows() {
     PageData page = new PageData(null, 1, "BadCategory", -1, false, null);
-    assertThrows(BadDataException.class, () -> provider.createPage(page));
+    assertThrows(BadDataException.class, () -> provider.createPage(page), invalid_category);
+  }
+
+  @Test
+  void getByCategorySuccess() throws InternalErrorException, SQLException {
+    int catId = create_category("temp");
+    create_page("gbcs1", catId, 1);
+    create_page("gbcs2", catId, 1);
+
+    List<PageData> pages = provider.getByCategory(catId);
+    assertEquals(2, pages.size());
+  }
+
+  @Test
+  void updatePageTitleWithTakenTitleThrows() throws SQLException {
+    create_page("uptwttt1", 1, 1);
+    int pgId = create_page("uptwttt2", 1, 1);
+
+    assertThrows(
+        BadDataException.class, () -> provider.updatePageTitle(pgId, "uptwttt1"), taken_title);
+  }
+
+  @Test
+  void deletePageSuccess() throws InternalErrorException, SQLException {
+    int pgId = create_page("dps", 1, 1);
+    provider.deletePage(pgId);
+    PageData page = provider.getById(pgId);
+    assertEquals(PageData.DELETED, page);
   }
 }

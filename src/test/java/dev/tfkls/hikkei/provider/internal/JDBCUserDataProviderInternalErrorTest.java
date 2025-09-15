@@ -104,4 +104,11 @@ public class JDBCUserDataProviderInternalErrorTest {
         assertThrows(InternalErrorException.class, () -> provider.removeUserAuthMethod(1, "type"));
     assertEquals(internal_error, ex.getMessage());
   }
+
+  @Test
+  void getCategoriesPermissionsThrowsInternalError() {
+    InternalErrorException ex =
+        assertThrows(InternalErrorException.class, () -> provider.getCategoriesPermissions(1));
+    assertEquals(internal_error, ex.getMessage());
+  }
 }

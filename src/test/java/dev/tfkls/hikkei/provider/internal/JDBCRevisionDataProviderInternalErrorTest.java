@@ -44,10 +44,31 @@ class JDBCRevisionDataProviderInternalErrorTest {
   }
 
   @Test
+  void getByUserThrowsInternalError() {
+    InternalErrorException ex =
+        assertThrows(InternalErrorException.class, () -> provider.getByUser(1));
+    assertEquals(internal_error, ex.getMessage());
+  }
+
+  @Test
+  void changeStateThrowsInternalError() {
+    InternalErrorException ex =
+        assertThrows(InternalErrorException.class, () -> provider.changeState(1, true));
+    assertEquals(internal_error, ex.getMessage());
+  }
+
+  @Test
   void createRevisionThrowsInternalError() {
     RevisionData rev = new RevisionData(1, 1, new byte[] {});
     InternalErrorException ex =
         assertThrows(InternalErrorException.class, () -> provider.createRevision(rev));
+    assertEquals(internal_error, ex.getMessage());
+  }
+
+  @Test
+  void deleteRevisionThrowsInternalError() {
+    InternalErrorException ex =
+        assertThrows(InternalErrorException.class, () -> provider.deleteRevision(1));
     assertEquals(internal_error, ex.getMessage());
   }
 
@@ -62,6 +83,13 @@ class JDBCRevisionDataProviderInternalErrorTest {
   void getDraftThrowsInternalError() {
     InternalErrorException ex =
         assertThrows(InternalErrorException.class, () -> provider.getDraft(1, 1));
+    assertEquals(internal_error, ex.getMessage());
+  }
+
+  @Test
+  void deleteDraftThrowsInternalError() {
+    InternalErrorException ex =
+        assertThrows(InternalErrorException.class, () -> provider.deleteDraft(1, 1));
     assertEquals(internal_error, ex.getMessage());
   }
 }
