@@ -100,7 +100,7 @@ public class CategoryRouteHandlerIntegrationTest extends RouteHandlerIntegration
     callEndpoint(
         "/api/category/permission",
         Method.PUT,
-        new JsonObject().put("category", 1).put("user", 1).put("permission", "NoAccess"),
+        new JsonObject().put("category", 1).put("user", 1).put("permission", "NO_ACCESS"),
         204,
         "");
   }

@@ -1,9 +1,9 @@
-CREATE TYPE PermissionLevel AS ENUM ('NoAccess', 'Untrusted', 'Trusted', 'Moderator', 'Admin', 'SuperAdmin');
+CREATE TYPE PermissionLevel AS ENUM ('NO_ACCESS', 'UNTRUSTED', 'TRUSTED', 'MODERATOR', 'ADMIN', 'SUPER_ADMIN');
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     joined TIMESTAMP NOT NULL DEFAULT now(),
-    minimal_permission PermissionLevel NOT NULL DEFAULT 'NoAccess',
+    minimal_permission PermissionLevel NOT NULL DEFAULT 'NO_ACCESS',
     deleted BOOLEAN NOT NULL DEFAULT false,
     date_deleted TIMESTAMP
 );
@@ -34,7 +34,7 @@ CREATE TABLE auth (
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
     created TIMESTAMP NOT NULL DEFAULT now(),
-    default_permission PermissionLevel NOT NULL DEFAULT 'Untrusted',
+    default_permission PermissionLevel NOT NULL DEFAULT 'UNTRUSTED',
     deleted BOOLEAN NOT NULL DEFAULT FALSE,
     date_deleted TIMESTAMP
 );

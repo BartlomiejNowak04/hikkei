@@ -25,7 +25,7 @@ public class ErrorCategoryRouteHandlerIntegrationTest extends RouteHandlerIntegr
   void init() {
     ie = new InternalErrorException("categorydkjdfie");
     bad = new BadDataException("categorydsdfkbad");
-    perm = new JsonObject().put("category", 1).put("user", 1).put("permission", "NoAccess");
+    perm = new JsonObject().put("category", 1).put("user", 1).put("permission", "NO_ACCESS");
     name = new JsonObject().put("name", "dsdg");
   }
 
