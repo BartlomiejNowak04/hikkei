@@ -263,7 +263,7 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
             "INSERT INTO user_category(user_id, category_id, permission) VALUES (?, ?, ?::PermissionLevel)")) {
       st.setInt(1, userId);
       st.setInt(2, catId);
-      st.setString(3, PermissionLevel.Admin.name());
+      st.setString(3, PermissionLevel.ADMIN.name());
       st.executeUpdate();
     } catch (SQLException ignored) {
     }
@@ -271,6 +271,6 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     Map<Integer, PermissionLevel> permissions = provider.getCategoriesPermissions(userId);
     assertEquals(1, permissions.size());
     assertTrue(permissions.containsKey(catId));
-    assertEquals(PermissionLevel.Admin, permissions.get(catId));
+    assertEquals(PermissionLevel.ADMIN, permissions.get(catId));
   }
 }
