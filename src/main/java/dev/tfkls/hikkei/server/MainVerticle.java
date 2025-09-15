@@ -57,7 +57,9 @@ public class MainVerticle extends VerticleBase {
 
     Router router = Router.router(vertx);
     router.route("/api/*").failureHandler(new FailureHandler());
-    router.route("/api/*").handler(BodyHandler.create().setDeleteUploadedFilesOnEnd(true));
+    router
+        .route("/api/*")
+        .handler(BodyHandler.create().setDeleteUploadedFilesOnEnd(true).setBodyLimit(-1));
     router.route("/api/user/*").subRouter(userRoute.getRouter());
     router.route("/api/page/*").subRouter(pageRoute.getRouter());
     router.route("/api/revision/*").subRouter(revisionRoute.getRouter());

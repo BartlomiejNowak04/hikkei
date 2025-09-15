@@ -20,7 +20,8 @@ public class JDBCPageDataProvider implements PageDataProvider {
   @Override
   public boolean doesPageExist(int pageId) throws InternalErrorException {
     try (PreparedStatement st =
-        connection.prepareStatement("SELECT COUNT(*) FROM pages WHERE id = ?")) {
+        connection.prepareStatement(
+            "SELECT COUNT(*) FROM pages WHERE id = ? AND deleted = false")) {
       st.setInt(1, pageId);
       try (ResultSet rs = st.executeQuery()) {
         rs.next();
@@ -35,7 +36,8 @@ public class JDBCPageDataProvider implements PageDataProvider {
   public PageData getRandomPage() throws InternalErrorException {
     try (Statement st = connection.createStatement()) {
       try (ResultSet rs =
-          st.executeQuery("SELECT * FROM pages_with_data ORDER BY RANDOM() LIMIT 1")) {
+          st.executeQuery(
+              "SELECT * FROM pages_with_data WHERE deleted = false ORDER BY RANDOM() LIMIT 1")) {
         if (!rs.next()) return null;
         return getPageData(rs);
       }
@@ -91,7 +93,8 @@ public class JDBCPageDataProvider implements PageDataProvider {
   @Override
   public List<PageData> getByCategory(int categoryId) throws InternalErrorException {
     try (PreparedStatement st =
-        connection.prepareStatement("SELECT * FROM pages_with_data WHERE category = ?")) {
+        connection.prepareStatement(
+            "SELECT * FROM pages_with_data WHERE category = ? and deleted = false")) {
       st.setInt(1, categoryId);
       try (ResultSet rs = st.executeQuery()) {
         ArrayList<PageData> res = new ArrayList<>();
@@ -115,7 +118,7 @@ public class JDBCPageDataProvider implements PageDataProvider {
         connection.prepareStatement(
             "INSERT INTO pages_with_data (user_id, title, category) VALUES (?, ?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
-      st.setInt(1, data.userId());
+      st.setObject(1, data.userId());
       st.setString(2, data.title());
       st.setInt(3, data.category());
       st.executeUpdate();

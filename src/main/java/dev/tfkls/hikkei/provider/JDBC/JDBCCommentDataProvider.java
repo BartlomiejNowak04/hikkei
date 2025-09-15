@@ -31,7 +31,7 @@ public class JDBCCommentDataProvider implements CommentDataProvider {
             "INSERT INTO comments (page_id, user_id, content) VALUES (?, ?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
       st.setInt(1, data.pageId());
-      st.setInt(2, data.userId());
+      st.setObject(2, data.userId());
       st.setString(3, data.content());
       st.executeUpdate();
 
