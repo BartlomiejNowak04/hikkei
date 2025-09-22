@@ -57,13 +57,13 @@ public class ErrorCategoryRouteHandlerIntegrationTest extends RouteHandlerIntegr
 
   @Test
   void permissionInternalErrorException() throws Exception {
-    doThrow(ie).when(categoryProvider).updatePermission(anyInt(), anyInt(), any());
+    doThrow(ie).when(categoryProvider).updateUserPermission(anyInt(), anyInt(), any());
     testException("/api/category/permission", Method.PUT, perm, ie);
   }
 
   @Test
   void permissionBadDataException() throws Exception {
-    doThrow(bad).when(categoryProvider).updatePermission(anyInt(), anyInt(), any());
+    doThrow(bad).when(categoryProvider).updateUserPermission(anyInt(), anyInt(), any());
     testException("/api/category/permission", Method.PUT, perm, bad);
   }
 

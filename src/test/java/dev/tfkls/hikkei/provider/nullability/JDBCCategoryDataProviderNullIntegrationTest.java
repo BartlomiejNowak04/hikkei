@@ -6,6 +6,7 @@ import dev.tfkls.hikkei.model.category.CategoryData;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.provider.JDBC.Config;
 import dev.tfkls.hikkei.provider.JDBC.JDBCCategoryDataProvider;
 import dev.tfkls.hikkei.provider.JDBCIntegrationTest;
@@ -30,7 +31,7 @@ public class JDBCCategoryDataProviderNullIntegrationTest extends JDBCIntegration
 
   @Test
   void createCategory_nullName_throwsBadDataException() {
-    CategoryData data = new CategoryData(0, null, LocalDateTime.now());
+    CategoryData data = new CategoryData(0, null, LocalDateTime.now(), PermissionLevel.UNTRUSTED);
     BadDataException ex = assertThrows(BadDataException.class, () -> provider.createCategory(data));
     assertEquals(Config.invalid_name, ex.getMessage());
   }
@@ -47,11 +48,11 @@ public class JDBCCategoryDataProviderNullIntegrationTest extends JDBCIntegration
   }
 
   @Test
-  void updatePermission_nullLevel_allowsNullPermission() throws SQLException {
+  void updatePermission_nullLevel_allowsNullUserPermission() throws SQLException {
     int catId = create_category("cnullperm");
     int userId = create_user("ucnull", null);
 
-    assertDoesNotThrow(() -> provider.updatePermission(catId, userId, null));
+    assertDoesNotThrow(() -> provider.updateUserPermission(catId, userId, null));
   }
 
   @Test

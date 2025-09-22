@@ -89,7 +89,7 @@ public class CategoryController {
             }
           }
 
-          categoryProvider.updatePermission(
+          categoryProvider.updateUserPermission(
               body.getInteger("category"), body.getInteger("user"), permission);
           ctx.response().setStatusCode(204).end();
         });

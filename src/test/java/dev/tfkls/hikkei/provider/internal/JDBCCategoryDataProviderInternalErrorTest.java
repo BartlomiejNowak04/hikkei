@@ -61,9 +61,9 @@ class JDBCCategoryDataProviderInternalErrorTest {
   }
 
   @Test
-  void updatePermissionThrowsInternalError() {
+  void updateUserPermissionThrowsInternalError() {
     InternalErrorException ex =
-        assertThrows(InternalErrorException.class, () -> provider.updatePermission(1, 1, null));
+        assertThrows(InternalErrorException.class, () -> provider.updateUserPermission(1, 1, null));
     assertEquals(internal_error, ex.getMessage());
   }
 

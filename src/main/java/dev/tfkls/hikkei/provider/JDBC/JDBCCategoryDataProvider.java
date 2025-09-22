@@ -11,10 +11,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class JDBCCategoryDataProvider implements CategoryDataProvider {
   private final Connection connection;
@@ -97,8 +94,44 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
     }
   }
 
+  // TODO: TEST
+  public void updateDefaultPermission(int id, PermissionLevel permissionLevel)
+      throws InternalErrorException, BadDataException {
+    if (permissionLevel == null) throw new BadDataException(invalid_permission);
+
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "UPDATE categories SET default_permission=?::PermissionLevel WHERE id = ?")) {
+      st.setString(1, permissionLevel.name());
+      st.setInt(2, id);
+      st.executeUpdate();
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+  }
+
+  // TODO: TEST
   @Override
-  public void updatePermission(int categoryId, int userId, PermissionLevel level)
+  public Optional<PermissionLevel> getUserPermission(int categoryId, int userId)
+      throws InternalErrorException, BadDataException {
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "SELECT permission FROM user_category_current WHERE user_id = ? AND category_id = ?")) {
+      st.setInt(1, userId);
+      st.setInt(2, categoryId);
+      try (ResultSet rs = st.executeQuery()) {
+        if (!rs.next()) return Optional.empty();
+        String enumName = rs.getString("permission");
+        if (enumName == null) return Optional.empty();
+        else return Optional.of(PermissionLevel.valueOf(enumName));
+      }
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+  }
+
+  @Override
+  public void updateUserPermission(int categoryId, int userId, PermissionLevel level)
       throws InternalErrorException, BadDataException {
     try (PreparedStatement st =
         connection.prepareStatement("SELECT * FROM categories WHERE id = ?")) {
@@ -171,6 +204,9 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
   private CategoryData getCategoryData(ResultSet rs) throws SQLException {
     if (rs.getBoolean("deleted")) return CategoryData.DELETED;
     return new CategoryData(
-        rs.getInt("id"), rs.getString("name"), rs.getTimestamp("created").toLocalDateTime());
+        rs.getInt("id"),
+        rs.getString("name"),
+        rs.getTimestamp("created").toLocalDateTime(),
+        PermissionLevel.valueOf(rs.getString("default_permission")));
   }
 }
