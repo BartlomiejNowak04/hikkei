@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.server.routes.error;
 
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
@@ -7,6 +8,7 @@ import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.server.routes.RouteHandlerIntegrationTest;
+import io.restassured.http.Method;
 import io.vertx.core.json.JsonObject;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
@@ -63,7 +65,6 @@ public class ErrorUserRouteHandlerIntegrationTest extends RouteHandlerIntegratio
     testGetException("/api/user/categories/1", ie);
   }
 
-  /* TODO: refactor tests to take into account authentication, @tfkls
   @Test
   void createBadDataTest() throws Exception {
     when(userProvider.createUser(any())).thenThrow(bad);
@@ -75,7 +76,6 @@ public class ErrorUserRouteHandlerIntegrationTest extends RouteHandlerIntegratio
     when(userProvider.createUser(any())).thenThrow(ie);
     testException("/api/user/create", Method.POST, name, ie);
   }
-  */
 
   // TODO: mock session and uncomment
   //  @Test

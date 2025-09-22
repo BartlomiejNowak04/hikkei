@@ -1,16 +1,18 @@
 package dev.tfkls.hikkei.server;
 
+import dev.tfkls.hikkei.model.auth.AuthEventHandler;
+import dev.tfkls.hikkei.model.auth.AuthenticationProvider;
 import dev.tfkls.hikkei.model.auth.SessionProvider;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
 import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
+import dev.tfkls.hikkei.model.page.PermissionVerifier;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
-import dev.tfkls.hikkei.provider.auth.DummyAuthenticationProvider;
-import dev.tfkls.hikkei.provider.auth.StandardAuthEventHandler;
-import dev.tfkls.hikkei.provider.auth.StandardSessionProvider;
+import dev.tfkls.hikkei.provider.auth.*;
+import dev.tfkls.hikkei.provider.permission.DummyPermissionVerifier;
 import dev.tfkls.hikkei.provider.permission.StandardPermissionVerifier;
 import dev.tfkls.hikkei.server.handlers.FailureHandler;
 import dev.tfkls.hikkei.server.handlers.PermissionHandler;
@@ -23,6 +25,9 @@ import io.vertx.ext.web.handler.BodyHandler;
 import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.function.Function;
+import org.jetbrains.annotations.Nullable;
 
 public class MainVerticle extends VerticleBase {
   private final UserDataProvider userProvider;
@@ -33,6 +38,8 @@ public class MainVerticle extends VerticleBase {
   private final VersionProvider versionProvider;
   private final FileProvider fileProvider;
   private final Integer port;
+  private final URI baseUri;
+  private final @Nullable Map<String, Function<URI, AuthenticationProvider>> authMethods;
 
   public MainVerticle(
       UserDataProvider userProvider,
@@ -42,7 +49,9 @@ public class MainVerticle extends VerticleBase {
       CategoryDataProvider categoryProvider,
       VersionProvider versionProvider,
       FileProvider fileProvider,
-      Integer port) {
+      Integer port,
+      URI baseUri,
+      @Nullable Map<String, Function<URI, AuthenticationProvider>> authMethods) {
     super();
     this.userProvider = userProvider;
     this.pageProvider = pageProvider;
@@ -52,6 +61,8 @@ public class MainVerticle extends VerticleBase {
     this.versionProvider = versionProvider;
     this.fileProvider = fileProvider;
     this.port = port;
+    this.baseUri = baseUri;
+    this.authMethods = authMethods;
   }
 
   @Override
@@ -65,25 +76,33 @@ public class MainVerticle extends VerticleBase {
     CategoryRouteHandler categoryRoute =
         new CategoryRouteHandler(vertx, categoryProvider, userProvider);
 
-    SessionProvider sessionProvider =
-        new StandardSessionProvider(Duration.ofDays(7), LocalDateTime::now);
-    // TODO: move URI out as a parameter
-    AuthRouteHandler authRoute =
-        new AuthRouteHandler(
-            vertx,
-            URI.create("http://localhost:8000"),
-            new StandardAuthEventHandler(userProvider, sessionProvider));
-    // TODO: pass auth handlers via DI
-    authRoute.registerProvider(
-        "dummy", new DummyAuthenticationProvider(authRoute.getProviderURI("dummy")));
+    // * Auth configuration section *//
+    SessionProvider sessionProvider;
+    AuthEventHandler authEventHandler;
+    PermissionVerifier permissionVerifier;
+    if (authMethods != null) {
+      sessionProvider = new StandardSessionProvider(Duration.ofDays(7), LocalDateTime::now);
+      authEventHandler = new StandardAuthEventHandler(userProvider, sessionProvider);
+      permissionVerifier = new StandardPermissionVerifier(userProvider, categoryProvider);
+    } else {
+      sessionProvider = new DummySessionProvider();
+      authEventHandler = new DummyAuthEventHandler();
+      permissionVerifier = new DummyPermissionVerifier();
+    }
+
+    AuthRouteHandler authRoute = new AuthRouteHandler(vertx, baseUri, authEventHandler);
+    if (authMethods != null) {
+      for (var authEntry : authMethods.entrySet()) {
+        authRoute.registerProvider(
+            authEntry.getKey(),
+            authEntry.getValue().apply(authRoute.getProviderURI(authEntry.getKey())));
+      }
+    }
 
     Router router = Router.router(vertx);
     router.route("/api/*").failureHandler(new FailureHandler());
     router.route("/api/*").handler(new SessionHandler(sessionProvider));
-    router
-        .route("/api/*")
-        .handler(
-            new PermissionHandler(new StandardPermissionVerifier(userProvider, categoryProvider)));
+    router.route("/api/*").handler(new PermissionHandler(permissionVerifier));
 
     router
         .route("/api/*")

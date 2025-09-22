@@ -22,6 +22,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.net.URI;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
@@ -63,7 +64,9 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
                 categoryProvider,
                 versionProvider,
                 fileProvider,
-                port))
+                port,
+                URI.create(String.format("%s:%d", RestAssured.baseURI, port)),
+                null))
         .onComplete(testContext.succeedingThenComplete());
   }
 

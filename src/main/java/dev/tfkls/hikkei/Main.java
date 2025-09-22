@@ -14,6 +14,7 @@ import dev.tfkls.hikkei.server.MainVerticle;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvBuilder;
 import io.vertx.core.Vertx;
+import java.net.URI;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -29,6 +30,7 @@ public class Main {
     String file_dir = dotenv.get("FILE_DIRECTORY");
     String img_dir = dotenv.get("IMAGE_DIRECTORY");
     Integer port = Integer.valueOf(dotenv.get("PORT"));
+    URI baseUri = URI.create(dotenv.get("BASE_URI"));
     System.out.println("Read environment variables");
 
     Connection connection;
@@ -60,6 +62,8 @@ public class Main {
             categoryDataProvider,
             versionProvider,
             fileProvider,
-            port));
+            port,
+            baseUri,
+            null /* TODO: add way to add auth methods here */));
   }
 }

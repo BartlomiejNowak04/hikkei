@@ -132,6 +132,7 @@ public class UserController {
         });
   }
 
+  // TODO: TEST THIS
   public void updatePermission(RoutingContext ctx) {
     handle(
         ctx,
