@@ -273,4 +273,35 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     assertTrue(permissions.containsKey(catId));
     assertEquals(PermissionLevel.ADMIN, permissions.get(catId));
   }
+
+  @Test
+  void defaultMinimalPermissionIsNoAccess() throws Exception {
+    int userId = create_user("example", null);
+    assertEquals(PermissionLevel.NO_ACCESS, provider.getUserData(userId).minimalPermission());
+  }
+
+  @Test
+  void createdUserPermissionTest() throws Exception {
+    int userId =
+        provider.createUser(new UserData(null, "cupt", null, null, PermissionLevel.MODERATOR));
+
+    assertEquals(PermissionLevel.MODERATOR, provider.getUserData(userId).minimalPermission());
+  }
+
+  @Test
+  void changeMinimalPermissionTest() throws Exception {
+    int userId = create_user("cmpt", null);
+    provider.updateMinimalPermission(userId, PermissionLevel.ADMIN);
+
+    try (PreparedStatement st =
+        connection.prepareStatement("select * from users_with_data where id = ?")) {
+      st.setInt(1, userId);
+      try (ResultSet rs = st.executeQuery()) {
+        assertTrue(rs.next());
+        assertEquals(PermissionLevel.ADMIN.name(), rs.getString("minimal_permission"));
+      }
+    }
+
+    assertEquals(PermissionLevel.ADMIN, provider.getUserData(userId).minimalPermission());
+  }
 }

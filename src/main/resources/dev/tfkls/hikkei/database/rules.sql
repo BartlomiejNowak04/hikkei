@@ -40,12 +40,12 @@ DO $$
 END$$;
 
 CREATE RULE no_updates_users AS ON UPDATE TO users
-WHERE NEW.id<>OLD.id OR NEW.joined<>OLD.joined OR NEW.minimal_permission<>OLD.minimal_permission
+WHERE NEW.id<>OLD.id OR NEW.joined<>OLD.joined -- OR NEW.minimal_permission<>OLD.minimal_permission -- @tfkls: currently disabled, possibly refactor to match with username
 DO INSTEAD NOTHING;
 
 CREATE RULE no_updates_categories AS
 ON UPDATE TO categories
-WHERE NEW.id <> OLD.id OR NEW.created <> OLD.created OR NEW.default_permission<>OLD.default_permission
+WHERE NEW.id <> OLD.id OR NEW.created <> OLD.created -- OR NEW.default_permission<>OLD.default_permission -- @tfkls: currently disabled, possibly refactor to match with name
 DO INSTEAD NOTHING;
 
 CREATE RULE no_updates_pages AS

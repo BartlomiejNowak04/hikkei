@@ -150,6 +150,7 @@ public class JDBCUserDataProvider implements UserDataProvider {
   @Override
   public void updateMinimalPermission(int userId, PermissionLevel permissionLevel)
       throws BadDataException, InternalErrorException {
+    if (!doesUserExist(userId)) throw new BadDataException(invalid_user);
     if (permissionLevel == null) throw new BadDataException(invalid_permission);
 
     try (PreparedStatement st =
@@ -170,17 +171,6 @@ public class JDBCUserDataProvider implements UserDataProvider {
             "UPDATE users SET deleted = ?, date_deleted=now() WHERE id = ?")) {
       st.setBoolean(1, true);
       st.setInt(2, userId);
-      st.executeUpdate();
-    } catch (SQLException e) {
-      throw new InternalErrorException(internal_error);
-    }
-  }
-
-  // TODO: TEST THIS
-  @Override
-  public void dropUser(int userId) throws InternalErrorException {
-    try (PreparedStatement st = connection.prepareStatement("DELETE users WHERE id = ?")) {
-      st.setInt(1, userId);
       st.executeUpdate();
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
