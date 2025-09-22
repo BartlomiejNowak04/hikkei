@@ -2,6 +2,7 @@ package dev.tfkls.hikkei.server.controllers;
 
 import dev.tfkls.hikkei.model.auth.AuthEventHandler;
 import dev.tfkls.hikkei.model.auth.AuthenticationProvider;
+import dev.tfkls.hikkei.model.user.AuthData;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.web.RoutingContext;
 import java.net.URI;
@@ -44,7 +45,7 @@ public class AuthController {
   }
 
   protected interface ExtendedAuthenticationCallback {
-    void callback(String providerName, String token, RoutingContext ctx);
+    void callback(AuthData authData, RoutingContext ctx);
   }
 
   protected void handleRequest(
@@ -52,7 +53,7 @@ public class AuthController {
     URI redirectUri =
         auth.get(providerName)
             .requestAuthentication(
-                (token, new_ctx) -> callback.callback(providerName, token, new_ctx));
+                (token, new_ctx) -> callback.callback(new AuthData(providerName, token), new_ctx));
     ctx.redirect(redirectUri.toString()).await();
   }
 }

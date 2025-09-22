@@ -2,6 +2,7 @@ package dev.tfkls.hikkei.provider.auth;
 
 import dev.tfkls.hikkei.model.auth.AuthenticationCallback;
 import dev.tfkls.hikkei.model.auth.AuthenticationProvider;
+import dev.tfkls.hikkei.model.exceptions.AuthenticationException;
 import dev.tfkls.hikkei.util.BoundedMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -58,14 +59,14 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
       state = UUID.fromString(ctx.request().getParam("state"));
       callback = authRequests.remove(state).orElseThrow();
     } catch (IllegalArgumentException | NullPointerException | NoSuchElementException ex) {
-      ctx.fail(400);
+      ctx.fail(new AuthenticationException("OAuth2 flow error: unable to retrieve OAuth2 state."));
       return;
     }
     String code;
     try {
       code = Objects.requireNonNull(ctx.request().getParam("code"));
     } catch (NullPointerException ex) {
-      ctx.fail(400);
+      ctx.fail(new AuthenticationException("OAuth2 flow error: unable to retrieve OAuth2 code."));
       return;
     }
 
@@ -78,7 +79,7 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
 
       callback.onAuthenticate(infoAccessor.apply(oauthAuth.userInfo(userObj).await()), ctx);
     } catch (Exception ex) {
-      ctx.fail(400);
+      ctx.fail(new AuthenticationException("OAuth2 flow error: " + ex.getMessage()));
     }
   }
 

@@ -1,11 +1,12 @@
 package dev.tfkls.hikkei.model.auth;
 
+import dev.tfkls.hikkei.model.user.AuthData;
 import io.vertx.ext.web.RoutingContext;
 
 public interface AuthEventHandler {
-  void onLogin(String providerName, String token, RoutingContext ctx);
+  void onLogin(AuthData authData, RoutingContext ctx);
 
-  void onRegister(String providerName, String token, RoutingContext ctx);
+  void onRegister(AuthData authData, RoutingContext ctx);
 
-  void onMerge(String providerName, String token, RoutingContext ctx);
+  void onMerge(AuthData authData, RoutingContext ctx);
 }

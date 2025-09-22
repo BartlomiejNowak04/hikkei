@@ -2,6 +2,7 @@ package dev.tfkls.hikkei.provider.auth;
 
 import dev.tfkls.hikkei.model.auth.AuthEventHandler;
 import dev.tfkls.hikkei.model.auth.SessionProvider;
+import dev.tfkls.hikkei.model.exceptions.AuthenticationException;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.user.AuthData;
@@ -19,7 +20,7 @@ public class StandardAuthEventHandler implements AuthEventHandler {
 
   public StandardAuthEventHandler(
       UserDataProvider userDataProvider, SessionProvider sessionProvider) {
-    this(userDataProvider, sessionProvider, "HikkeiSession", "AuthenticatedUser");
+    this(userDataProvider, sessionProvider, "HikkeiSession", "UserIdentifier");
   }
 
   StandardAuthEventHandler(
@@ -34,60 +35,70 @@ public class StandardAuthEventHandler implements AuthEventHandler {
   }
 
   @Override
-  public void onLogin(String providerName, String token, RoutingContext ctx) {
+  public void onLogin(AuthData authData, RoutingContext ctx) {
     try {
-      UserData userData = userDataProvider.getUserByAuth(new AuthData(providerName, token));
+      UserData userData = userDataProvider.getUserByAuth(authData);
       UUID session = sessionProvider.createSession(userData.id());
       ctx.response()
           .addCookie(Cookie.cookie(cookieName, session.toString()).setMaxAge(60 * 60 * 24 * 365));
       ctx.redirect("/auth/success");
     } catch (InternalErrorException err) {
-      ctx.fail(500, err);
+      ctx.fail(err);
     } catch (NullPointerException err) {
-      ctx.fail(404, err);
+      ctx.fail(new AuthenticationException("Auth error: could not login user with provided data."));
     }
   }
 
   @Override
-  public void onRegister(String providerName, String token, RoutingContext ctx) {
+  public void onRegister(AuthData authData, RoutingContext ctx) {
+    checkIfAuthIsUnused(authData, ctx);
+
     int newUser = -1;
     try {
       newUser = userDataProvider.createUser(new UserData(UUID.randomUUID().toString()));
     } catch (InternalErrorException | BadDataException err) {
-      ctx.fail(500, err);
-    } catch (NullPointerException err) {
-      ctx.fail(404, err);
+      ctx.fail(err);
     }
     try {
-      userDataProvider.addUserAuthMethod(newUser, new AuthData(providerName, token));
+      userDataProvider.addUserAuthMethod(newUser, authData);
 
-      // i love code reuse :)
-      onLogin(providerName, token, ctx);
+      // NOTE: I love code reuse :)
+      onLogin(authData, ctx);
     } catch (InternalErrorException | BadDataException err) {
       try {
-        // TODO: drop user here instead
+        // NOTE: This may litter the DB with some users, but this should not matter.
         userDataProvider.deleteUser(newUser);
       } catch (InternalErrorException ignored) {
       }
       ctx.fail(500, err);
-    } catch (NullPointerException err) {
-      try {
-        userDataProvider.deleteUser(newUser);
-      } catch (InternalErrorException ignored) {
-      }
-      ctx.fail(404, err);
     }
   }
 
   @Override
-  public void onMerge(String providerName, String token, RoutingContext ctx) {
+  public void onMerge(AuthData authData, RoutingContext ctx) {
+    checkIfAuthIsUnused(authData, ctx);
+
     try {
       int userId = ctx.get(contextName);
-      userDataProvider.addUserAuthMethod(userId, new AuthData(providerName, token));
+      userDataProvider.addUserAuthMethod(userId, authData);
+      ctx.redirect("/auth/success");
     } catch (InternalErrorException | BadDataException err) {
       ctx.fail(500, err);
     } catch (NullPointerException err) {
       ctx.fail(404, err);
+    }
+  }
+
+  private void checkIfAuthIsUnused(AuthData authData, RoutingContext ctx) {
+    try {
+      UserData oldUser = userDataProvider.getUserByAuth(authData);
+      if (oldUser != null) {
+        ctx.fail(
+            new AuthenticationException(
+                "Auth error: user account with said credentials already exists."));
+      }
+    } catch (InternalErrorException err) {
+      ctx.fail(err);
     }
   }
 }

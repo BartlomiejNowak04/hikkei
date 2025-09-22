@@ -1,0 +1,154 @@
+package dev.tfkls.hikkei.auth;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import dev.tfkls.hikkei.model.auth.AuthEventHandler;
+import dev.tfkls.hikkei.model.auth.SessionProvider;
+import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.user.AuthData;
+import dev.tfkls.hikkei.model.user.UserData;
+import dev.tfkls.hikkei.model.user.UserDataProvider;
+import dev.tfkls.hikkei.provider.auth.StandardAuthEventHandler;
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.ext.web.RoutingContext;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+
+public class StandardAuthEventHandlerMockTest {
+  @Test
+  public void checkLoginSuccess() throws Exception {
+    var ctx = mock(RoutingContext.class);
+    var userP = mock(UserDataProvider.class);
+    var sessP = mock(SessionProvider.class);
+    var ctxResp = mock(HttpServerResponse.class);
+
+    AuthData authData = new AuthData("github", "bob123");
+    UUID sessionId = UUID.randomUUID();
+
+    when(userP.getUserByAuth(authData)).thenReturn(new UserData(1, "bob", null, null, null));
+    when(sessP.createSession(1)).thenReturn(sessionId);
+    when(ctx.response()).thenReturn(ctxResp);
+
+    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP);
+
+    authHandler.onLogin(authData, ctx);
+
+    verify(userP).getUserByAuth(authData);
+    verify(sessP).createSession(1);
+    verify(ctx).response();
+    verify(ctxResp).addCookie(any());
+    verify(ctx).redirect("/auth/success");
+
+    verifyNoMoreInteractions(ctx, userP, sessP, ctxResp);
+  }
+
+  @Test
+  public void checkLoginFailureNoUser() throws Exception {
+    var ctx = mock(RoutingContext.class);
+    var userP = mock(UserDataProvider.class);
+    var sessP = mock(SessionProvider.class);
+    var ctxResp = mock(HttpServerResponse.class);
+
+    AuthData authData = new AuthData("github", "bob123");
+    UUID sessionId = UUID.randomUUID();
+
+    when(userP.getUserByAuth(authData)).thenReturn(null);
+
+    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP);
+
+    authHandler.onLogin(authData, ctx);
+
+    verify(userP).getUserByAuth(authData);
+    verify(ctx).fail(any());
+
+    verifyNoMoreInteractions(ctx, userP, sessP, ctxResp);
+  }
+
+  @Test
+  public void checkRegisterSuccess() throws Exception {
+    var ctx = mock(RoutingContext.class);
+    var userP = mock(UserDataProvider.class);
+    var sessP = mock(SessionProvider.class);
+    var ctxResp = mock(HttpServerResponse.class);
+
+    AuthData authData = new AuthData("github", "bob123");
+    UUID sessionId = UUID.randomUUID();
+
+    when(userP.getUserByAuth(authData))
+        .thenReturn(null)
+        .thenReturn(new UserData(1, "bob", null, null, null));
+    when(userP.createUser(any())).thenReturn(1);
+
+    // onLogin dependencies
+    when(ctx.response()).thenReturn(ctxResp);
+    when(sessP.createSession(1)).thenReturn(sessionId);
+
+    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP);
+
+    authHandler.onRegister(authData, ctx);
+
+    verify(userP, times(2)).getUserByAuth(authData);
+    verify(userP).createUser(any());
+    verify(userP).addUserAuthMethod(1, authData);
+
+    // On login dependencies
+    verify(sessP).createSession(1);
+    verify(ctx).response();
+    verify(ctxResp).addCookie(any());
+    verify(ctx).redirect("/auth/success");
+
+    verifyNoMoreInteractions(ctx, userP, sessP, ctxResp);
+  }
+
+  @Test
+  public void checkRegisterFailure() throws Exception {
+    var ctx = mock(RoutingContext.class);
+    var userP = mock(UserDataProvider.class);
+    var sessP = mock(SessionProvider.class);
+    var ctxResp = mock(HttpServerResponse.class);
+
+    AuthData authData = new AuthData("github", "bob123");
+    UUID sessionId = UUID.randomUUID();
+
+    when(userP.getUserByAuth(authData)).thenReturn(new UserData(1, "bob", null, null, null));
+    doThrow(new RuntimeException()).when(ctx).fail(any(Throwable.class));
+
+    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP);
+
+    assertThrows(RuntimeException.class, () -> authHandler.onRegister(authData, ctx));
+
+    verify(userP).getUserByAuth(authData);
+    verify(ctx).fail(any(Throwable.class));
+
+    verifyNoMoreInteractions(ctx, userP, sessP, ctxResp);
+  }
+
+  @Test
+  public void checkRegisterRaceCondition() throws Exception {
+    var ctx = mock(RoutingContext.class);
+    var userP = mock(UserDataProvider.class);
+    var sessP = mock(SessionProvider.class);
+    var ctxResp = mock(HttpServerResponse.class);
+
+    AuthData authData = new AuthData("github", "bob123");
+    UUID sessionId = UUID.randomUUID();
+
+    when(userP.getUserByAuth(authData))
+        .thenReturn(null)
+        .thenReturn(new UserData(1, "bob", null, null, null));
+    when(userP.createUser(any())).thenReturn(1);
+    doThrow(new InternalErrorException("Race condition :O"))
+        .when(userP)
+        .addUserAuthMethod(1, authData);
+    doThrow(new RuntimeException()).when(ctx).fail(anyInt(), any(Throwable.class));
+
+    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP);
+
+    assertThrows(RuntimeException.class, () -> authHandler.onRegister(authData, ctx));
+
+    verify(ctx).fail(anyInt(), any(Throwable.class));
+  }
+
+  // TODO: add tests for onMerge
+}
