@@ -22,6 +22,7 @@ public class UserRouteHandler extends RouteHandler {
     router.post("/create").blockingHandler(controller::createUser);
     router.put("/update/name").blockingHandler(controller::updateName);
     router.put("/update/pfp").blockingHandler(controller::updatePfp);
+    router.put("/update/permission").blockingHandler(controller::updatePermission);
 
     router.delete("/delete").blockingHandler(controller::deleteUser);
   }

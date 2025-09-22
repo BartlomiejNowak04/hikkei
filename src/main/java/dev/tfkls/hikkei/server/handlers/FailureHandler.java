@@ -6,16 +6,27 @@ import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.HttpException;
 
 public class FailureHandler implements Handler<RoutingContext> {
   @Override
   public void handle(RoutingContext ctx) {
     Throwable e = ctx.failure();
+    if (ctx.response().ended()) {
+      return;
+    }
     if (!(e instanceof BadDataException)
         && !(e instanceof InternalErrorException)
-        && !(e instanceof AuthenticationException)) {
+        && !(e instanceof AuthenticationException)
+        && !(e instanceof HttpException)) {
       ctx.response().setStatusCode(500);
       ctx.json(new JsonObject().put("message", "Internal server error"));
+      // ctx.json(new JsonObject().put("message", e.toString()));
+    } else if (e instanceof HttpException) {
+      ctx.response().setStatusCode(((HttpException) e).getStatusCode());
+      ctx.json(
+          new JsonObject()
+              .put("message", e.getCause() == null ? e.getMessage() : e.getCause().getMessage()));
     } else {
       ctx.response().setStatusCode(e instanceof InternalErrorException ? 500 : 400);
       ctx.json(new JsonObject().put("message", e.getMessage()));

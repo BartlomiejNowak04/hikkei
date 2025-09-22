@@ -12,6 +12,7 @@ import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.provider.auth.StandardAuthEventHandler;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.HttpException;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -57,10 +58,9 @@ public class StandardAuthEventHandlerMockTest {
 
     AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP);
 
-    authHandler.onLogin(authData, ctx);
+    assertThrows(HttpException.class, () -> authHandler.onLogin(authData, ctx));
 
     verify(userP).getUserByAuth(authData);
-    verify(ctx).fail(any());
 
     verifyNoMoreInteractions(ctx, userP, sessP, ctxResp);
   }
@@ -112,14 +112,12 @@ public class StandardAuthEventHandlerMockTest {
     UUID sessionId = UUID.randomUUID();
 
     when(userP.getUserByAuth(authData)).thenReturn(new UserData(1, "bob", null, null, null));
-    doThrow(new RuntimeException()).when(ctx).fail(any(Throwable.class));
 
     AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP);
 
-    assertThrows(RuntimeException.class, () -> authHandler.onRegister(authData, ctx));
+    assertThrows(HttpException.class, () -> authHandler.onRegister(authData, ctx));
 
     verify(userP).getUserByAuth(authData);
-    verify(ctx).fail(any(Throwable.class));
 
     verifyNoMoreInteractions(ctx, userP, sessP, ctxResp);
   }
@@ -141,13 +139,10 @@ public class StandardAuthEventHandlerMockTest {
     doThrow(new InternalErrorException("Race condition :O"))
         .when(userP)
         .addUserAuthMethod(1, authData);
-    doThrow(new RuntimeException()).when(ctx).fail(anyInt(), any(Throwable.class));
 
     AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP);
 
-    assertThrows(RuntimeException.class, () -> authHandler.onRegister(authData, ctx));
-
-    verify(ctx).fail(anyInt(), any(Throwable.class));
+    assertThrows(HttpException.class, () -> authHandler.onRegister(authData, ctx));
   }
 
   // TODO: add tests for onMerge

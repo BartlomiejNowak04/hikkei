@@ -15,4 +15,14 @@ public enum PermissionLevel {
   public static PermissionLevel max(PermissionLevel one, PermissionLevel two) {
     return isLess(one, two) ? two : one;
   }
+
+  public static PermissionLevel successor(PermissionLevel level) {
+    return switch (level) {
+      case NO_ACCESS -> UNTRUSTED;
+      case UNTRUSTED -> TRUSTED;
+      case TRUSTED -> MODERATOR;
+      case MODERATOR -> ADMIN;
+      case ADMIN, SUPER_ADMIN -> SUPER_ADMIN;
+    };
+  }
 }

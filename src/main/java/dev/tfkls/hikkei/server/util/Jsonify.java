@@ -42,13 +42,15 @@ public class Jsonify {
         .put("id", user.id())
         .put("username", user.username())
         .put("picture", user.picture())
-        .put("joined", user.joinedAt() == null ? null : user.joinedAt().toString());
+        .put("joined", user.joinedAt() == null ? null : user.joinedAt().toString())
+        .put("minimal_permission", user.minimalPermission().name());
   }
 
   public static JsonObject categoryToJson(CategoryData category) {
     return new JsonObject()
         .put("id", category.id())
         .put("name", category.name())
-        .put("created", category.created() == null ? null : category.created().toString());
+        .put("created", category.created() == null ? null : category.created().toString())
+        .put("default_permission", category.defaultPermission().name());
   }
 }

@@ -11,6 +11,7 @@ import io.vertx.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.ext.auth.oauth2.OAuth2AuthorizationURL;
 import io.vertx.ext.auth.oauth2.Oauth2Credentials;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.HttpException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -59,15 +60,15 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
       state = UUID.fromString(ctx.request().getParam("state"));
       callback = authRequests.remove(state).orElseThrow();
     } catch (IllegalArgumentException | NullPointerException | NoSuchElementException ex) {
-      ctx.fail(new AuthenticationException("OAuth2 flow error: unable to retrieve OAuth2 state."));
-      return;
+      throw new HttpException(
+          400, new AuthenticationException("OAuth2 flow error: unable to retrieve OAuth2 state."));
     }
     String code;
     try {
       code = Objects.requireNonNull(ctx.request().getParam("code"));
     } catch (NullPointerException ex) {
-      ctx.fail(new AuthenticationException("OAuth2 flow error: unable to retrieve OAuth2 code."));
-      return;
+      throw new HttpException(
+          400, new AuthenticationException("OAuth2 flow error: unable to retrieve OAuth2 code."));
     }
 
     try {
@@ -79,7 +80,7 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
 
       callback.onAuthenticate(infoAccessor.apply(oauthAuth.userInfo(userObj).await()), ctx);
     } catch (Exception ex) {
-      ctx.fail(new AuthenticationException("OAuth2 flow error: " + ex.getMessage()));
+      throw new HttpException(400);
     }
   }
 

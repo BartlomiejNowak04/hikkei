@@ -20,5 +20,6 @@ public class PermissionHandler implements Handler<RoutingContext> {
   @Override
   public void handle(RoutingContext ctx) {
     ctx.put(contextName, verifier);
+    ctx.next();
   }
 }

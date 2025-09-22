@@ -11,6 +11,7 @@ import dev.tfkls.hikkei.model.file.StoredFile;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
+import dev.tfkls.hikkei.server.util.AccessManager;
 import dev.tfkls.hikkei.server.util.Jsonify;
 import dev.tfkls.hikkei.server.util.Type;
 import io.vertx.core.buffer.Buffer;
@@ -18,9 +19,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.HttpException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Objects;
 
 public class UserController {
   private final UserDataProvider userProvider;
@@ -56,7 +59,7 @@ public class UserController {
 
   public void updatePfp(RoutingContext ctx) {
     try {
-      Integer id = ctx.get("id");
+      int id = AccessManager.requireUser(ctx);
       if (!userProvider.doesUserExist(id)) throw new BadDataException("Incorrect parameter: id");
       if (ctx.fileUploads().size() != 1)
         throw new BadDataException("Exactly one file must be supplied");
@@ -122,9 +125,38 @@ public class UserController {
         Map.of("name", Type.Str),
         null,
         body -> {
+          AccessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
           int id = userProvider.createUser(new UserData(body.getString("name")));
           ctx.response().setStatusCode(201);
           ctx.json(new JsonObject().put("id", id));
+        });
+  }
+
+  public void updatePermission(RoutingContext ctx) {
+    handle(
+        ctx,
+        Map.of("id", Type.Int, "permission", Type.Str),
+        null,
+        body -> {
+          PermissionLevel newLevel;
+          try {
+            newLevel = PermissionLevel.valueOf(body.getString("permission"));
+          } catch (IllegalArgumentException e) {
+            throw new HttpException(400, "Invalid permission enum value.");
+          }
+          UserData userData;
+          try {
+            userData = Objects.requireNonNull(userProvider.getUserData(body.getInteger("id")));
+          } catch (NullPointerException e) {
+            throw new HttpException(404, "User not found.");
+          }
+          PermissionLevel oldLevel = userData.minimalPermission();
+          PermissionLevel maxLevel = PermissionLevel.max(newLevel, oldLevel);
+
+          AccessManager.verifyPermission(ctx, PermissionLevel.successor(maxLevel));
+
+          userProvider.updateMinimalPermission(userData.id(), newLevel);
+          ctx.response().setStatusCode(200).end();
         });
   }
 
@@ -134,7 +166,7 @@ public class UserController {
         Map.of("name", Type.Str),
         null,
         body -> {
-          Integer id = ctx.get("id");
+          int id = AccessManager.requireUser(ctx);
           userProvider.updateUsername(id, body.getString("name"));
           ctx.response().setStatusCode(204).end();
         });
@@ -146,7 +178,7 @@ public class UserController {
         null,
         null,
         body -> {
-          Integer id = ctx.get("id");
+          int id = AccessManager.requireUser(ctx);
           userProvider.deleteUser(id);
           ctx.response().setStatusCode(204).end();
         });

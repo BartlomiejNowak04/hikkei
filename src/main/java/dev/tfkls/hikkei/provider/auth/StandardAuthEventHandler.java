@@ -10,6 +10,7 @@ import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import io.vertx.core.http.Cookie;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.HttpException;
 import java.util.UUID;
 
 public class StandardAuthEventHandler implements AuthEventHandler {
@@ -43,9 +44,10 @@ public class StandardAuthEventHandler implements AuthEventHandler {
           .addCookie(Cookie.cookie(cookieName, session.toString()).setMaxAge(60 * 60 * 24 * 365));
       ctx.redirect("/auth/success");
     } catch (InternalErrorException err) {
-      ctx.fail(err);
+      throw new HttpException(500, err);
     } catch (NullPointerException err) {
-      ctx.fail(new AuthenticationException("Auth error: could not login user with provided data."));
+      throw new HttpException(
+          400, new AuthenticationException("Auth error: could not login user with provided data."));
     }
   }
 
@@ -57,7 +59,7 @@ public class StandardAuthEventHandler implements AuthEventHandler {
     try {
       newUser = userDataProvider.createUser(new UserData(UUID.randomUUID().toString()));
     } catch (InternalErrorException | BadDataException err) {
-      ctx.fail(err);
+      throw new HttpException(500, err);
     }
     try {
       userDataProvider.addUserAuthMethod(newUser, authData);
@@ -70,7 +72,7 @@ public class StandardAuthEventHandler implements AuthEventHandler {
         userDataProvider.deleteUser(newUser);
       } catch (InternalErrorException ignored) {
       }
-      ctx.fail(500, err);
+      throw new HttpException(500, err);
     }
   }
 
@@ -83,9 +85,9 @@ public class StandardAuthEventHandler implements AuthEventHandler {
       userDataProvider.addUserAuthMethod(userId, authData);
       ctx.redirect("/auth/success");
     } catch (InternalErrorException | BadDataException err) {
-      ctx.fail(500, err);
+      throw new HttpException(500, err);
     } catch (NullPointerException err) {
-      ctx.fail(404, err);
+      throw new HttpException(404, err);
     }
   }
 
@@ -93,12 +95,13 @@ public class StandardAuthEventHandler implements AuthEventHandler {
     try {
       UserData oldUser = userDataProvider.getUserByAuth(authData);
       if (oldUser != null) {
-        ctx.fail(
+        throw new HttpException(
+            400,
             new AuthenticationException(
                 "Auth error: user account with said credentials already exists."));
       }
     } catch (InternalErrorException err) {
-      ctx.fail(err);
+      throw new HttpException(500, err);
     }
   }
 }

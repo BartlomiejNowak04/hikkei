@@ -12,6 +12,7 @@ import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.provider.permission.StandardPermissionVerifier;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.HttpException;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -45,11 +46,11 @@ public class StandardPermissionVerifierMockTest {
 
     PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    permissionVerifier.verify(ctx, PermissionLevel.UNTRUSTED);
+    assertThrows(
+        HttpException.class, () -> permissionVerifier.verify(ctx, PermissionLevel.UNTRUSTED));
 
     verify(ctx).get("UserIdentifier");
     verify(ctx).get("CategoryIdentifier");
-    verify(ctx).fail(401);
     verifyNoMoreInteractions(ctx, userP, categoryP);
   }
 
@@ -89,11 +90,11 @@ public class StandardPermissionVerifierMockTest {
 
     PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    permissionVerifier.verify(ctx, PermissionLevel.SUPER_ADMIN);
+    assertThrows(
+        HttpException.class, () -> permissionVerifier.verify(ctx, PermissionLevel.SUPER_ADMIN));
 
     verify(ctx).get("UserIdentifier");
     verify(ctx).get("CategoryIdentifier");
-    verify(ctx).fail(403);
     verify(userP).getUserData(1);
     verifyNoMoreInteractions(ctx, userP, categoryP);
   }
@@ -134,11 +135,11 @@ public class StandardPermissionVerifierMockTest {
 
     PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    permissionVerifier.verify(ctx, PermissionLevel.TRUSTED);
+    assertThrows(
+        HttpException.class, () -> permissionVerifier.verify(ctx, PermissionLevel.TRUSTED));
 
     verify(ctx).get("UserIdentifier");
     verify(ctx).get("CategoryIdentifier");
-    verify(ctx).fail(401);
     verify(categoryP).getById(1);
     verifyNoMoreInteractions(ctx, userP, categoryP);
   }
@@ -186,11 +187,11 @@ public class StandardPermissionVerifierMockTest {
     when(categoryP.getUserPermission(2, 1)).thenReturn(Optional.empty());
     PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    permissionVerifier.verify(ctx, PermissionLevel.TRUSTED);
+    assertThrows(
+        HttpException.class, () -> permissionVerifier.verify(ctx, PermissionLevel.TRUSTED));
 
     verify(ctx).get("UserIdentifier");
     verify(ctx).get("CategoryIdentifier");
-    verify(ctx).fail(403);
     verify(userP).getUserData(1);
     verify(categoryP).getById(2);
     verify(categoryP).getUserPermission(2, 1);
@@ -241,11 +242,11 @@ public class StandardPermissionVerifierMockTest {
 
     PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    permissionVerifier.verify(ctx, PermissionLevel.SUPER_ADMIN);
+    assertThrows(
+        HttpException.class, () -> permissionVerifier.verify(ctx, PermissionLevel.SUPER_ADMIN));
 
     verify(ctx).get("UserIdentifier");
     verify(ctx).get("CategoryIdentifier");
-    verify(ctx).fail(403);
     verify(userP).getUserData(1);
     verify(categoryP).getById(2);
     verify(categoryP).getUserPermission(2, 1);
@@ -296,11 +297,11 @@ public class StandardPermissionVerifierMockTest {
         .thenReturn(new CategoryData(2, "example", null, PermissionLevel.UNTRUSTED));
     when(categoryP.getUserPermission(2, 1)).thenReturn(Optional.of(PermissionLevel.TRUSTED));
 
-    permissionVerifier.verify(ctx, PermissionLevel.SUPER_ADMIN);
+    assertThrows(
+        HttpException.class, () -> permissionVerifier.verify(ctx, PermissionLevel.SUPER_ADMIN));
 
     verify(ctx).get("UserIdentifier");
     verify(ctx).get("CategoryIdentifier");
-    verify(ctx).fail(403);
     verify(userP).getUserData(1);
     verify(categoryP).getById(2);
     verify(categoryP).getUserPermission(2, 1);
@@ -317,18 +318,15 @@ public class StandardPermissionVerifierMockTest {
     InternalErrorException exc = new InternalErrorException("");
     when(userP.getUserData(1)).thenThrow(exc);
 
-    var runtimeMarker = new RuntimeException("expected error");
-    doThrow(runtimeMarker).when(ctx).fail(500, exc);
     var categoryP = mock(CategoryDataProvider.class);
 
     PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
     assertThrows(
-        RuntimeException.class, () -> permissionVerifier.verify(ctx, PermissionLevel.UNTRUSTED));
+        HttpException.class, () -> permissionVerifier.verify(ctx, PermissionLevel.UNTRUSTED));
 
     verify(ctx).get("UserIdentifier");
     verify(ctx).get("CategoryIdentifier");
-    verify(ctx).fail(500, exc);
     verify(userP).getUserData(1);
     verifyNoMoreInteractions(ctx, userP, categoryP);
   }

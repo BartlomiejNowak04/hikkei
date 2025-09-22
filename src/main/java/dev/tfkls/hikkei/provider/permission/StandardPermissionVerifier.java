@@ -7,6 +7,7 @@ import dev.tfkls.hikkei.model.page.PermissionVerifier;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.HttpException;
 import java.util.Optional;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,7 +43,7 @@ public class StandardPermissionVerifier implements PermissionVerifier {
       try {
         categoryLevel = categoryDataProvider.getById((int) categoryId).defaultPermission();
       } catch (InternalErrorException err) {
-        ctx.fail(500, err);
+        throw new HttpException(500, err);
       }
     }
 
@@ -50,7 +51,7 @@ public class StandardPermissionVerifier implements PermissionVerifier {
       try {
         userLevel = userDataProvider.getUserData((int) userId).minimalPermission();
       } catch (InternalErrorException err) {
-        ctx.fail(500, err);
+        throw new HttpException(500, err);
       }
 
       if (categoryId != null) {
@@ -61,7 +62,7 @@ public class StandardPermissionVerifier implements PermissionVerifier {
             categoryLevel = jointPermission.get();
           }
         } catch (InternalErrorException | BadDataException err) {
-          ctx.fail(500, err);
+          throw new HttpException(500, err);
         }
       }
     }
@@ -70,9 +71,9 @@ public class StandardPermissionVerifier implements PermissionVerifier {
 
     if (PermissionLevel.isLess(trueLevel, targetLevel)) {
       if (userId == null) {
-        ctx.fail(401);
+        throw new HttpException(401, "You may need to login to access this resource");
       } else {
-        ctx.fail(403);
+        throw new HttpException(403, "You do not have permission to access this resource");
       }
     }
   }
