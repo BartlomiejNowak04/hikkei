@@ -97,6 +97,12 @@ The frontend application communicates with the backend server through an API. Be
     - POST `create`: create a category, params: String name
     - PUT `update/name`: update category name, params: Integer id, String name
     - DELETE `delete`: delete a category, params: Integer id
+- `/api/auth`:
+    - GET `/methods`: get available auth methods (same as above)
+    - GET `/login/:method`: login a user with the specified method
+    - GET `/register/:method`: register a user with the specified method
+    - GET `/merge/:method`: add a new auth method for a user
+    - *NOTE: as the login/register/merge endpoints begin an auth flow, the client should be redirected to them directly*
 
 
 ## Setup
