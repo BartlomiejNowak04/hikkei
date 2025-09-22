@@ -27,7 +27,7 @@ public class AuthRouteHandler extends RouteHandler {
   private final URI baseUri;
   private final AuthController controller;
 
-  URI getProviderURI(String providerName) {
+  public URI getProviderURI(String providerName) {
     try {
       return new URI(baseUri + "/auth/callback/" + providerName);
     } catch (URISyntaxException e) {
@@ -35,7 +35,7 @@ public class AuthRouteHandler extends RouteHandler {
     }
   }
 
-  AuthRouteHandler registerProvider(String name, AuthenticationProvider provider) {
+  public AuthRouteHandler registerProvider(String name, AuthenticationProvider provider) {
     controller.registerProvider(name, provider);
     router.route("/auth/callback/" + name).blockingHandler(provider);
     router.route("/auth/login/" + name).blockingHandler(ctx -> controller.handleLogin(name, ctx));

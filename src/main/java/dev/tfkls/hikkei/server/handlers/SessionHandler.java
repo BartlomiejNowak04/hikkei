@@ -8,11 +8,11 @@ import java.util.OptionalInt;
 import java.util.UUID;
 
 public class SessionHandler implements Handler<RoutingContext> {
-  SessionHandler(SessionProvider provider) {
+  public SessionHandler(SessionProvider provider) {
     this(provider, "HikkeiSession", "AuthenticatedUser");
   }
 
-  SessionHandler(SessionProvider provider, String cookieName, String contextName) {
+  public SessionHandler(SessionProvider provider, String cookieName, String contextName) {
     this.provider = provider;
     this.cookieName = cookieName;
     this.contextName = contextName;

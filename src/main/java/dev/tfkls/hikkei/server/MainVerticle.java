@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.server;
 
+import dev.tfkls.hikkei.model.auth.SessionProvider;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
 import dev.tfkls.hikkei.model.file.FileProvider;
@@ -7,12 +8,19 @@ import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
+import dev.tfkls.hikkei.provider.auth.DummyAuthenticationProvider;
+import dev.tfkls.hikkei.provider.auth.StandardAuthEventHandler;
+import dev.tfkls.hikkei.provider.auth.StandardSessionProvider;
 import dev.tfkls.hikkei.server.handlers.FailureHandler;
+import dev.tfkls.hikkei.server.handlers.SessionHandler;
 import dev.tfkls.hikkei.server.routes.*;
 import io.vertx.core.Future;
 import io.vertx.core.VerticleBase;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
+import java.net.URI;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 public class MainVerticle extends VerticleBase {
   private final UserDataProvider userProvider;
@@ -55,11 +63,25 @@ public class MainVerticle extends VerticleBase {
     CategoryRouteHandler categoryRoute =
         new CategoryRouteHandler(vertx, categoryProvider, userProvider);
 
+    SessionProvider sessionProvider =
+        new StandardSessionProvider(Duration.ofDays(7), LocalDateTime::now);
+    // TODO: move URI out as a parameter
+    AuthRouteHandler authRoute =
+        new AuthRouteHandler(
+            vertx,
+            URI.create("http://localhost"),
+            new StandardAuthEventHandler(userProvider, sessionProvider));
+    // TODO: pass auth handlers via DI
+    authRoute.registerProvider(
+        "dummy", new DummyAuthenticationProvider(authRoute.getProviderURI("dummy")));
+
     Router router = Router.router(vertx);
     router.route("/api/*").failureHandler(new FailureHandler());
+    router.route("/api/*").handler(new SessionHandler(sessionProvider));
     router
         .route("/api/*")
         .handler(BodyHandler.create().setDeleteUploadedFilesOnEnd(true).setBodyLimit(-1));
+    router.route("/api/auth/*").subRouter(authRoute.getRouter());
     router.route("/api/user/*").subRouter(userRoute.getRouter());
     router.route("/api/page/*").subRouter(pageRoute.getRouter());
     router.route("/api/revision/*").subRouter(revisionRoute.getRouter());

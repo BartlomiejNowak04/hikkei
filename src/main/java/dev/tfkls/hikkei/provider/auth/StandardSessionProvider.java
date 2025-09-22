@@ -22,7 +22,7 @@ public class StandardSessionProvider implements SessionProvider {
     LocalDateTime expiry;
   }
 
-  StandardSessionProvider(Duration expiry, ClockView clockView) {
+  public StandardSessionProvider(Duration expiry, ClockView clockView) {
     this.expiry = expiry;
     this.clockView = clockView;
 
