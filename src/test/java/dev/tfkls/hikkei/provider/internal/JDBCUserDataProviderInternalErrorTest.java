@@ -62,7 +62,7 @@ public class JDBCUserDataProviderInternalErrorTest {
 
   @Test
   void createUserThrowsInternalError() {
-    UserData user = new UserData(1, "test", new byte[] {}, null);
+    UserData user = new UserData(1, "test", new byte[] {}, null, null);
     InternalErrorException ex =
         assertThrows(InternalErrorException.class, () -> provider.createUser(user));
     assertEquals(internal_error, ex.getMessage());

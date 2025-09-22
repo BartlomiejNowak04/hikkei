@@ -22,7 +22,12 @@ public interface UserDataProvider {
   void updateUserPicture(int userId, byte[] picture)
       throws BadDataException, InternalErrorException;
 
+  void updateMinimalPermission(int userId, PermissionLevel permissionLevel)
+      throws BadDataException, InternalErrorException;
+
   void deleteUser(int userId) throws InternalErrorException;
+
+  void dropUser(int userId) throws InternalErrorException;
 
   void addUserAuthMethod(int userId, AuthData auth) throws BadDataException, InternalErrorException;
 

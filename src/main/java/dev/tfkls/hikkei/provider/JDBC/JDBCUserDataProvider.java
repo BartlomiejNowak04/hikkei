@@ -89,10 +89,11 @@ public class JDBCUserDataProvider implements UserDataProvider {
     // NOTE: decided not to allow join date other than default, nor to add deleted user accounts
     try (PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO users_with_data (username, picture) VALUES (?, ?)",
+            "INSERT INTO users_with_data (username, picture, minimal_permission) VALUES (?, ?, ?::PermissionLevel)",
             Statement.RETURN_GENERATED_KEYS)) {
       st.setString(1, data.username());
       st.setBytes(2, data.picture());
+      st.setString(3, data.minimalPermission().name());
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
@@ -145,6 +146,23 @@ public class JDBCUserDataProvider implements UserDataProvider {
     }
   }
 
+  // TODO: TEST THIS
+  @Override
+  public void updateMinimalPermission(int userId, PermissionLevel permissionLevel)
+      throws BadDataException, InternalErrorException {
+    if (permissionLevel == null) throw new BadDataException(invalid_permission);
+
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "UPDATE users SET minimal_permission = ?::PermissionLevel WHERE id = ?")) {
+      st.setString(1, permissionLevel.name());
+      st.setInt(2, userId);
+      st.executeUpdate();
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+  }
+
   @Override
   public void deleteUser(int userId) throws InternalErrorException {
     try (PreparedStatement st =
@@ -152,6 +170,17 @@ public class JDBCUserDataProvider implements UserDataProvider {
             "UPDATE users SET deleted = ?, date_deleted=now() WHERE id = ?")) {
       st.setBoolean(1, true);
       st.setInt(2, userId);
+      st.executeUpdate();
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+  }
+
+  // TODO: TEST THIS
+  @Override
+  public void dropUser(int userId) throws InternalErrorException {
+    try (PreparedStatement st = connection.prepareStatement("DELETE users WHERE id = ?")) {
+      st.setInt(1, userId);
       st.executeUpdate();
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
@@ -228,6 +257,7 @@ public class JDBCUserDataProvider implements UserDataProvider {
         rs.getInt("id"),
         rs.getString("username"),
         rs.getBytes("picture"),
-        rs.getTimestamp("joined").toLocalDateTime());
+        rs.getTimestamp("joined").toLocalDateTime(),
+        PermissionLevel.valueOf(rs.getString("minimal_permission")));
   }
 }
