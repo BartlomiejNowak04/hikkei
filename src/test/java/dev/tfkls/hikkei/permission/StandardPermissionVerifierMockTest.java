@@ -1,4 +1,4 @@
-package dev.tfkls.hikkei.auth;
+package dev.tfkls.hikkei.permission;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -6,44 +6,49 @@ import static org.mockito.Mockito.*;
 import dev.tfkls.hikkei.model.category.CategoryData;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.page.PermissionVerifier;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
-import dev.tfkls.hikkei.server.handlers.AuthHandler;
+import dev.tfkls.hikkei.provider.permission.StandardPermissionVerifier;
 import io.vertx.ext.web.RoutingContext;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-public class AuthHandlerMockTest {
+public class StandardPermissionVerifierMockTest {
   @Test
   public void noUserNoCategorySuccess() {
     var ctx = mock(RoutingContext.class);
-    when(ctx.get("AuthenticatedUser")).thenReturn(null);
+    when(ctx.get("UserIdentifier")).thenReturn(null);
+    when(ctx.get("CategoryIdentifier")).thenReturn(null);
 
     var userP = mock(UserDataProvider.class);
     var categoryP = mock(CategoryDataProvider.class);
 
-    AuthHandler authHandler = new AuthHandler(userP, categoryP);
+    PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    authHandler.verify(ctx, PermissionLevel.NO_ACCESS, null);
+    permissionVerifier.verify(ctx, PermissionLevel.NO_ACCESS);
 
-    verify(ctx).get("AuthenticatedUser");
+    verify(ctx).get("UserIdentifier");
+    verify(ctx).get("CategoryIdentifier");
     verifyNoMoreInteractions(ctx, userP, categoryP);
   }
 
   @Test
   public void noUserNoCategoryFailure() {
     var ctx = mock(RoutingContext.class);
-    when(ctx.get("AuthenticatedUser")).thenReturn(null);
+    when(ctx.get("UserIdentifier")).thenReturn(null);
+    when(ctx.get("CategoryIdentifier")).thenReturn(null);
 
     var userP = mock(UserDataProvider.class);
     var categoryP = mock(CategoryDataProvider.class);
 
-    AuthHandler authHandler = new AuthHandler(userP, categoryP);
+    PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    authHandler.verify(ctx, PermissionLevel.UNTRUSTED, null);
+    permissionVerifier.verify(ctx, PermissionLevel.UNTRUSTED);
 
-    verify(ctx).get("AuthenticatedUser");
+    verify(ctx).get("UserIdentifier");
+    verify(ctx).get("CategoryIdentifier");
     verify(ctx).fail(401);
     verifyNoMoreInteractions(ctx, userP, categoryP);
   }
@@ -51,7 +56,8 @@ public class AuthHandlerMockTest {
   @Test
   public void yesUserNoCategorySuccess() throws Exception {
     var ctx = mock(RoutingContext.class);
-    when(ctx.get("AuthenticatedUser")).thenReturn(1);
+    when(ctx.get("UserIdentifier")).thenReturn(1);
+    when(ctx.get("CategoryIdentifier")).thenReturn(null);
 
     var userP = mock(UserDataProvider.class);
     when(userP.getUserData(1))
@@ -59,11 +65,12 @@ public class AuthHandlerMockTest {
 
     var categoryP = mock(CategoryDataProvider.class);
 
-    AuthHandler authHandler = new AuthHandler(userP, categoryP);
+    PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    authHandler.verify(ctx, PermissionLevel.TRUSTED, null);
+    permissionVerifier.verify(ctx, PermissionLevel.TRUSTED);
 
-    verify(ctx).get("AuthenticatedUser");
+    verify(ctx).get("UserIdentifier");
+    verify(ctx).get("CategoryIdentifier");
     verify(userP).getUserData(1);
     verifyNoMoreInteractions(ctx, userP, categoryP);
   }
@@ -71,7 +78,8 @@ public class AuthHandlerMockTest {
   @Test
   public void yesUserNoCategoryFailure() throws Exception {
     var ctx = mock(RoutingContext.class);
-    when(ctx.get("AuthenticatedUser")).thenReturn(1);
+    when(ctx.get("UserIdentifier")).thenReturn(1);
+    when(ctx.get("CategoryIdentifier")).thenReturn(null);
 
     var userP = mock(UserDataProvider.class);
     when(userP.getUserData(1))
@@ -79,11 +87,12 @@ public class AuthHandlerMockTest {
 
     var categoryP = mock(CategoryDataProvider.class);
 
-    AuthHandler authHandler = new AuthHandler(userP, categoryP);
+    PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    authHandler.verify(ctx, PermissionLevel.SUPER_ADMIN, null);
+    permissionVerifier.verify(ctx, PermissionLevel.SUPER_ADMIN);
 
-    verify(ctx).get("AuthenticatedUser");
+    verify(ctx).get("UserIdentifier");
+    verify(ctx).get("CategoryIdentifier");
     verify(ctx).fail(403);
     verify(userP).getUserData(1);
     verifyNoMoreInteractions(ctx, userP, categoryP);
@@ -92,7 +101,8 @@ public class AuthHandlerMockTest {
   @Test
   public void noUserYesCategorySuccess() throws Exception {
     var ctx = mock(RoutingContext.class);
-    when(ctx.get("AuthenticatedUser")).thenReturn(null);
+    when(ctx.get("UserIdentifier")).thenReturn(null);
+    when(ctx.get("CategoryIdentifier")).thenReturn(1);
 
     var userP = mock(UserDataProvider.class);
 
@@ -100,11 +110,12 @@ public class AuthHandlerMockTest {
     when(categoryP.getById(1))
         .thenReturn(new CategoryData(1, "example", null, PermissionLevel.UNTRUSTED));
 
-    AuthHandler authHandler = new AuthHandler(userP, categoryP);
+    PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    authHandler.verify(ctx, PermissionLevel.NO_ACCESS, 1);
+    permissionVerifier.verify(ctx, PermissionLevel.NO_ACCESS);
 
-    verify(ctx).get("AuthenticatedUser");
+    verify(ctx).get("UserIdentifier");
+    verify(ctx).get("CategoryIdentifier");
     verify(categoryP).getById(1);
     verifyNoMoreInteractions(ctx, userP, categoryP);
   }
@@ -112,7 +123,8 @@ public class AuthHandlerMockTest {
   @Test
   public void noUserYesCategoryFailure() throws Exception {
     var ctx = mock(RoutingContext.class);
-    when(ctx.get("AuthenticatedUser")).thenReturn(null);
+    when(ctx.get("UserIdentifier")).thenReturn(null);
+    when(ctx.get("CategoryIdentifier")).thenReturn(1);
 
     var userP = mock(UserDataProvider.class);
 
@@ -120,11 +132,12 @@ public class AuthHandlerMockTest {
     when(categoryP.getById(1))
         .thenReturn(new CategoryData(1, "example", null, PermissionLevel.UNTRUSTED));
 
-    AuthHandler authHandler = new AuthHandler(userP, categoryP);
+    PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    authHandler.verify(ctx, PermissionLevel.TRUSTED, 1);
+    permissionVerifier.verify(ctx, PermissionLevel.TRUSTED);
 
-    verify(ctx).get("AuthenticatedUser");
+    verify(ctx).get("UserIdentifier");
+    verify(ctx).get("CategoryIdentifier");
     verify(ctx).fail(401);
     verify(categoryP).getById(1);
     verifyNoMoreInteractions(ctx, userP, categoryP);
@@ -133,7 +146,8 @@ public class AuthHandlerMockTest {
   @Test
   public void yesUserYesCategoryNoOverrideSuccess() throws Exception {
     var ctx = mock(RoutingContext.class);
-    when(ctx.get("AuthenticatedUser")).thenReturn(1);
+    when(ctx.get("UserIdentifier")).thenReturn(1);
+    when(ctx.get("CategoryIdentifier")).thenReturn(2);
 
     var userP = mock(UserDataProvider.class);
     when(userP.getUserData(1))
@@ -144,11 +158,12 @@ public class AuthHandlerMockTest {
         .thenReturn(new CategoryData(2, "example", null, PermissionLevel.TRUSTED));
     when(categoryP.getUserPermission(2, 1)).thenReturn(Optional.empty());
 
-    AuthHandler authHandler = new AuthHandler(userP, categoryP);
+    PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    authHandler.verify(ctx, PermissionLevel.TRUSTED, 2);
+    permissionVerifier.verify(ctx, PermissionLevel.TRUSTED);
 
-    verify(ctx).get("AuthenticatedUser");
+    verify(ctx).get("UserIdentifier");
+    verify(ctx).get("CategoryIdentifier");
     verify(userP).getUserData(1);
     verify(categoryP).getById(2);
     verify(categoryP).getUserPermission(2, 1);
@@ -158,7 +173,8 @@ public class AuthHandlerMockTest {
   @Test
   public void yesUserYesCategoryNoOverrideFailure() throws Exception {
     var ctx = mock(RoutingContext.class);
-    when(ctx.get("AuthenticatedUser")).thenReturn(1);
+    when(ctx.get("UserIdentifier")).thenReturn(1);
+    when(ctx.get("CategoryIdentifier")).thenReturn(2);
 
     var userP = mock(UserDataProvider.class);
     when(userP.getUserData(1))
@@ -168,11 +184,12 @@ public class AuthHandlerMockTest {
     when(categoryP.getById(2))
         .thenReturn(new CategoryData(2, "example", null, PermissionLevel.UNTRUSTED));
     when(categoryP.getUserPermission(2, 1)).thenReturn(Optional.empty());
-    AuthHandler authHandler = new AuthHandler(userP, categoryP);
+    PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    authHandler.verify(ctx, PermissionLevel.TRUSTED, 2);
+    permissionVerifier.verify(ctx, PermissionLevel.TRUSTED);
 
-    verify(ctx).get("AuthenticatedUser");
+    verify(ctx).get("UserIdentifier");
+    verify(ctx).get("CategoryIdentifier");
     verify(ctx).fail(403);
     verify(userP).getUserData(1);
     verify(categoryP).getById(2);
@@ -183,7 +200,8 @@ public class AuthHandlerMockTest {
   @Test
   public void yesUserYesCategoryYesOverrideSuccess() throws Exception {
     var ctx = mock(RoutingContext.class);
-    when(ctx.get("AuthenticatedUser")).thenReturn(1);
+    when(ctx.get("UserIdentifier")).thenReturn(1);
+    when(ctx.get("CategoryIdentifier")).thenReturn(2);
 
     var userP = mock(UserDataProvider.class);
     when(userP.getUserData(1))
@@ -194,11 +212,12 @@ public class AuthHandlerMockTest {
         .thenReturn(new CategoryData(2, "example", null, PermissionLevel.TRUSTED));
     when(categoryP.getUserPermission(2, 1)).thenReturn(Optional.of(PermissionLevel.ADMIN));
 
-    AuthHandler authHandler = new AuthHandler(userP, categoryP);
+    PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    authHandler.verify(ctx, PermissionLevel.TRUSTED, 2);
+    permissionVerifier.verify(ctx, PermissionLevel.TRUSTED);
 
-    verify(ctx).get("AuthenticatedUser");
+    verify(ctx).get("UserIdentifier");
+    verify(ctx).get("CategoryIdentifier");
     verify(userP).getUserData(1);
     verify(categoryP).getById(2);
     verify(categoryP).getUserPermission(2, 1);
@@ -208,7 +227,8 @@ public class AuthHandlerMockTest {
   @Test
   public void yesUserYesCategoryYesOverrideFailure() throws Exception {
     var ctx = mock(RoutingContext.class);
-    when(ctx.get("AuthenticatedUser")).thenReturn(1);
+    when(ctx.get("UserIdentifier")).thenReturn(1);
+    when(ctx.get("CategoryIdentifier")).thenReturn(2);
 
     var userP = mock(UserDataProvider.class);
     when(userP.getUserData(1))
@@ -219,11 +239,12 @@ public class AuthHandlerMockTest {
         .thenReturn(new CategoryData(2, "example", null, PermissionLevel.SUPER_ADMIN));
     when(categoryP.getUserPermission(2, 1)).thenReturn(Optional.of(PermissionLevel.ADMIN));
 
-    AuthHandler authHandler = new AuthHandler(userP, categoryP);
+    PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    authHandler.verify(ctx, PermissionLevel.SUPER_ADMIN, 2);
+    permissionVerifier.verify(ctx, PermissionLevel.SUPER_ADMIN);
 
-    verify(ctx).get("AuthenticatedUser");
+    verify(ctx).get("UserIdentifier");
+    verify(ctx).get("CategoryIdentifier");
     verify(ctx).fail(403);
     verify(userP).getUserData(1);
     verify(categoryP).getById(2);
@@ -234,7 +255,8 @@ public class AuthHandlerMockTest {
   @Test
   public void yesUserYesCategoryYesOverrideSuccessTwo() throws Exception {
     var ctx = mock(RoutingContext.class);
-    when(ctx.get("AuthenticatedUser")).thenReturn(1);
+    when(ctx.get("UserIdentifier")).thenReturn(1);
+    when(ctx.get("CategoryIdentifier")).thenReturn(2);
 
     var userP = mock(UserDataProvider.class);
     when(userP.getUserData(1))
@@ -245,11 +267,12 @@ public class AuthHandlerMockTest {
         .thenReturn(new CategoryData(2, "example", null, PermissionLevel.UNTRUSTED));
     when(categoryP.getUserPermission(2, 1)).thenReturn(Optional.of(PermissionLevel.TRUSTED));
 
-    AuthHandler authHandler = new AuthHandler(userP, categoryP);
+    PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
-    authHandler.verify(ctx, PermissionLevel.ADMIN, 2);
+    permissionVerifier.verify(ctx, PermissionLevel.ADMIN);
 
-    verify(ctx).get("AuthenticatedUser");
+    verify(ctx).get("UserIdentifier");
+    verify(ctx).get("CategoryIdentifier");
     verify(userP).getUserData(1);
     verify(categoryP).getById(2);
     verify(categoryP).getUserPermission(2, 1);
@@ -259,7 +282,8 @@ public class AuthHandlerMockTest {
   @Test
   public void yesUserYesCategoryYesOverrideFailureTwo() throws Exception {
     var ctx = mock(RoutingContext.class);
-    when(ctx.get("AuthenticatedUser")).thenReturn(1);
+    when(ctx.get("UserIdentifier")).thenReturn(1);
+    when(ctx.get("CategoryIdentifier")).thenReturn(2);
 
     var userP = mock(UserDataProvider.class);
     when(userP.getUserData(1))
@@ -267,14 +291,15 @@ public class AuthHandlerMockTest {
 
     var categoryP = mock(CategoryDataProvider.class);
 
-    AuthHandler authHandler = new AuthHandler(userP, categoryP);
+    PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
     when(categoryP.getById(2))
         .thenReturn(new CategoryData(2, "example", null, PermissionLevel.UNTRUSTED));
     when(categoryP.getUserPermission(2, 1)).thenReturn(Optional.of(PermissionLevel.TRUSTED));
 
-    authHandler.verify(ctx, PermissionLevel.SUPER_ADMIN, 2);
+    permissionVerifier.verify(ctx, PermissionLevel.SUPER_ADMIN);
 
-    verify(ctx).get("AuthenticatedUser");
+    verify(ctx).get("UserIdentifier");
+    verify(ctx).get("CategoryIdentifier");
     verify(ctx).fail(403);
     verify(userP).getUserData(1);
     verify(categoryP).getById(2);
@@ -285,7 +310,8 @@ public class AuthHandlerMockTest {
   @Test
   public void userInternalErrorFailure() throws Exception {
     var ctx = mock(RoutingContext.class);
-    when(ctx.get("AuthenticatedUser")).thenReturn(1);
+    when(ctx.get("UserIdentifier")).thenReturn(1);
+    when(ctx.get("CategoryIdentifier")).thenReturn(null);
 
     var userP = mock(UserDataProvider.class);
     InternalErrorException exc = new InternalErrorException("");
@@ -295,12 +321,13 @@ public class AuthHandlerMockTest {
     doThrow(runtimeMarker).when(ctx).fail(500, exc);
     var categoryP = mock(CategoryDataProvider.class);
 
-    AuthHandler authHandler = new AuthHandler(userP, categoryP);
+    PermissionVerifier permissionVerifier = new StandardPermissionVerifier(userP, categoryP);
 
     assertThrows(
-        RuntimeException.class, () -> authHandler.verify(ctx, PermissionLevel.UNTRUSTED, null));
+        RuntimeException.class, () -> permissionVerifier.verify(ctx, PermissionLevel.UNTRUSTED));
 
-    verify(ctx).get("AuthenticatedUser");
+    verify(ctx).get("UserIdentifier");
+    verify(ctx).get("CategoryIdentifier");
     verify(ctx).fail(500, exc);
     verify(userP).getUserData(1);
     verifyNoMoreInteractions(ctx, userP, categoryP);

@@ -1,0 +1,24 @@
+package dev.tfkls.hikkei.provider.permission;
+
+import dev.tfkls.hikkei.model.page.PermissionVerifier;
+import dev.tfkls.hikkei.model.permission.PermissionLevel;
+import io.vertx.ext.web.RoutingContext;
+
+public class DummyPermissionVerifier implements PermissionVerifier {
+  private final PermissionLevel globalRequiredPermission;
+
+  public DummyPermissionVerifier() {
+    this(PermissionLevel.NO_ACCESS);
+  }
+
+  public DummyPermissionVerifier(PermissionLevel globalRequiredPermission) {
+    this.globalRequiredPermission = globalRequiredPermission;
+  }
+
+  @Override
+  public void verify(RoutingContext ctx, PermissionLevel requiredLevel) {
+    if (PermissionLevel.isLess(requiredLevel, globalRequiredPermission)) {
+      ctx.fail(403);
+    }
+  }
+}

@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public class SessionHandler implements Handler<RoutingContext> {
   public SessionHandler(SessionProvider provider) {
-    this(provider, "HikkeiSession", "AuthenticatedUser");
+    this(provider, "HikkeiSession", "UserIdentifier");
   }
 
   public SessionHandler(SessionProvider provider, String cookieName, String contextName) {

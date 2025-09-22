@@ -1,44 +1,40 @@
-package dev.tfkls.hikkei.server.handlers;
+package dev.tfkls.hikkei.provider.permission;
 
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.page.PermissionVerifier;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
-import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 import java.util.Optional;
 import org.jetbrains.annotations.Nullable;
 
-public class AuthHandler implements Handler<RoutingContext> {
+public class StandardPermissionVerifier implements PermissionVerifier {
   private final UserDataProvider userDataProvider;
   private final CategoryDataProvider categoryDataProvider;
   private final String userContextName;
-  private final String thisContextName;
+  private final String categoryContextName;
 
-  public AuthHandler(UserDataProvider userDataProvider, CategoryDataProvider categoryDataProvider) {
-    this(userDataProvider, categoryDataProvider, "AuthenticatedUser", "AuthHandler");
+  public StandardPermissionVerifier(
+      UserDataProvider userDataProvider, CategoryDataProvider categoryDataProvider) {
+    this(userDataProvider, categoryDataProvider, "UserIdentifier", "CategoryIdentifier");
   }
 
-  public AuthHandler(
+  public StandardPermissionVerifier(
       UserDataProvider userDataProvider,
       CategoryDataProvider categoryDataProvider,
       String userContextName,
-      String thisContextName) {
+      String categoryContextName) {
     this.userDataProvider = userDataProvider;
     this.categoryDataProvider = categoryDataProvider;
     this.userContextName = userContextName;
-    this.thisContextName = thisContextName;
+    this.categoryContextName = categoryContextName;
   }
 
-  @Override
-  public void handle(RoutingContext ctx) {
-    ctx.put(thisContextName, this);
-  }
-
-  public void verify(
-      RoutingContext ctx, PermissionLevel targetLevel, @Nullable Integer categoryId) {
-    Object userIdOrNull = ctx.get(userContextName);
+  public void verify(RoutingContext ctx, PermissionLevel targetLevel) {
+    @Nullable Integer userId = ctx.get(userContextName);
+    @Nullable Integer categoryId = ctx.get(categoryContextName);
     PermissionLevel userLevel = PermissionLevel.NO_ACCESS;
     PermissionLevel categoryLevel = PermissionLevel.NO_ACCESS;
 
@@ -50,9 +46,9 @@ public class AuthHandler implements Handler<RoutingContext> {
       }
     }
 
-    if (userIdOrNull != null) {
+    if (userId != null) {
       try {
-        userLevel = userDataProvider.getUserData((int) userIdOrNull).minimalPermission();
+        userLevel = userDataProvider.getUserData((int) userId).minimalPermission();
       } catch (InternalErrorException err) {
         ctx.fail(500, err);
       }
@@ -60,7 +56,7 @@ public class AuthHandler implements Handler<RoutingContext> {
       if (categoryId != null) {
         try {
           Optional<PermissionLevel> jointPermission =
-              categoryDataProvider.getUserPermission(categoryId, (int) userIdOrNull);
+              categoryDataProvider.getUserPermission(categoryId, (int) userId);
           if (jointPermission.isPresent()) {
             categoryLevel = jointPermission.get();
           }
@@ -73,7 +69,7 @@ public class AuthHandler implements Handler<RoutingContext> {
     PermissionLevel trueLevel = PermissionLevel.max(userLevel, categoryLevel);
 
     if (PermissionLevel.isLess(trueLevel, targetLevel)) {
-      if (userIdOrNull == null) {
+      if (userId == null) {
         ctx.fail(401);
       } else {
         ctx.fail(403);
