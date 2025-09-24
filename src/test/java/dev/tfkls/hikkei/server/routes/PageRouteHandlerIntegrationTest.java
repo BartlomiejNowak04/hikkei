@@ -107,20 +107,23 @@ public class PageRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
     assertPage(pd, body.getJsonObject(0));
   }
 
-  //  @Test
-  //  void createWorkingTest() throws Exception {
-  //    when(pageProvider.createPage(any())).thenReturn(1);
-  //    JsonObject body =
-  //        callEndpointObject(
-  //            "/api/page/create",
-  //            Method.POST,
-  //            new JsonObject().put("title", "a").put("category", 1),
-  //            201);
-  //    assertEquals(1, body.getInteger("id"));
-  //  }
+  /*
+  @Test
+  void createWorkingTest() throws Exception {
+    when(pageProvider.createPage(any())).thenReturn(1);
+    JsonObject body =
+        callEndpointObject(
+            "/api/page/create",
+              Method.POST,
+              new JsonObject().put("title", "a").put("category", 1),
+              201);
+      assertEquals(1, body.getInteger("id"));
+    }
+   */
 
   @Test
-  void updateTitleWorkingTest() {
+  void updateTitleWorkingTest() throws Exception {
+    when(pageProvider.getById(1)).thenReturn(pd);
     callEndpoint(
         "/api/page/update/title",
         Method.PUT,
@@ -130,7 +133,8 @@ public class PageRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
   }
 
   @Test
-  void updateCategoryWorkingTest() {
+  void updateCategoryWorkingTest() throws Exception {
+    when(pageProvider.getById(1)).thenReturn(pd);
     callEndpoint(
         "/api/page/update/category",
         Method.PUT,
@@ -140,7 +144,8 @@ public class PageRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
   }
 
   @Test
-  void updateArchiveWorkingTest() {
+  void updateArchiveWorkingTest() throws Exception {
+    when(pageProvider.getById(1)).thenReturn(pd);
     callEndpoint(
         "/api/page/update/archive",
         Method.PUT,
@@ -150,7 +155,8 @@ public class PageRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
   }
 
   @Test
-  void deleteWorkingTest() {
+  void deleteWorkingTest() throws Exception {
+    when(pageProvider.getById(1)).thenReturn(pd);
     callEndpoint("/api/page/delete", Method.DELETE, new JsonObject().put("id", 1), 204, "");
   }
 }

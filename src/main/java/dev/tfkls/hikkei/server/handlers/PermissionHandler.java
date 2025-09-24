@@ -1,6 +1,6 @@
 package dev.tfkls.hikkei.server.handlers;
 
-import dev.tfkls.hikkei.model.page.PermissionVerifier;
+import dev.tfkls.hikkei.model.permission.PermissionVerifier;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 

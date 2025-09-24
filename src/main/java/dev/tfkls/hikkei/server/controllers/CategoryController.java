@@ -6,6 +6,7 @@ import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
+import dev.tfkls.hikkei.server.util.AccessManager;
 import dev.tfkls.hikkei.server.util.Jsonify;
 import dev.tfkls.hikkei.server.util.ParamFlow;
 import dev.tfkls.hikkei.server.util.Type;
@@ -81,6 +82,9 @@ public class CategoryController {
         null,
         body -> {
           PermissionLevel permission = null;
+          int categoryId = body.getInteger("category");
+          int userId = body.getInteger("user");
+
           if (!body.getString("permission").equals("null")) {
             try {
               permission = PermissionLevel.valueOf(body.getString("permission"));
@@ -89,8 +93,19 @@ public class CategoryController {
             }
           }
 
-          categoryProvider.updateUserPermission(
-              body.getInteger("category"), body.getInteger("user"), permission);
+          PermissionLevel oldPermission =
+              categoryProvider
+                  .getUserPermission(categoryId, userId)
+                  .orElse(categoryProvider.getById(categoryId).defaultPermission());
+
+          AccessManager.setCategory(ctx, categoryId);
+          AccessManager.verifyPermission(
+              ctx,
+              PermissionLevel.successor(
+                  PermissionLevel.max(
+                      permission != null ? permission : PermissionLevel.NO_ACCESS, oldPermission)));
+
+          categoryProvider.updateUserPermission(categoryId, userId, permission);
           ctx.response().setStatusCode(204).end();
         });
   }
@@ -101,6 +116,8 @@ public class CategoryController {
         Map.of("name", Type.Str),
         null,
         body -> {
+          AccessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
+
           int idc = categoryProvider.createCategory(new CategoryData(body.getString("name")));
           ctx.response().setStatusCode(201);
           ctx.json(new JsonObject().put("id", idc));
@@ -113,6 +130,8 @@ public class CategoryController {
         Map.of("id", Type.Int, "name", Type.Str),
         null,
         body -> {
+          AccessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
+
           categoryProvider.changeName(body.getInteger("id"), body.getString("name"));
           ctx.response().setStatusCode(204).end();
         });
@@ -124,6 +143,8 @@ public class CategoryController {
         Map.of("id", Type.Int),
         null,
         body -> {
+          AccessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
+
           categoryProvider.deleteCategory(body.getInteger("id"));
           ctx.response().setStatusCode(204).end();
         });

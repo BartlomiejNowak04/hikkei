@@ -6,8 +6,13 @@ import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.file.StoredVersion;
 import dev.tfkls.hikkei.model.file.VersionProvider;
+import dev.tfkls.hikkei.model.page.PageDataProvider;
+import dev.tfkls.hikkei.model.page.PageRenderer;
+import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
+import dev.tfkls.hikkei.provider.page.IdentityPageRenderer;
+import dev.tfkls.hikkei.server.util.AccessManager;
 import dev.tfkls.hikkei.server.util.Jsonify;
 import dev.tfkls.hikkei.server.util.Type;
 import io.vertx.core.json.JsonArray;
@@ -15,15 +20,23 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 
 public class RevisionController {
   private final RevisionDataProvider revisionProvider;
   private final VersionProvider versionProvider;
+  private final PageDataProvider pageProvider;
+  private final PageRenderer pageRenderer;
 
   public RevisionController(
-      RevisionDataProvider revisionProvider, VersionProvider versionProvider) {
+      RevisionDataProvider revisionProvider,
+      VersionProvider versionProvider,
+      PageDataProvider pageProvider,
+      PageRenderer pageRenderer) {
     this.revisionProvider = revisionProvider;
     this.versionProvider = versionProvider;
+    this.pageProvider = pageProvider;
+    this.pageRenderer = pageRenderer;
   }
 
   public void addRevision(RoutingContext ctx) {
@@ -32,6 +45,10 @@ public class RevisionController {
         Map.of("page_id", Type.Int, "content", Type.Str),
         null,
         body -> {
+          int pageCategory = pageProvider.getById(body.getInteger("page_id")).category();
+          AccessManager.setCategory(ctx, pageCategory);
+          AccessManager.verifyPermission(ctx, PermissionLevel.TRUSTED);
+
           byte[] previous = null;
           List<RevisionData> revs = revisionProvider.getByPage(body.getInteger("page_id"));
           if (revs != null && !revs.isEmpty()) previous = revs.getFirst().file();
@@ -56,7 +73,14 @@ public class RevisionController {
         Map.of("id", Type.Int, "status", Type.Bool),
         null,
         body -> {
-          revisionProvider.changeState(body.getInteger("id"), body.getBoolean("status"));
+          RevisionData data = revisionProvider.getById(body.getInteger("id"));
+          if (data != null) {
+            int pageCategory = pageProvider.getById(data.pageId()).category();
+            AccessManager.setCategory(ctx, pageCategory);
+            AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+
+            revisionProvider.changeState(body.getInteger("id"), body.getBoolean("status"));
+          }
           ctx.response().setStatusCode(204).end();
         });
   }
@@ -69,8 +93,25 @@ public class RevisionController {
         body -> {
           Integer id = body.getInteger("id");
 
-          List<RevisionData> data =
-              type.equals("page") ? revisionProvider.getByPage(id) : revisionProvider.getByUser(id);
+          List<RevisionData> data;
+          if (type.equals("page")) {
+            int pageCategory = pageProvider.getById(id).category();
+            AccessManager.setCategory(ctx, pageCategory);
+            AccessManager.verifyPermission(ctx, PermissionLevel.UNTRUSTED);
+
+            data = revisionProvider.getByPage(id);
+          } else if (type.equals("user")) {
+            OptionalInt userId = AccessManager.fetchUser(ctx);
+            // Only global moderators can see other users' contributions
+            if (userId.isEmpty() || userId.getAsInt() != id) {
+              AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+            }
+
+            data = revisionProvider.getByUser(id);
+          } else {
+            throw new IllegalArgumentException("Expected 'page' or 'user' as the type");
+          }
+
           if (data == null) throw new BadDataException("Incorrect parameter value: id");
           JsonArray items = new JsonArray();
           for (RevisionData item : data) items.add(Jsonify.revisionToJson(item));
@@ -88,16 +129,25 @@ public class RevisionController {
     getList(ctx, "user");
   }
 
-  // TODO: do the rendering
-  public void Render(RoutingContext ctx) {}
-
   public void getCurrentContent(RoutingContext ctx) {
+    getCurrentContent(ctx, pageRenderer);
+  }
+
+  public void getCurrentContentRaw(RoutingContext ctx) {
+    getCurrentContent(ctx, new IdentityPageRenderer());
+  }
+
+  public void getCurrentContent(RoutingContext ctx, PageRenderer transform) {
     handle(
         ctx,
         null,
         Map.of("id", Type.Int),
         body -> {
           Integer id = body.getInteger("id");
+
+          int pageCategory = pageProvider.getById(id).category();
+          AccessManager.setCategory(ctx, pageCategory);
+          AccessManager.verifyPermission(ctx, PermissionLevel.UNTRUSTED);
 
           List<RevisionData> revisions = revisionProvider.getByPage(id);
           if (revisions == null) throw new BadDataException("Invalid page id");
@@ -111,8 +161,8 @@ public class RevisionController {
             data = file.data();
           }
           ctx.response().setStatusCode(200);
-          // TODO: transform the data appropriately
-          ctx.json(new JsonObject().put("content", data));
+
+          ctx.json(new JsonObject().put("content", transform.render(data)));
         });
   }
 
@@ -126,6 +176,10 @@ public class RevisionController {
           if (data == null) throw new BadDataException("Incorrect parameter value: id");
           else if (data == RevisionData.DELETED) ctx.response().setStatusCode(404).end();
           else {
+            int pageCategory = pageProvider.getById(data.pageId()).category();
+            AccessManager.setCategory(ctx, pageCategory);
+            AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+
             ctx.response().setStatusCode(200);
             ctx.json(Jsonify.revisionToJson(data));
           }
@@ -138,7 +192,14 @@ public class RevisionController {
         null,
         Map.of("page_id", Type.Int),
         body -> {
-          byte[] id = revisionProvider.getDraft(ctx.get("id"), body.getInteger("page_id"));
+          int userId = AccessManager.requireUser(ctx);
+          int pageId = body.getInteger("page_id");
+
+          int pageCategory = pageProvider.getById(pageId).category();
+          AccessManager.setCategory(ctx, pageCategory);
+          AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+
+          byte[] id = revisionProvider.getDraft(userId, pageId);
           String content = "";
           if (id != null) {
             StoredVersion file = versionProvider.getVersion(id);
@@ -157,14 +218,20 @@ public class RevisionController {
         Map.of("page", Type.Int, "content", Type.Str),
         null,
         body -> {
-          byte[] id = revisionProvider.getDraft(ctx.get("id"), body.getInteger("page"));
+          int userId = AccessManager.requireUser(ctx);
+          int pageId = body.getInteger("page");
+          int pageCategory = pageProvider.getById(pageId).category();
+          AccessManager.setCategory(ctx, pageCategory);
+          AccessManager.verifyPermission(ctx, PermissionLevel.TRUSTED);
+
+          byte[] id = revisionProvider.getDraft(userId, pageId);
           byte[] nid;
           try {
             nid = versionProvider.storeVersion(body.getString("content"), id);
           } catch (BadDataException e) {
             throw new InternalErrorException(e.getMessage());
           }
-          revisionProvider.saveDraft(ctx.get("id"), body.getInteger("page"), nid);
+          revisionProvider.saveDraft(userId, pageId, nid);
           ctx.response().setStatusCode(204).end();
         });
   }
@@ -175,8 +242,14 @@ public class RevisionController {
         Map.of("page", Type.Int),
         null,
         body -> {
-          byte[] id = revisionProvider.getDraft(ctx.get("id"), body.getInteger("page"));
-          revisionProvider.deleteDraft(ctx.get("id"), body.getInteger("page"));
+          int userId = AccessManager.requireUser(ctx);
+          int pageId = body.getInteger("page");
+          int pageCategory = pageProvider.getById(pageId).category();
+          AccessManager.setCategory(ctx, pageCategory);
+          AccessManager.verifyPermission(ctx, PermissionLevel.TRUSTED);
+
+          byte[] id = revisionProvider.getDraft(userId, pageId);
+          revisionProvider.deleteDraft(userId, pageId);
           versionProvider.deleteVersion(id);
           ctx.response().setStatusCode(204).end();
         });
@@ -188,7 +261,14 @@ public class RevisionController {
         Map.of("id", Type.Int),
         null,
         body -> {
-          revisionProvider.deleteRevision(body.getInteger("id"));
+          RevisionData revisionPage = revisionProvider.getById(body.getInteger("id"));
+          if (revisionPage != null) {
+            int pageCategory = pageProvider.getById(revisionPage.pageId()).category();
+            AccessManager.setCategory(ctx, pageCategory);
+            AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+
+            revisionProvider.deleteRevision(body.getInteger("id"));
+          }
           ctx.response().setStatusCode(204).end();
         });
   }

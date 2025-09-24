@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.server.routes.RouteHandlerIntegrationTest;
 import io.restassured.http.Method;
 import io.vertx.core.json.JsonObject;
@@ -73,42 +74,49 @@ public class ErrorPageRouteHandlerIntegrationTest extends RouteHandlerIntegratio
 
   @Test
   void updateTitleBadDataTest() throws Exception {
+    when(pageProvider.getById(1)).thenReturn(new PageData(1, "", 2));
     doThrow(bad).when(pageProvider).updatePageTitle(1, "sometitle");
     testException("/api/page/update/title", Method.PUT, title, bad);
   }
 
   @Test
   void updateTitleInternalErrorTest() throws Exception {
+    when(pageProvider.getById(1)).thenReturn(new PageData(1, "", 2));
     doThrow(ie).when(pageProvider).updatePageTitle(1, "sometitle");
     testException("/api/page/update/title", Method.PUT, title, ie);
   }
 
   @Test
   void updateCategoryBadDataTest() throws Exception {
+    when(pageProvider.getById(1)).thenReturn(new PageData(1, "", 2));
     doThrow(bad).when(pageProvider).updatePageCategory(1, 10);
     testException("/api/page/update/category", Method.PUT, category, bad);
   }
 
   @Test
   void updateCategoryInternalErrorTest() throws Exception {
+    when(pageProvider.getById(1)).thenReturn(new PageData(1, "", 2));
     doThrow(ie).when(pageProvider).updatePageCategory(1, 10);
     testException("/api/page/update/category", Method.PUT, category, ie);
   }
 
   @Test
   void updateArchiveBadDataTest() throws Exception {
+    when(pageProvider.getById(1)).thenReturn(new PageData(1, "", 2));
     doThrow(bad).when(pageProvider).toggleArchive(1, true);
     testException("/api/page/update/archive", Method.PUT, archive1, bad);
   }
 
   @Test
   void updateArchiveInternalErrorTest() throws Exception {
+    when(pageProvider.getById(1)).thenReturn(new PageData(1, "", 2));
     doThrow(ie).when(pageProvider).toggleArchive(1, true);
     testException("/api/page/update/archive", Method.PUT, archive1, ie);
   }
 
   @Test
   void deleteInternalErrorTest() throws Exception {
+    when(pageProvider.getById(1)).thenReturn(new PageData(1, "", 2));
     doThrow(ie).when(pageProvider).deletePage(1);
     testException("/api/page/delete", Method.DELETE, new JsonObject().put("id", 1), ie);
   }

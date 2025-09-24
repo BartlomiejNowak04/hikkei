@@ -4,6 +4,8 @@ import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
+import dev.tfkls.hikkei.model.permission.PermissionLevel;
+import dev.tfkls.hikkei.server.util.AccessManager;
 import dev.tfkls.hikkei.server.util.Jsonify;
 import dev.tfkls.hikkei.server.util.ParamFlow;
 import dev.tfkls.hikkei.server.util.Type;
@@ -12,6 +14,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 
 public class PageController {
   private final PageDataProvider pageProvider;
@@ -19,6 +22,10 @@ public class PageController {
   public PageController(PageDataProvider pageProvider) {
     this.pageProvider = pageProvider;
   }
+
+  // NOTE: We treat page metadata as public, as adding permission filtering would warrant a major
+  // refactor – instead the page metadata is not guarded by permissions, we guard the content
+  // instead.
 
   public void getRandomPage(RoutingContext ctx) {
     ParamFlow.handle(
@@ -86,7 +93,10 @@ public class PageController {
         body -> {
           String title = body.getString("title");
           Integer category = body.getInteger("category");
-          Integer user = body.getInteger("user");
+          Integer user = AccessManager.requireUser(ctx);
+
+          AccessManager.setCategory(ctx, category);
+          AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
 
           int id = pageProvider.createPage(new PageData(user, title, category));
           ctx.response().setStatusCode(201);
@@ -100,6 +110,8 @@ public class PageController {
         Map.of("title", Type.Str, "id", Type.Int),
         null,
         body -> {
+          checkOwnerOrAdmin(ctx, body.getInteger("id"));
+
           pageProvider.updatePageTitle(body.getInteger("id"), body.getString("title"));
           ctx.response().setStatusCode(204).end();
         });
@@ -111,6 +123,11 @@ public class PageController {
         Map.of("category", Type.Int, "id", Type.Int),
         null,
         body -> {
+          checkOwnerOrAdmin(ctx, body.getInteger("id"));
+
+          AccessManager.setCategory(ctx, body.getInteger("category"));
+          AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+
           pageProvider.updatePageCategory(body.getInteger("id"), body.getInteger("category"));
           ctx.response().setStatusCode(204).end();
         });
@@ -122,6 +139,7 @@ public class PageController {
         Map.of("value", Type.Bool, "id", Type.Int),
         null,
         body -> {
+          checkOwnerOrAdmin(ctx, body.getInteger("id"));
           pageProvider.toggleArchive(body.getInteger("id"), body.getBoolean("value"));
           ctx.response().setStatusCode(204).end();
         });
@@ -133,8 +151,21 @@ public class PageController {
         Map.of("id", Type.Int),
         null,
         body -> {
+          checkOwnerOrAdmin(ctx, body.getInteger("id"));
           pageProvider.deletePage(body.getInteger("id"));
           ctx.response().setStatusCode(204).end();
         });
+  }
+
+  // We can usually act on a page IF we are an owner of the page or an admin.
+  private void checkOwnerOrAdmin(RoutingContext ctx, int pageId) throws InternalErrorException {
+    PageData pageData = pageProvider.getById(pageId);
+
+    OptionalInt maybeUserId = AccessManager.fetchUser(ctx);
+    if (maybeUserId.isEmpty() || maybeUserId.getAsInt() != pageData.userId()) {
+
+      AccessManager.setCategory(ctx, pageData.category());
+      AccessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
+    }
   }
 }

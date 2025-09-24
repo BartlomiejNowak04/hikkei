@@ -1,7 +1,7 @@
 package dev.tfkls.hikkei.provider.permission;
 
-import dev.tfkls.hikkei.model.page.PermissionVerifier;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
+import dev.tfkls.hikkei.model.permission.PermissionVerifier;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.HttpException;
 

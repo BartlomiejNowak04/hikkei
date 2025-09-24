@@ -12,6 +12,7 @@ import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
+import dev.tfkls.hikkei.provider.page.IdentityPageRenderer;
 import dev.tfkls.hikkei.server.MainVerticle;
 import dev.tfkls.hikkei.test.IntegrationTest;
 import io.restassured.RestAssured;
@@ -66,7 +67,8 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
                 fileProvider,
                 port,
                 URI.create(String.format("%s:%d", RestAssured.baseURI, port)),
-                null))
+                null,
+                new IdentityPageRenderer()))
         .onComplete(testContext.succeedingThenComplete());
   }
 

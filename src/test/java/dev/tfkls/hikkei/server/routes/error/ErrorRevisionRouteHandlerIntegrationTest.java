@@ -1,11 +1,11 @@
 package dev.tfkls.hikkei.server.routes.error;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
+import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.server.routes.RouteHandlerIntegrationTest;
 import io.restassured.http.Method;
@@ -41,18 +41,21 @@ public class ErrorRevisionRouteHandlerIntegrationTest extends RouteHandlerIntegr
 
   @Test
   void pageInternalErrorTest() throws Exception {
+    when(pageProvider.getById(7)).thenThrow(ie);
     when(revisionProvider.getByPage(7)).thenThrow(ie);
     testGetException("/api/revision/page/7", ie);
   }
 
   @Test
   void contentInternalErrorTest() throws Exception {
+    when(pageProvider.getById(1)).thenThrow(ie);
     when(revisionProvider.getByPage(1)).thenThrow(ie);
     testGetException("/api/revision/content/1", ie);
   }
 
   @Test
   void contentInternalErrorTest2() throws Exception {
+    when(pageProvider.getById(1)).thenReturn(new PageData(1, "example", 3));
     when(revisionProvider.getByPage(1))
         .thenReturn(
             new ArrayList<>(
@@ -123,12 +126,16 @@ public class ErrorRevisionRouteHandlerIntegrationTest extends RouteHandlerIntegr
 
   @Test
   void updateStatusBadDataTest() throws Exception {
+    doReturn(new RevisionData(1, 1, new byte[2])).when(revisionProvider).getById(1);
+    doReturn(new PageData(1, "", 1)).when(pageProvider).getById(1);
     doThrow(bad).when(revisionProvider).changeState(1, true);
     testException("/api/revision/update/status", Method.PUT, status1, bad);
   }
 
   @Test
   void updateStatusInternalErrorTest() throws Exception {
+    doReturn(new RevisionData(1, 1, new byte[2])).when(revisionProvider).getById(1);
+    doReturn(new PageData(1, "", 1)).when(pageProvider).getById(1);
     doThrow(ie).when(revisionProvider).changeState(1, true);
     testException("/api/revision/update/status", Method.PUT, status1, ie);
   }
@@ -187,6 +194,8 @@ public class ErrorRevisionRouteHandlerIntegrationTest extends RouteHandlerIntegr
 
   @Test
   void deleteInternalErrorTest() throws Exception {
+    doReturn(new RevisionData(1, 1, new byte[2])).when(revisionProvider).getById(1);
+    doReturn(new PageData(1, "", 1)).when(pageProvider).getById(1);
     doThrow(ie).when(revisionProvider).deleteRevision(1);
     testException("/api/revision/delete", Method.DELETE, new JsonObject().put("id", 1), ie);
   }

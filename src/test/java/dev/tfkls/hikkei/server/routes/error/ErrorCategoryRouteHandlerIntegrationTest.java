@@ -2,16 +2,18 @@ package dev.tfkls.hikkei.server.routes.error;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
+import dev.tfkls.hikkei.model.category.CategoryData;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.server.routes.RouteHandlerIntegrationTest;
 import io.restassured.http.Method;
 import io.vertx.core.json.JsonObject;
+import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -57,12 +59,20 @@ public class ErrorCategoryRouteHandlerIntegrationTest extends RouteHandlerIntegr
 
   @Test
   void permissionInternalErrorException() throws Exception {
+    doReturn(Optional.empty()).when(categoryProvider).getUserPermission(anyInt(), anyInt());
+    when(categoryProvider.getById(1))
+        .thenReturn(new CategoryData(1, "", LocalDateTime.now(), PermissionLevel.NO_ACCESS));
+
     doThrow(ie).when(categoryProvider).updateUserPermission(anyInt(), anyInt(), any());
     testException("/api/category/permission", Method.PUT, perm, ie);
   }
 
   @Test
   void permissionBadDataException() throws Exception {
+    doReturn(Optional.empty()).when(categoryProvider).getUserPermission(anyInt(), anyInt());
+    when(categoryProvider.getById(1))
+        .thenReturn(new CategoryData(1, "", LocalDateTime.now(), PermissionLevel.NO_ACCESS));
+
     doThrow(bad).when(categoryProvider).updateUserPermission(anyInt(), anyInt(), any());
     testException("/api/category/permission", Method.PUT, perm, bad);
   }

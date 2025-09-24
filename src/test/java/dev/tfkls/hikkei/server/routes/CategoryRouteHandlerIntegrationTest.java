@@ -14,6 +14,7 @@ import io.vertx.core.json.JsonObject;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -86,7 +87,9 @@ public class CategoryRouteHandlerIntegrationTest extends RouteHandlerIntegration
   }
 
   @Test
-  void permissionWorkingNullTest() {
+  void permissionWorkingNullTest() throws Exception {
+    when(categoryProvider.getUserPermission(1, 1)).thenReturn(Optional.of(PermissionLevel.TRUSTED));
+    when(categoryProvider.getById(1)).thenReturn(cd);
     callEndpoint(
         "/api/category/permission",
         Method.PUT,
@@ -96,7 +99,9 @@ public class CategoryRouteHandlerIntegrationTest extends RouteHandlerIntegration
   }
 
   @Test
-  void permissionWorkingTest() {
+  void permissionWorkingTest() throws Exception {
+    when(categoryProvider.getUserPermission(1, 1)).thenReturn(Optional.of(PermissionLevel.TRUSTED));
+    when(categoryProvider.getById(1)).thenReturn(cd);
     callEndpoint(
         "/api/category/permission",
         Method.PUT,

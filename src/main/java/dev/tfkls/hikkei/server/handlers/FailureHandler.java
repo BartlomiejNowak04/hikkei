@@ -26,7 +26,13 @@ public class FailureHandler implements Handler<RoutingContext> {
       ctx.response().setStatusCode(((HttpException) e).getStatusCode());
       ctx.json(
           new JsonObject()
-              .put("message", e.getCause() == null ? e.getMessage() : e.getCause().getMessage()));
+              .put(
+                  "message",
+                  e.getCause() != null
+                      ? e.getCause().getMessage()
+                      : ((HttpException) e).getPayload() != null
+                          ? ((HttpException) e).getPayload()
+                          : e.getMessage()));
     } else {
       ctx.response().setStatusCode(e instanceof InternalErrorException ? 500 : 400);
       ctx.json(new JsonObject().put("message", e.getMessage()));

@@ -3,8 +3,8 @@ package dev.tfkls.hikkei.provider.permission;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
-import dev.tfkls.hikkei.model.page.PermissionVerifier;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
+import dev.tfkls.hikkei.model.permission.PermissionVerifier;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.HttpException;
@@ -44,6 +44,8 @@ public class StandardPermissionVerifier implements PermissionVerifier {
         categoryLevel = categoryDataProvider.getById((int) categoryId).defaultPermission();
       } catch (InternalErrorException err) {
         throw new HttpException(500, err);
+      } catch (NullPointerException err) {
+        throw new HttpException(400, "The category associated with said object could not be found");
       }
     }
 

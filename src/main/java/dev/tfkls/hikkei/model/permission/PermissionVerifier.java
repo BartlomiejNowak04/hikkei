@@ -1,6 +1,5 @@
-package dev.tfkls.hikkei.model.page;
+package dev.tfkls.hikkei.model.permission;
 
-import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import io.vertx.ext.web.RoutingContext;
 
 public interface PermissionVerifier {

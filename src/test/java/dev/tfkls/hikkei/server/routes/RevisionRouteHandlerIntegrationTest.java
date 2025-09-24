@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.file.StoredVersion;
+import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import io.restassured.http.Method;
 import io.vertx.core.json.JsonArray;
@@ -20,10 +21,12 @@ import org.junit.jupiter.api.Test;
 
 public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest {
   private RevisionData rd;
+  private PageData pd;
 
   @BeforeAll
   void init() {
     rd = new RevisionData(1, 1, 1, new byte[] {1, 2}, LocalDateTime.now(), true);
+    pd = new PageData(1, "", 1);
   }
 
   private void assertRevision(RevisionData rd, JsonObject body) {
@@ -59,12 +62,14 @@ public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegration
   @Test
   void pageNoDataTest() throws Exception {
     when(revisionProvider.getByPage(1)).thenReturn(null);
+    when(pageProvider.getById(1)).thenReturn(pd);
     testGetException("/api/revision/page/1", new BadDataException("Incorrect parameter value: id"));
   }
 
   @Test
   void pageEmptyTest() throws Exception {
     when(revisionProvider.getByPage(1)).thenReturn(List.of());
+    when(pageProvider.getById(1)).thenReturn(pd);
     JsonArray body = callGetEndpointArray("/api/revision/page/1", 200);
     assertEquals(0, body.size());
   }
@@ -72,6 +77,7 @@ public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegration
   @Test
   void pageWorkingTest() throws Exception {
     when(revisionProvider.getByPage(1)).thenReturn(List.of(rd));
+    when(pageProvider.getById(1)).thenReturn(pd);
     JsonArray body = callGetEndpointArray("/api/revision/page/1", 200);
     assertEquals(1, body.size());
     assertRevision(rd, body.getJsonObject(0));
@@ -80,12 +86,14 @@ public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegration
   @Test
   void contentNoPageTest() throws Exception {
     when(revisionProvider.getByPage(1)).thenReturn(null);
+    when(pageProvider.getById(1)).thenReturn(pd);
     testGetException("/api/revision/content/1", new BadDataException("Invalid page id"));
   }
 
   @Test
   void contentEmptyTest() throws Exception {
     when(revisionProvider.getByPage(1)).thenReturn(new ArrayList<>());
+    when(pageProvider.getById(1)).thenReturn(pd);
     JsonObject body = callGetEndpointObject("/api/revision/content/1", 200);
     assertEquals("", body.getString("content"));
   }
@@ -94,6 +102,7 @@ public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegration
   void currentWorkingTest() throws Exception {
     when(revisionProvider.getByPage(1)).thenReturn(new ArrayList<>(Collections.singleton(rd)));
     when(versionProvider.getVersion(any())).thenReturn(new StoredVersion("test", null));
+    when(pageProvider.getById(1)).thenReturn(pd);
     JsonObject body = callGetEndpointObject("/api/revision/content/1", 200);
     assertEquals("test", body.getString("content"));
   }
@@ -105,18 +114,21 @@ public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegration
   @Test
   void byIdNoDataTest() throws Exception {
     when(revisionProvider.getById(1)).thenReturn(null);
+    when(pageProvider.getById(1)).thenReturn(pd);
     testGetException("/api/revision/1", new BadDataException("Incorrect parameter value: id"));
   }
 
   @Test
   void byIdDeletedTest() throws Exception {
     when(revisionProvider.getById(1)).thenReturn(RevisionData.DELETED);
+    when(pageProvider.getById(1)).thenReturn(pd);
     callEndpoint("/api/revision/1", Method.GET, null, 404, "");
   }
 
   @Test
   void byIdWorkingTest() throws Exception {
     when(revisionProvider.getById(1)).thenReturn(rd);
+    when(pageProvider.getById(1)).thenReturn(pd);
     JsonObject body = callGetEndpointObject("/api/revision/1", 200);
     assertRevision(rd, body);
   }

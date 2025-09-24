@@ -8,7 +8,8 @@ import dev.tfkls.hikkei.model.comment.CommentDataProvider;
 import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
-import dev.tfkls.hikkei.model.page.PermissionVerifier;
+import dev.tfkls.hikkei.model.page.PageRenderer;
+import dev.tfkls.hikkei.model.permission.PermissionVerifier;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.provider.auth.*;
@@ -40,6 +41,7 @@ public class MainVerticle extends VerticleBase {
   private final Integer port;
   private final URI baseUri;
   private final @Nullable Map<String, Function<URI, AuthenticationProvider>> authMethods;
+  private final PageRenderer pageRenderer;
 
   public MainVerticle(
       UserDataProvider userProvider,
@@ -51,7 +53,8 @@ public class MainVerticle extends VerticleBase {
       FileProvider fileProvider,
       Integer port,
       URI baseUri,
-      @Nullable Map<String, Function<URI, AuthenticationProvider>> authMethods) {
+      @Nullable Map<String, Function<URI, AuthenticationProvider>> authMethods,
+      PageRenderer pageRenderer) {
     super();
     this.userProvider = userProvider;
     this.pageProvider = pageProvider;
@@ -63,6 +66,7 @@ public class MainVerticle extends VerticleBase {
     this.port = port;
     this.baseUri = baseUri;
     this.authMethods = authMethods;
+    this.pageRenderer = pageRenderer;
   }
 
   @Override
@@ -71,8 +75,10 @@ public class MainVerticle extends VerticleBase {
         new UserRouteHandler(vertx, userProvider, fileProvider, categoryProvider);
     PageRouteHandler pageRoute = new PageRouteHandler(vertx, pageProvider);
     RevisionRouteHandler revisionRoute =
-        new RevisionRouteHandler(vertx, revisionProvider, versionProvider);
-    CommentRouteHandler commentRoute = new CommentRouteHandler(vertx, commentProvider);
+        new RevisionRouteHandler(
+            vertx, revisionProvider, versionProvider, pageProvider, pageRenderer);
+    CommentRouteHandler commentRoute =
+        new CommentRouteHandler(vertx, commentProvider, pageProvider);
     CategoryRouteHandler categoryRoute =
         new CategoryRouteHandler(vertx, categoryProvider, userProvider);
 
