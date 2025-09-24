@@ -37,6 +37,12 @@ public class UserController {
     this.categoryProvider = categoryProvider;
   }
 
+  public void getSelf(RoutingContext ctx) {
+    int userId = AccessManager.requireUser(ctx);
+    ctx.pathParams().put("id", String.valueOf(userId));
+    getUser(ctx);
+  }
+
   public void getUser(RoutingContext ctx) {
     handle(
         ctx,

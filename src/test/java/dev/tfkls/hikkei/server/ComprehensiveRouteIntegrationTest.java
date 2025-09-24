@@ -1,0 +1,204 @@
+package dev.tfkls.hikkei.server;
+
+import static dev.tfkls.hikkei.server.util.RestCaller.*;
+import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.*;
+
+import dev.tfkls.hikkei.model.permission.PermissionLevel;
+import dev.tfkls.hikkei.model.user.AuthData;
+import dev.tfkls.hikkei.model.user.UserData;
+import dev.tfkls.hikkei.model.user.UserDataProvider;
+import dev.tfkls.hikkei.provider.JDBC.*;
+import dev.tfkls.hikkei.provider.JDBCIntegrationTest;
+import dev.tfkls.hikkei.provider.auth.TokenAuthenticationProvider;
+import dev.tfkls.hikkei.provider.filesystem.FilesystemFileProvider;
+import dev.tfkls.hikkei.provider.filesystem.FilesystemVersionProvider;
+import dev.tfkls.hikkei.provider.page.MarkdownPageRenderer;
+import io.restassured.RestAssured;
+import io.restassured.http.Cookie;
+import io.restassured.http.Method;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import java.io.File;
+import java.net.URI;
+import java.util.Map;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+@ExtendWith(VertxExtension.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
+  static final String TOKEN = "jaSI1Sjh4A_41jnEsx9";
+
+  @BeforeAll
+  void initServer(Vertx vertx, VertxTestContext testContext) throws Exception {
+    Integer port = Integer.valueOf(require("PORT"));
+    RestAssured.baseURI = "http://localhost";
+    RestAssured.port = port;
+
+    UserDataProvider userDataProvider = new JDBCUserDataProvider(connection);
+    int adminId =
+        userDataProvider.createUser(
+            new UserData(null, "admin", null, null, PermissionLevel.SUPER_ADMIN));
+    userDataProvider.addUserAuthMethod(adminId, new AuthData("admin", ""));
+
+    new File("./.testfs/version").mkdirs();
+    new File("./.testfs/file").mkdirs();
+
+    vertx
+        .deployVerticle(
+            new MainVerticle(
+                userDataProvider,
+                new JDBCPageDataProvider(connection),
+                new JDBCRevisionDataProvider(connection),
+                new JDBCCommentDataProvider(connection),
+                new JDBCCategoryDataProvider(connection),
+                new FilesystemVersionProvider("./.testfs/version"),
+                new FilesystemFileProvider("./.testfs/file"),
+                port,
+                URI.create(String.format("%s:%d", RestAssured.baseURI, port)),
+                Map.of("admin", uri -> new TokenAuthenticationProvider(TOKEN, uri)),
+                new MarkdownPageRenderer()))
+        .onComplete(testContext.succeedingThenComplete());
+  }
+
+  @Test
+  public void comprehensiveTest() {
+    JsonArray receivedMethods = callEndpointArray("/api/auth/methods", Method.GET, null, 200);
+    assertEquals(JsonArray.of("admin"), receivedMethods);
+
+    String htmlForm = callEndpoint("/api/auth/login/admin", Method.GET, null, 200, "").asString();
+
+    Pattern uuidPattern = Pattern.compile("value='(?<uuid>[0-9a-f-]*)'");
+    Matcher uuidMatcher = uuidPattern.matcher(htmlForm);
+    assertTrue(uuidMatcher.find());
+    UUID stateUuid = UUID.fromString(uuidMatcher.group("uuid"));
+
+    var oldRedirectConfig = RestAssured.config().getRedirectConfig();
+
+    String sessionId =
+        given()
+            .redirects()
+            .follow(false)
+            .when()
+            .body("")
+            .request(Method.GET, "/api/auth/callback/admin?state=" + stateUuid + "&token=" + TOKEN)
+            .then()
+            .statusCode(302)
+            .cookie("HikkeiSession")
+            .extract()
+            .cookie("HikkeiSession");
+
+    Cookie sessionCookie = new Cookie.Builder("HikkeiSession", sessionId).build();
+
+    String userData =
+        callEndpoint("/api/user/", Method.GET, null, 200, "application/json", sessionCookie)
+            .asString();
+
+    int categoryId =
+        new JsonObject(
+                callEndpoint(
+                        "/api/category/create",
+                        Method.POST,
+                        JsonObject.of("name", "Cats & Dogs"),
+                        201,
+                        "application/json",
+                        sessionCookie)
+                    .asString())
+            .getInteger("id");
+
+    int pageId =
+        new JsonObject(
+                callEndpoint(
+                        "/api/page/create",
+                        Method.POST,
+                        JsonObject.of("category", categoryId, "title", "Kitty"),
+                        201,
+                        "application/json",
+                        sessionCookie)
+                    .asString())
+            .getInteger("id");
+
+    int revisionId =
+        new JsonObject(
+                callEndpoint(
+                        "/api/revision/create",
+                        Method.POST,
+                        JsonObject.of(
+                            "page_id",
+                            pageId,
+                            "content",
+                            "**A quick *brown* fox jumped over the lazy** dog."),
+                        201,
+                        "application/json",
+                        sessionCookie)
+                    .asString())
+            .getInteger("id");
+
+    System.out.println(
+        callEndpoint(
+                "/api/revision/page/" + pageId,
+                Method.GET,
+                null,
+                200,
+                "application/json",
+                sessionCookie)
+            .asString());
+
+    callEndpoint(
+        "/api/revision/update/status",
+        Method.PUT,
+        JsonObject.of("id", revisionId, "status", true),
+        204,
+        "",
+        sessionCookie);
+
+    System.out.println(
+        callEndpoint(
+                "/api/revision/page/" + pageId,
+                Method.GET,
+                null,
+                200,
+                "application/json",
+                sessionCookie)
+            .asString());
+
+    String renderedContent =
+        new JsonObject(
+                callEndpoint(
+                        "/api/revision/content/" + pageId,
+                        Method.GET,
+                        null,
+                        200,
+                        "application/json",
+                        sessionCookie)
+                    .asString())
+            .getString("content");
+
+    assertEquals(
+        "<p><strong>A quick <em>brown</em> fox jumped over the lazy</strong> dog.</p>\n",
+        renderedContent);
+
+    String rawContent =
+        new JsonObject(
+                callEndpoint(
+                        "/api/revision/content/" + pageId + "/raw",
+                        Method.GET,
+                        null,
+                        200,
+                        "application/json",
+                        sessionCookie)
+                    .asString())
+            .getString("content");
+
+    assertEquals("**A quick *brown* fox jumped over the lazy** dog.", rawContent);
+  }
+}

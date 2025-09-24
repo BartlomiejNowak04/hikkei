@@ -15,6 +15,7 @@ public class UserRouteHandler extends RouteHandler {
     super(vertx);
     UserController controller = new UserController(userProvider, fileProvider, categoryProvider);
 
+    router.get("/").blockingHandler(controller::getSelf);
     router.get("/:id").blockingHandler(controller::getUser);
     router.get("/pfp/:id").blockingHandler(controller::getPfp);
     router.get("/categories/:id").blockingHandler(controller::getCategoriesWithPermissions);

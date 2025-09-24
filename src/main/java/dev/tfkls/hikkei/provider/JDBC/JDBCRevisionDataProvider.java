@@ -58,6 +58,7 @@ public class JDBCRevisionDataProvider implements RevisionDataProvider {
             "INSERT INTO revision_approved (approved, revision_id) values (?, ?)")) {
       st.setBoolean(1, state);
       st.setInt(2, id);
+      st.executeUpdate();
     } catch (SQLException e) {
       String message = e.getMessage();
       if (message.contains("revision_approved_revision_id_fkey"))

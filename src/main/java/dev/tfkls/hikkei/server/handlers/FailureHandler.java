@@ -12,6 +12,8 @@ public class FailureHandler implements Handler<RoutingContext> {
   @Override
   public void handle(RoutingContext ctx) {
     Throwable e = ctx.failure();
+    e.printStackTrace();
+
     if (ctx.response().ended()) {
       return;
     }
@@ -20,7 +22,7 @@ public class FailureHandler implements Handler<RoutingContext> {
         && !(e instanceof AuthenticationException)
         && !(e instanceof HttpException)) {
       ctx.response().setStatusCode(500);
-      ctx.json(new JsonObject().put("message", "Internal server error"));
+      ctx.json(new JsonObject().put("message", "Internal server error: " + e.getMessage()));
       // ctx.json(new JsonObject().put("message", e.toString()));
     } else if (e instanceof HttpException) {
       ctx.response().setStatusCode(((HttpException) e).getStatusCode());

@@ -6,6 +6,7 @@ import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.model.user.UserData;
 import io.vertx.core.json.JsonObject;
+import java.util.Optional;
 
 public class Jsonify {
   public static JsonObject pageToJson(PageData page) {
@@ -23,7 +24,7 @@ public class Jsonify {
         .put("id", revision.id())
         .put("page_id", revision.pageId())
         .put("user_id", revision.userId())
-        .put("filename", revision.file())
+        .put("filename", Optional.ofNullable(revision.file()).map(String::new).orElse(null))
         .put("date", revision.date() == null ? null : revision.date().toString())
         .put("approved", revision.approved());
   }

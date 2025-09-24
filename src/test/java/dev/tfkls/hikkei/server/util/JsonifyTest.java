@@ -37,7 +37,7 @@ class JsonifyTest {
     assertEquals(5, json.getInteger("id"));
     assertEquals(2, json.getInteger("page_id"));
     assertEquals(1, json.getInteger("user_id"));
-    assertArrayEquals(new byte[] {0}, json.getBinary("filename"));
+    assertEquals(new String(new byte[] {0}), json.getString("filename"));
     assertEquals(now, LocalDateTime.parse(json.getString("date")));
     assertTrue(json.getBoolean("approved"));
   }

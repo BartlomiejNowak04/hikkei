@@ -88,7 +88,7 @@ public class PageController {
   public void createPage(RoutingContext ctx) {
     ParamFlow.handle(
         ctx,
-        Map.of("title", Type.Str, "category", Type.Str),
+        Map.of("title", Type.Str, "category", Type.Int),
         null,
         body -> {
           String title = body.getString("title");

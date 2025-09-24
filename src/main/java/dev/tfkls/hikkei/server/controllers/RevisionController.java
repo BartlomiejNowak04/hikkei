@@ -6,6 +6,7 @@ import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.file.StoredVersion;
 import dev.tfkls.hikkei.model.file.VersionProvider;
+import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.page.PageRenderer;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
@@ -45,6 +46,8 @@ public class RevisionController {
         Map.of("page_id", Type.Int, "content", Type.Str),
         null,
         body -> {
+          int userId = AccessManager.requireUser(ctx);
+
           int pageCategory = pageProvider.getById(body.getInteger("page_id")).category();
           AccessManager.setCategory(ctx, pageCategory);
           AccessManager.verifyPermission(ctx, PermissionLevel.TRUSTED);
@@ -61,7 +64,7 @@ public class RevisionController {
 
           int idr =
               revisionProvider.createRevision(
-                  new RevisionData(body.getInteger("page_id"), ctx.get("id"), filename));
+                  new RevisionData(body.getInteger("page_id"), userId, filename));
           ctx.response().setStatusCode(201);
           ctx.json(new JsonObject().put("id", idr));
         });
@@ -80,8 +83,10 @@ public class RevisionController {
             AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
 
             revisionProvider.changeState(body.getInteger("id"), body.getBoolean("status"));
+            ctx.response().setStatusCode(204).end();
+          } else {
+            ctx.response().setStatusCode(404).end();
           }
-          ctx.response().setStatusCode(204).end();
         });
   }
 
@@ -145,8 +150,9 @@ public class RevisionController {
         body -> {
           Integer id = body.getInteger("id");
 
-          int pageCategory = pageProvider.getById(id).category();
-          AccessManager.setCategory(ctx, pageCategory);
+          PageData pageData = pageProvider.getById(id);
+          if (pageData == null) throw new BadDataException("Invalid page id");
+          AccessManager.setCategory(ctx, pageData.category());
           AccessManager.verifyPermission(ctx, PermissionLevel.UNTRUSTED);
 
           List<RevisionData> revisions = revisionProvider.getByPage(id);
@@ -156,8 +162,9 @@ public class RevisionController {
           String data = "";
           if (!revisions.isEmpty()) {
             StoredVersion file = versionProvider.getVersion(revisions.getFirst().file());
-            if (file == null || file.data() == null)
+            if (file == null || file.data() == null) {
               throw new InternalErrorException("Couldn't retrieve content for page " + id);
+            }
             data = file.data();
           }
           ctx.response().setStatusCode(200);

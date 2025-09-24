@@ -1,8 +1,9 @@
 package dev.tfkls.hikkei.server.routes;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static dev.tfkls.hikkei.server.util.RestCaller.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +35,8 @@ public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegration
     assertEquals(rd.id(), body.getInteger("id"));
     assertEquals(rd.userId(), body.getInteger("user_id"));
     assertEquals(rd.pageId(), body.getInteger("page_id"));
-    assertArrayEquals(rd.file(), body.getBinary("filename"));
+    assertEquals(
+        Optional.ofNullable(rd.file()).map(String::new).orElse(null), body.getString("filename"));
     assertEquals(rd.date().toString(), body.getString("date"));
     assertEquals(rd.approved(), body.getBoolean("approved"));
   }
@@ -107,10 +110,6 @@ public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegration
     assertEquals("test", body.getString("content"));
   }
 
-  // TODO: test the rendering
-  @Test
-  void currentRenderTest() throws Exception {}
-
   @Test
   void byIdNoDataTest() throws Exception {
     when(revisionProvider.getById(1)).thenReturn(null);
@@ -162,12 +161,25 @@ public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegration
   //  }
 
   @Test
-  void updateStatusWorkingTest() {
+  void updateStatusFoundTest() throws Exception {
+    when(pageProvider.getById(1)).thenReturn(pd);
+    when(revisionProvider.getById(1)).thenReturn(rd);
     callEndpoint(
         "/api/revision/update/status",
         Method.PUT,
         new JsonObject().put("id", 1).put("status", true),
         204,
+        "");
+    verify(revisionProvider).changeState(1, true);
+  }
+
+  @Test
+  void updateStatusNotFoundTest() {
+    callEndpoint(
+        "/api/revision/update/status",
+        Method.PUT,
+        new JsonObject().put("id", 1).put("status", true),
+        404,
         "");
   }
 

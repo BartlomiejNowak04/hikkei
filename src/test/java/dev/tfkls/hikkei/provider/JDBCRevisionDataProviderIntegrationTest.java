@@ -148,4 +148,16 @@ public class JDBCRevisionDataProviderIntegrationTest extends JDBCIntegrationTest
   void saveDraftFailsForInvalidPage() {
     assertThrows(BadDataException.class, () -> provider.saveDraft(userId, -1, new byte[] {1}));
   }
+
+  @Test
+  void revisionApprovalWorks() throws Exception {
+    RevisionData revision =
+        new RevisionData(-1, pageId, userId, new byte[] {1, 2}, LocalDateTime.now(), null);
+    int revId = provider.createRevision(revision);
+
+    provider.changeState(revId, true);
+    assertTrue(provider.getById(revId).approved());
+    provider.changeState(revId, false);
+    assertFalse(provider.getById(revId).approved());
+  }
 }

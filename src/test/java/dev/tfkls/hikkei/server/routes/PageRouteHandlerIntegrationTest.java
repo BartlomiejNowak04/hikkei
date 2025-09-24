@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.server.routes;
 
+import static dev.tfkls.hikkei.server.util.RestCaller.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 

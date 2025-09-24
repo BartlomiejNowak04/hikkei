@@ -1,12 +1,9 @@
 package dev.tfkls.hikkei.server.routes;
 
-import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
-import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
@@ -16,11 +13,7 @@ import dev.tfkls.hikkei.provider.page.IdentityPageRenderer;
 import dev.tfkls.hikkei.server.MainVerticle;
 import dev.tfkls.hikkei.test.IntegrationTest;
 import io.restassured.RestAssured;
-import io.restassured.http.Method;
-import io.restassured.response.ResponseBodyExtractionOptions;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.net.URI;
@@ -82,48 +75,5 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
         categoryProvider,
         versionProvider,
         fileProvider);
-  }
-
-  protected ResponseBodyExtractionOptions callEndpoint(
-      String endpoint, Method method, JsonObject body, int statusCode, String contentType) {
-    return given()
-        .when()
-        .body(body == null ? "" : body.toString())
-        .request(method, endpoint)
-        .then()
-        .statusCode(statusCode)
-        .contentType(contentType)
-        .extract()
-        .body();
-  }
-
-  protected JsonObject callEndpointObject(
-      String endpoint, Method method, JsonObject body, int statusCode) {
-    return new JsonObject(
-        callEndpoint(endpoint, method, body, statusCode, "application/json").asString());
-  }
-
-  protected JsonObject callGetEndpointObject(String endpoint, int statusCode) {
-    return callEndpointObject(endpoint, Method.GET, null, statusCode);
-  }
-
-  protected JsonArray callEndpointArray(
-      String endpoint, Method method, JsonObject body, int statusCode) {
-    return new JsonArray(
-        callEndpoint(endpoint, method, body, statusCode, "application/json").asString());
-  }
-
-  protected JsonArray callGetEndpointArray(String endpoint, int statusCode) {
-    return callEndpointArray(endpoint, Method.GET, null, statusCode);
-  }
-
-  protected void testException(String endpoint, Method method, JsonObject body, Exception e) {
-    JsonObject bd =
-        callEndpointObject(endpoint, method, body, e instanceof InternalErrorException ? 500 : 400);
-    assertEquals(e.getMessage(), bd.getString("message"));
-  }
-
-  protected void testGetException(String endpoint, Exception e) {
-    testException(endpoint, Method.GET, null, e);
   }
 }

@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.server.routes.error;
 
+import static dev.tfkls.hikkei.server.util.RestCaller.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;
 

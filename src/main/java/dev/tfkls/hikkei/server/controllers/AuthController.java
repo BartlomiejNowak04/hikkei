@@ -54,6 +54,6 @@ public class AuthController {
         auth.get(providerName)
             .requestAuthentication(
                 (token, new_ctx) -> callback.callback(new AuthData(providerName, token), new_ctx));
-    ctx.redirect(redirectUri.toString()).await();
+    ctx.redirect(redirectUri.toString());
   }
 }

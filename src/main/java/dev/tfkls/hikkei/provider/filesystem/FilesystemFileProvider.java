@@ -11,7 +11,7 @@ public class FilesystemFileProvider implements FileProvider {
   private final Path dir;
 
   public FilesystemFileProvider(String directory) {
-    dir = Paths.get(directory);
+    dir = Paths.get(directory).normalize();
     if (!Files.exists(dir) || !Files.isDirectory(dir))
       throw new InvalidPathException(null, "Invalid directory: " + directory);
   }
