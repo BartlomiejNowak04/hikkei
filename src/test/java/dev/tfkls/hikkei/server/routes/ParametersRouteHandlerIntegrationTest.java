@@ -189,15 +189,16 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     assertGetEndpoint("/api/revision/page", List.of(Type.Int), List.of("id"));
   }
 
-  //  @Test
-  //  public void apiRevisionRenderRejectsImproperData() {
-  //    assertEndpoint("/api/revision/render", Method.POST, Map.of("content", "Sample content"));
-  //  }
-
   @Test
-  public void apiRevisionContentRejectsImproperData() {
-    assertGetEndpoint("/api/revision/content", List.of(Type.Int), List.of("id"));
+  public void apiRevisionRenderRejectsImproperData() {
+    assertEndpoint(
+        "/api/revision/render", Method.POST, Map.of("content", Type.Str), List.of(), List.of());
   }
+
+  // @Test
+  // public void apiRevisionContentRejectsImproperData() {
+  // assertGetEndpoint("/api/revision/current", List.of(Type.Int), List.of("id"));
+  // }
 
   @Test
   public void apiRevisionByidRejectsImproperData() {

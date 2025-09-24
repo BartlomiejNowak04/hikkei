@@ -51,7 +51,7 @@ public class ErrorRevisionRouteHandlerIntegrationTest extends RouteHandlerIntegr
   void contentInternalErrorTest() throws Exception {
     when(pageProvider.getById(1)).thenThrow(ie);
     when(revisionProvider.getByPage(1)).thenThrow(ie);
-    testGetException("/api/revision/content/1", ie);
+    testGetException("/api/revision/current/1/raw", ie);
   }
 
   @Test
@@ -62,7 +62,7 @@ public class ErrorRevisionRouteHandlerIntegrationTest extends RouteHandlerIntegr
             new ArrayList<>(
                 Collections.singleton(new RevisionData(1, 1, 1, new byte[0], null, true))));
     when(versionProvider.getVersion(any())).thenThrow(ie);
-    testGetException("/api/revision/content/1", ie);
+    testGetException("/api/revision/current/1/raw", ie);
   }
 
   @Test

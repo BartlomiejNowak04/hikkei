@@ -110,8 +110,6 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
 
     int userId = userData.getInteger("id");
 
-    System.out.println("Authenticated");
-
     int categoryId =
         new JsonObject(
                 callEndpoint(
@@ -166,12 +164,10 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
     callEndpoint(
         "/api/revision/page/" + pageId, Method.GET, null, 200, "application/json", sessionCookie);
 
-    System.out.println("Created a revision");
-
     String renderedContent =
         new JsonObject(
                 callEndpoint(
-                        "/api/revision/content/" + pageId,
+                        "/api/revision/current/" + pageId + "/rendered",
                         Method.GET,
                         null,
                         200,
@@ -187,7 +183,7 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
     String rawContent =
         new JsonObject(
                 callEndpoint(
-                        "/api/revision/content/" + pageId + "/raw",
+                        "/api/revision/current/" + pageId + "/raw",
                         Method.GET,
                         null,
                         200,
@@ -198,7 +194,47 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
 
     assertEquals("**A quick *brown* fox jumped over the lazy** dog.", rawContent);
 
-    System.out.println("Checked the revision");
+    String renderedContent2 =
+        new JsonObject(
+                callEndpoint(
+                        "/api/revision/" + revisionId + "/rendered",
+                        Method.GET,
+                        null,
+                        200,
+                        "application/json",
+                        sessionCookie)
+                    .asString())
+            .getString("content");
+
+    assertEquals(renderedContent, renderedContent2);
+
+    String rawContent2 =
+        new JsonObject(
+                callEndpoint(
+                        "/api/revision/" + revisionId + "/raw",
+                        Method.GET,
+                        null,
+                        200,
+                        "application/json",
+                        sessionCookie)
+                    .asString())
+            .getString("content");
+
+    assertEquals(rawContent, rawContent2);
+
+    String renderedContent3 =
+        new JsonObject(
+                callEndpoint(
+                        "/api/revision/render",
+                        Method.POST,
+                        JsonObject.of("content", rawContent),
+                        200,
+                        "application/json",
+                        sessionCookie)
+                    .asString())
+            .getString("content");
+
+    assertEquals(renderedContent, renderedContent3);
 
     JsonObject exampleJson =
         new JsonObject()
@@ -247,12 +283,9 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
     assertEquals(userId, blobMetadata.getInteger("user_id"));
     assertEquals(blobId, blobMetadata.getInteger("id"));
 
-    System.out.println("Created & checked the blob");
-
-    callEndpoint("/api/blob/" + blobId + "/delete", Method.DELETE, null, 204, "", sessionCookie);
+    callEndpoint(
+        "/api/blob/delete", Method.DELETE, JsonObject.of("id", blobId), 204, "", sessionCookie);
 
     callEndpoint("/api/blob/" + blobId + "/data", Method.GET, null, 404, "", sessionCookie);
-
-    System.out.println("Deleted the blob");
   }
 }

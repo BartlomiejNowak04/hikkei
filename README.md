@@ -59,6 +59,7 @@ The frontend application communicates with the backend server through an API. Be
     - POST `create`: create a user, params: String name
     - PUT `update/name`: update logged in user's username, params: String name
     - PUT `update/pfp`: update profile picture, send the picture as multi-part file
+    - PUT `update/permission`: update profile picture, send the picture as multi-part file
     - DELETE `delete`: delete the account
 - `/api/page/`:
     - GET `random`: get a random page
@@ -74,15 +75,18 @@ The frontend application communicates with the backend server through an API. Be
 - `/api/revision/`:
     - GET `user/:id`: get user's revisions
     - GET `page/:id`: get page's revisions
-    - POST `render`: render passed content, params: String content
-    - GET `content/:id`: get current content for a page
-    - GET `:id`: get revision by id
+    - GET `current/:id/raw`: get current content for a page as raw markup for editing
+    - GET `current/:id/rendered`: get current content for a page as rendered HTML for display
+    - GET `:id`: get revision metadata by id
+    - GET `:id/raw`: get revision content as raw markup for editing
+    - GET `:id/rendered`: get revision content as rendered HTML for display
     - GET `draft/:page_id`: get user's draft revision for a page
     - POST `create`: create a revision, params: Integer page_id, String content
     - PUT `update/status`: approve or reject a revision, params: Integer id, Boolean status
     - POST `draft/save`: save a draft revision, params: Integer page, String content
     - DELETE `draft/delete`: delete a draft revision, params: Integer page
     - DELETE `delete`: delete a revision, params: Integer id
+    - POST `render`: render passed content, params: String content
 - `/api/comment/`:
     - GET `user/:id`: get user's comments
     - GET `page/:id`: get page's comments
@@ -96,19 +100,21 @@ The frontend application communicates with the backend server through an API. Be
     - PUT `permission`: modify user's permissions to given category, params: Integer category, Integer user, String permission
     - POST `create`: create a category, params: String name
     - PUT `update/name`: update category name, params: Integer id, String name
+    - PUT `update/permission`: update default category permission, params: Integer id, String permission
     - DELETE `delete`: delete a category, params: Integer id
-- `/api/auth`:
-    - GET `methods`: get available auth methods (same as above)
-    - GET `login/:method`: login a user with the specified method
-    - GET `register/:method`: register a user with the specified method
-    - GET `merge/:method`: add a new auth method for a user
-    - *NOTE: as the login/register/merge endpoints begin an auth flow, the client should be redirected to them directly*
 - `/api/blob`:
     - GET `:id/data`: get the raw blob data in it's specified mime type
     - GET `:id/meta`: get the blob metadata (creation time, mime type, owner's user id & more)
     - POST `create`: upload some raw blob data, with the mime type determined by the Content-Type header
     - GET `user/:id`: get all non-deleted blobs created by a given user
-    - DELETE `:id/delete`: delete a blob object and it's data
+    - DELETE `delete`: delete a blob object and it's data, params: Integer id
+- `/api/auth`:
+    - GET `methods`: get available auth methods (same as above)
+    - GET `login/:method`: login a user with the specified method
+    - GET `register/:method`: register a user with the specified method
+    - GET `merge/:method`: add a new auth method for a user
+    - GET `callback/:method`: route internally managed by each auth provider
+    - *NOTE: as the login/register/merge endpoints begin an auth flow, the client should be redirected to them directly*
 
 
 ## Setup
@@ -121,6 +127,8 @@ POSTGRES_PASS=[password]
 FILE_DIRECTORY=/directory/where/revisions/are/kept
 IMAGE_DIRECTORY=/directory/where/images/are/kept
 PORT=[port_number]
+BASE_URI=[base_site_uri]
+ADMIN_PASS=[default_superadmin_access_token]
 ```
 
 ### Database

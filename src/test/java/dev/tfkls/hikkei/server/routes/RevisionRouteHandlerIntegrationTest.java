@@ -90,14 +90,14 @@ public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegration
   void contentNoPageTest() throws Exception {
     when(revisionProvider.getByPage(1)).thenReturn(null);
     when(pageProvider.getById(1)).thenReturn(pd);
-    testGetException("/api/revision/content/1", new BadDataException("Invalid page id"));
+    testGetException("/api/revision/current/1/raw", new BadDataException("Invalid page id"));
   }
 
   @Test
   void contentEmptyTest() throws Exception {
     when(revisionProvider.getByPage(1)).thenReturn(new ArrayList<>());
     when(pageProvider.getById(1)).thenReturn(pd);
-    JsonObject body = callGetEndpointObject("/api/revision/content/1", 200);
+    JsonObject body = callGetEndpointObject("/api/revision/current/1/raw", 200);
     assertEquals("", body.getString("content"));
   }
 
@@ -106,7 +106,7 @@ public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegration
     when(revisionProvider.getByPage(1)).thenReturn(new ArrayList<>(Collections.singleton(rd)));
     when(versionProvider.getVersion(any())).thenReturn(new StoredVersion("test", null));
     when(pageProvider.getById(1)).thenReturn(pd);
-    JsonObject body = callGetEndpointObject("/api/revision/content/1", 200);
+    JsonObject body = callGetEndpointObject("/api/revision/current/1/raw", 200);
     assertEquals("test", body.getString("content"));
   }
 

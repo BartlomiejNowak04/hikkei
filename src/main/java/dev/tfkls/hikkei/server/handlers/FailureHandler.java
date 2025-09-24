@@ -12,7 +12,6 @@ public class FailureHandler implements Handler<RoutingContext> {
   @Override
   public void handle(RoutingContext ctx) {
     Throwable e = ctx.failure();
-    e.printStackTrace();
 
     if (ctx.response().ended()) {
       return;

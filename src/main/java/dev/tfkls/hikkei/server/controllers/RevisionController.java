@@ -19,6 +19,7 @@ import dev.tfkls.hikkei.server.util.Type;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.HttpException;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -142,7 +143,7 @@ public class RevisionController {
     getCurrentContent(ctx, new IdentityPageRenderer());
   }
 
-  public void getCurrentContent(RoutingContext ctx, PageRenderer transform) {
+  protected void getCurrentContent(RoutingContext ctx, PageRenderer transform) {
     handle(
         ctx,
         null,
@@ -277,6 +278,50 @@ public class RevisionController {
             revisionProvider.deleteRevision(body.getInteger("id"));
           }
           ctx.response().setStatusCode(204).end();
+        });
+  }
+
+  public void getRevisionContentRaw(RoutingContext ctx) {
+    getRevisionContent(ctx, new IdentityPageRenderer());
+  }
+
+  public void getRevisionContent(RoutingContext ctx) {
+    getRevisionContent(ctx, pageRenderer);
+  }
+
+  protected void getRevisionContent(RoutingContext ctx, PageRenderer transform) {
+    handle(
+        ctx,
+        null,
+        Map.of("id", Type.Int),
+        body -> {
+          Integer id = body.getInteger("id");
+          RevisionData revision = revisionProvider.getById(id);
+          if (revision == null) throw new HttpException(404, "Revision not found");
+
+          AccessManager.setCategory(ctx, pageProvider.getById(revision.pageId()).category());
+          AccessManager.verifyPermission(ctx, PermissionLevel.TRUSTED);
+
+          StoredVersion file = versionProvider.getVersion(revision.file());
+          if (file == null || file.data() == null) {
+            throw new InternalErrorException("Couldn't retrieve content for page " + id);
+          }
+          String data = file.data();
+          ctx.response().setStatusCode(200);
+
+          ctx.json(new JsonObject().put("content", transform.render(data)));
+        });
+  }
+
+  public void render(RoutingContext ctx) {
+    handle(
+        ctx,
+        Map.of("content", Type.Str),
+        null,
+        body -> {
+          String content = body.getString("content");
+          ctx.response().setStatusCode(200);
+          ctx.json(JsonObject.of("content", pageRenderer.render(content)));
         });
   }
 }

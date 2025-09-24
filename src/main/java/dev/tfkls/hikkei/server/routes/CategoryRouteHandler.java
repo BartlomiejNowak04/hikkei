@@ -18,6 +18,7 @@ public class CategoryRouteHandler extends RouteHandler {
     router.put("/permission").blockingHandler(controller::modifyPermission);
     router.post("/create").blockingHandler(controller::createCategory);
     router.put("/update/name").blockingHandler(controller::updateName);
+    router.put("/update/permission").blockingHandler(controller::updateDefaultPermission);
 
     router.delete("/delete").blockingHandler(controller::deleteCategory);
   }

@@ -14,6 +14,6 @@ public class BlobRouteHandler extends RouteHandler {
     router.post("/create").blockingHandler(blobController::createBlob);
     router.get("/:id/data").blockingHandler(blobController::getBlobData);
     router.get("/:id/meta").blockingHandler(blobController::getBlobMetadata);
-    router.delete("/:id/delete").blockingHandler(blobController::deleteBlob);
+    router.delete("/delete").blockingHandler(blobController::deleteBlob);
   }
 }

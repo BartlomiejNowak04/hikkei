@@ -66,8 +66,8 @@ public class BlobController {
   public void deleteBlob(RoutingContext ctx) {
     handle(
         ctx,
-        null,
         Map.of("id", Type.Int),
+        null,
         json -> {
           int id = json.getInteger("id");
           BlobData blobData = blobProvider.getBlobById(id);

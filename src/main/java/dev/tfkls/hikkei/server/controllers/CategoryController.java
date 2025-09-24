@@ -13,6 +13,7 @@ import dev.tfkls.hikkei.server.util.Type;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.HttpException;
 import java.util.List;
 import java.util.Map;
 
@@ -131,8 +132,25 @@ public class CategoryController {
         null,
         body -> {
           AccessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
-
           categoryProvider.changeName(body.getInteger("id"), body.getString("name"));
+          ctx.response().setStatusCode(204).end();
+        });
+  }
+
+  public void updateDefaultPermission(RoutingContext ctx) {
+    ParamFlow.handle(
+        ctx,
+        Map.of("id", Type.Int, "permission", Type.Str),
+        null,
+        body -> {
+          PermissionLevel permission;
+          try {
+            permission = PermissionLevel.valueOf(body.getString("permission"));
+          } catch (IllegalArgumentException e) {
+            throw new HttpException(400, "Invalid permission type");
+          }
+          AccessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
+          categoryProvider.updateDefaultPermission(body.getInteger("id"), permission);
           ctx.response().setStatusCode(204).end();
         });
   }

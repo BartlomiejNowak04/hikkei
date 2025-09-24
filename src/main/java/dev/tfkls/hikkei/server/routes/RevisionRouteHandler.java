@@ -20,10 +20,14 @@ public class RevisionRouteHandler extends RouteHandler {
 
     router.get("/user/:id").blockingHandler(controller::getByUser);
     router.get("/page/:id").blockingHandler(controller::getByPage);
-    router.get("/content/:id").blockingHandler(controller::getCurrentContent);
-    router.get("/content/:id/raw").blockingHandler(controller::getCurrentContentRaw);
+    router.get("/current/:id/raw").blockingHandler(controller::getCurrentContentRaw);
+    router.get("/current/:id/rendered").blockingHandler(controller::getCurrentContent);
     router.get("/:id").blockingHandler(controller::getById);
     router.get("/draft/:page_id").blockingHandler(controller::getDraft);
+
+    router.get("/:id/raw").blockingHandler(controller::getRevisionContentRaw);
+    router.get("/:id/rendered").blockingHandler(controller::getRevisionContent);
+    router.post("/render").blockingHandler(controller::render);
 
     router.post("/create").blockingHandler(controller::addRevision);
     router.put("/update/status").blockingHandler(controller::changeStatus);
