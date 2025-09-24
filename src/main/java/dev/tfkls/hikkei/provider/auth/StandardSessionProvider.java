@@ -1,7 +1,7 @@
 package dev.tfkls.hikkei.provider.auth;
 
 import dev.tfkls.hikkei.model.auth.SessionProvider;
-import dev.tfkls.hikkei.view.ClockView;
+import dev.tfkls.hikkei.util.ClockView;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
