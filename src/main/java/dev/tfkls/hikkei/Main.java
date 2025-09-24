@@ -1,6 +1,7 @@
 package dev.tfkls.hikkei;
 
 import dev.tfkls.hikkei.model.auth.AuthenticationProvider;
+import dev.tfkls.hikkei.model.blob.BlobDataProvider;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
@@ -63,6 +64,7 @@ public class Main {
     CategoryDataProvider categoryDataProvider = new JDBCCategoryDataProvider(connection);
     VersionProvider versionProvider = new FilesystemVersionProvider(file_dir);
     FileProvider fileProvider = new FilesystemFileProvider(img_dir);
+    BlobDataProvider blobDataProvider = new JDBCBlobDataProvider(connection, fileProvider);
 
     // Admin auth setup
     Map<String, Function<URI, AuthenticationProvider>> authMethods = new HashMap<>();
@@ -94,6 +96,7 @@ public class Main {
             revisionDataProvider,
             commentDataProvider,
             categoryDataProvider,
+            blobDataProvider,
             versionProvider,
             fileProvider,
             port,

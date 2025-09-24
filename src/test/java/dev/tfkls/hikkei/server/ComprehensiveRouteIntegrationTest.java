@@ -4,6 +4,7 @@ import static dev.tfkls.hikkei.server.util.RestCaller.*;
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.AuthData;
 import dev.tfkls.hikkei.model.user.UserData;
@@ -53,6 +54,8 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
     new File("./.testfs/version").mkdirs();
     new File("./.testfs/file").mkdirs();
 
+    FileProvider fileProvider = new FilesystemFileProvider("./.testfs/file");
+
     vertx
         .deployVerticle(
             new MainVerticle(
@@ -61,8 +64,9 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
                 new JDBCRevisionDataProvider(connection),
                 new JDBCCommentDataProvider(connection),
                 new JDBCCategoryDataProvider(connection),
+                new JDBCBlobDataProvider(connection, fileProvider),
                 new FilesystemVersionProvider("./.testfs/version"),
-                new FilesystemFileProvider("./.testfs/file"),
+                fileProvider,
                 port,
                 URI.create(String.format("%s:%d", RestAssured.baseURI, port)),
                 Map.of("admin", uri -> new TokenAuthenticationProvider(TOKEN, uri)),
@@ -99,9 +103,14 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
 
     Cookie sessionCookie = new Cookie.Builder("HikkeiSession", sessionId).build();
 
-    String userData =
-        callEndpoint("/api/user/", Method.GET, null, 200, "application/json", sessionCookie)
-            .asString();
+    JsonObject userData =
+        new JsonObject(
+            callEndpoint("/api/user/", Method.GET, null, 200, "application/json", sessionCookie)
+                .asString());
+
+    int userId = userData.getInteger("id");
+
+    System.out.println("Authenticated");
 
     int categoryId =
         new JsonObject(
@@ -143,15 +152,8 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
                     .asString())
             .getInteger("id");
 
-    System.out.println(
-        callEndpoint(
-                "/api/revision/page/" + pageId,
-                Method.GET,
-                null,
-                200,
-                "application/json",
-                sessionCookie)
-            .asString());
+    callEndpoint(
+        "/api/revision/page/" + pageId, Method.GET, null, 200, "application/json", sessionCookie);
 
     callEndpoint(
         "/api/revision/update/status",
@@ -161,15 +163,10 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
         "",
         sessionCookie);
 
-    System.out.println(
-        callEndpoint(
-                "/api/revision/page/" + pageId,
-                Method.GET,
-                null,
-                200,
-                "application/json",
-                sessionCookie)
-            .asString());
+    callEndpoint(
+        "/api/revision/page/" + pageId, Method.GET, null, 200, "application/json", sessionCookie);
+
+    System.out.println("Created a revision");
 
     String renderedContent =
         new JsonObject(
@@ -200,5 +197,62 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
             .getString("content");
 
     assertEquals("**A quick *brown* fox jumped over the lazy** dog.", rawContent);
+
+    System.out.println("Checked the revision");
+
+    JsonObject exampleJson =
+        new JsonObject()
+            .put("test", 1234)
+            .put("test1", 123.4)
+            .put("test2", "test2")
+            .put("test3", new JsonArray().add(1).add("2").add(JsonObject.of("3", 4.5)));
+
+    int blobId =
+        new JsonObject(
+                callEndpoint(
+                        "/api/blob/create",
+                        Method.POST,
+                        exampleJson,
+                        201,
+                        "application/json",
+                        sessionCookie)
+                    .asString())
+            .getInteger("id");
+
+    String blobData =
+        callEndpoint(
+                "/api/blob/" + blobId + "/data",
+                Method.GET,
+                null,
+                200,
+                "application/json",
+                sessionCookie)
+            .asString();
+
+    assertEquals(exampleJson.toString(), blobData);
+
+    JsonObject blobMetadata =
+        new JsonObject(
+            callEndpoint(
+                    "/api/blob/" + blobId + "/meta",
+                    Method.GET,
+                    null,
+                    200,
+                    "application/json",
+                    sessionCookie)
+                .asString());
+
+    assertEquals(blobData.length(), blobMetadata.getInteger("size"));
+    assertEquals("application/json", blobMetadata.getString("mime"));
+    assertEquals(userId, blobMetadata.getInteger("user_id"));
+    assertEquals(blobId, blobMetadata.getInteger("id"));
+
+    System.out.println("Created & checked the blob");
+
+    callEndpoint("/api/blob/" + blobId + "/delete", Method.DELETE, null, 204, "", sessionCookie);
+
+    callEndpoint("/api/blob/" + blobId + "/data", Method.GET, null, 404, "", sessionCookie);
+
+    System.out.println("Deleted the blob");
   }
 }

@@ -314,7 +314,8 @@ DECLARE
     { comments, page_id, pages },
     { comments, user_id, users },
     { drafts, page_id, pages },
-    { drafts, user_id, users }
+    { drafts, user_id, users },
+    { blobs, user_id, users }
     }$arr$;
 BEGIN
     FOREACH name SLICE 1 in ARRAY refs
@@ -335,3 +336,5 @@ END$$;
 
 CREATE TRIGGER  trg_check_not_deleted_update_draft_users BEFORE UPDATE on drafts FOR EACH ROW EXECUTE FUNCTION check_not_deleted('user_id', 'users');
 CREATE TRIGGER  trg_check_not_deleted_update_draft_pages BEFORE UPDATE on drafts FOR EACH ROW EXECUTE FUNCTION check_not_deleted('page_id', 'pages');
+
+CREATE TRIGGER  trg_check_not_deleted_update_blob_users BEFORE UPDATE on blobs FOR EACH ROW EXECUTE FUNCTION check_not_deleted('user_id', 'users');

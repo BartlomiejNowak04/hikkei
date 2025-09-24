@@ -2,6 +2,7 @@ package dev.tfkls.hikkei.server.routes;
 
 import static org.mockito.Mockito.mock;
 
+import dev.tfkls.hikkei.model.blob.BlobDataProvider;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
 import dev.tfkls.hikkei.model.file.FileProvider;
@@ -31,6 +32,7 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
   protected RevisionDataProvider revisionProvider;
   protected CommentDataProvider commentProvider;
   protected CategoryDataProvider categoryProvider;
+  protected BlobDataProvider blobProvider;
   protected VersionProvider versionProvider;
   protected FileProvider fileProvider;
 
@@ -45,6 +47,7 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
     revisionProvider = mock();
     commentProvider = mock();
     categoryProvider = mock();
+    blobProvider = mock();
     versionProvider = mock();
     fileProvider = mock();
 
@@ -56,6 +59,7 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
                 revisionProvider,
                 commentProvider,
                 categoryProvider,
+                blobProvider,
                 versionProvider,
                 fileProvider,
                 port,

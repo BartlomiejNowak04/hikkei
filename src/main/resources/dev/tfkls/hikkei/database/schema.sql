@@ -119,3 +119,14 @@ CREATE TABLE drafts (
     file BYTEA NOT NULL,
     PRIMARY KEY (user_id, page_id)
 );
+
+CREATE TABLE blobs (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    mime VARCHAR NOT NULL,
+    size INTEGER NOT NULL,
+    file BYTEA NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT now(),
+    deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    date_deleted TIMESTAMP
+);

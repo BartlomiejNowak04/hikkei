@@ -13,7 +13,8 @@ DROP TABLE IF EXISTS
     categories,
     users,
     drafts,
-    user_category
+    user_category,
+    blobs
 CASCADE;
 
 DROP FUNCTION IF EXISTS

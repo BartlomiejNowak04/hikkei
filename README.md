@@ -98,11 +98,17 @@ The frontend application communicates with the backend server through an API. Be
     - PUT `update/name`: update category name, params: Integer id, String name
     - DELETE `delete`: delete a category, params: Integer id
 - `/api/auth`:
-    - GET `/methods`: get available auth methods (same as above)
-    - GET `/login/:method`: login a user with the specified method
-    - GET `/register/:method`: register a user with the specified method
-    - GET `/merge/:method`: add a new auth method for a user
+    - GET `methods`: get available auth methods (same as above)
+    - GET `login/:method`: login a user with the specified method
+    - GET `register/:method`: register a user with the specified method
+    - GET `merge/:method`: add a new auth method for a user
     - *NOTE: as the login/register/merge endpoints begin an auth flow, the client should be redirected to them directly*
+- `/api/blob`:
+    - GET `:id/data`: get the raw blob data in it's specified mime type
+    - GET `:id/meta`: get the blob metadata (creation time, mime type, owner's user id & more)
+    - POST `create`: upload some raw blob data, with the mime type determined by the Content-Type header
+    - GET `user/:id`: get all non-deleted blobs created by a given user
+    - DELETE `:id/delete`: delete a blob object and it's data
 
 
 ## Setup

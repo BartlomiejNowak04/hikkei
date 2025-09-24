@@ -3,6 +3,7 @@ package dev.tfkls.hikkei.server;
 import dev.tfkls.hikkei.model.auth.AuthEventHandler;
 import dev.tfkls.hikkei.model.auth.AuthenticationProvider;
 import dev.tfkls.hikkei.model.auth.SessionProvider;
+import dev.tfkls.hikkei.model.blob.BlobDataProvider;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
 import dev.tfkls.hikkei.model.file.FileProvider;
@@ -36,6 +37,7 @@ public class MainVerticle extends VerticleBase {
   private final RevisionDataProvider revisionProvider;
   private final CommentDataProvider commentProvider;
   private final CategoryDataProvider categoryProvider;
+  private final BlobDataProvider blobProvider;
   private final VersionProvider versionProvider;
   private final FileProvider fileProvider;
   private final Integer port;
@@ -49,6 +51,7 @@ public class MainVerticle extends VerticleBase {
       RevisionDataProvider revisionProvider,
       CommentDataProvider commentProvider,
       CategoryDataProvider categoryProvider,
+      BlobDataProvider blobProvider,
       VersionProvider versionProvider,
       FileProvider fileProvider,
       Integer port,
@@ -61,6 +64,7 @@ public class MainVerticle extends VerticleBase {
     this.revisionProvider = revisionProvider;
     this.commentProvider = commentProvider;
     this.categoryProvider = categoryProvider;
+    this.blobProvider = blobProvider;
     this.versionProvider = versionProvider;
     this.fileProvider = fileProvider;
     this.port = port;
@@ -81,6 +85,7 @@ public class MainVerticle extends VerticleBase {
         new CommentRouteHandler(vertx, commentProvider, pageProvider);
     CategoryRouteHandler categoryRoute =
         new CategoryRouteHandler(vertx, categoryProvider, userProvider);
+    BlobRouteHandler blobRoute = new BlobRouteHandler(vertx, blobProvider);
 
     // * Auth configuration section *//
     SessionProvider sessionProvider;
@@ -119,6 +124,7 @@ public class MainVerticle extends VerticleBase {
     router.route("/api/revision/*").subRouter(revisionRoute.getRouter());
     router.route("/api/comment/*").subRouter(commentRoute.getRouter());
     router.route("/api/category/*").subRouter(categoryRoute.getRouter());
+    router.route("/api/blob/*").subRouter(blobRoute.getRouter());
 
     return vertx
         .createHttpServer()

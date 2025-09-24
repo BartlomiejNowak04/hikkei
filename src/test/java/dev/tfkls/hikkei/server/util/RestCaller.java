@@ -34,6 +34,7 @@ public class RestCaller {
     return given()
         .when()
         .body(body == null ? "" : body.toString())
+        .contentType("application/json")
         .cookie(cookie)
         .request(method, endpoint)
         .then()

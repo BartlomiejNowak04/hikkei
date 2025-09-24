@@ -14,7 +14,8 @@ BEGIN
         comments,
         pages,
         categories,
-        users
+        users,
+        blobs
         }$arr$::text[]
     LOOP
         EXECUTE 'CREATE RULE no_deletes_' || name || ' AS ON DELETE TO ' || name || ' DO INSTEAD NOTHING';
@@ -68,6 +69,11 @@ ON UPDATE TO drafts
 WHERE NEW.page_id <> OLD.page_id OR NEW.user_id <> OLD.user_id
 DO INSTEAD NOTHING;
 
+CREATE RULE no_updates_blobs AS
+ON UPDATE TO blobs
+WHERE NEW.id <> OLD.id OR NEW.user_id <> OLD.user_id OR NEW.mime <> OLD.mime OR NEW.size <> OLD.size OR NEW.created <> OLD.created OR NEW.file <> OLD.file
+DO INSTEAD NOTHING;
+
 DO $$
     DECLARE
         name text;
@@ -77,7 +83,8 @@ DO $$
         categories,
         pages,
         revisions,
-        comments
+        comments,
+        blobs
         }$arr$::text[]
             LOOP
                 EXECUTE 'CREATE RULE no_updates_deleted_' || name || ' AS ON UPDATE TO ' || name || ' WHERE OLD.deleted=TRUE DO INSTEAD NOTHING';

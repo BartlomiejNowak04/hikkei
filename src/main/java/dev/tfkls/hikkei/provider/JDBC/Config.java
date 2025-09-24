@@ -8,6 +8,7 @@ public class Config {
   public static final String internal_page = "Could not create a new page";
   public static final String internal_revision = "Could not create a new revision";
   public static final String internal_user = "Could not create a new user";
+  public static final String internal_blob = "Could not create a new blob";
 
   public static final String invalid_category = "Invalid category id";
   public static final String invalid_comment = "Invalid comment id";

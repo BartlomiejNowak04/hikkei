@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.server.util;
 
+import dev.tfkls.hikkei.model.blob.BlobData;
 import dev.tfkls.hikkei.model.category.CategoryData;
 import dev.tfkls.hikkei.model.comment.CommentData;
 import dev.tfkls.hikkei.model.page.PageData;
@@ -53,5 +54,15 @@ public class Jsonify {
         .put("name", category.name())
         .put("created", category.created() == null ? null : category.created().toString())
         .put("default_permission", category.defaultPermission().name());
+  }
+
+  public static JsonObject blobToJson(BlobData blob) {
+    return new JsonObject()
+        .put("id", blob.id())
+        .put("user_id", blob.userId())
+        .put("created", blob.created().toString())
+        .put("filename", new String(blob.file()))
+        .put("mime", blob.mime())
+        .put("size", blob.size());
   }
 }
