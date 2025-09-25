@@ -3,6 +3,7 @@ package dev.tfkls.hikkei.auth;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.auth.AuthEventHandler;
 import dev.tfkls.hikkei.model.auth.SessionProvider;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
@@ -145,5 +146,61 @@ public class StandardAuthEventHandlerMockTest {
     assertThrows(HttpException.class, () -> authHandler.onRegister(authData, ctx));
   }
 
-  // TODO: add tests for onMerge
+  @Test
+  public void checkMergeSuccess() throws Exception {
+    var ctx = mock(RoutingContext.class);
+    var userP = mock(UserDataProvider.class);
+    var sessP = mock(SessionProvider.class);
+    var ctxResp = mock(HttpServerResponse.class);
+    var access = mock(AccessManager.class);
+
+    AuthData authData = new AuthData("github", "bob123");
+    UUID sessionId = UUID.randomUUID();
+
+    when(userP.getUserByAuth(authData))
+        .thenReturn(null)
+        .thenReturn(new UserData(1, "bob", null, null, null));
+    when(access.requireUser(any())).thenReturn(1);
+
+    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, access);
+
+    authHandler.onMerge(authData, ctx);
+
+    verify(userP).getUserByAuth(authData);
+    verify(access).requireUser(any());
+    verify(userP).addUserAuthMethod(1, authData);
+    verify(ctx).redirect("/auth/success");
+
+    verifyNoMoreInteractions(ctx, userP, sessP, ctxResp, access);
+  }
+
+  @Test
+  public void checkMergeFailure() throws Exception {
+    var ctx = mock(RoutingContext.class);
+    var userP = mock(UserDataProvider.class);
+    var sessP = mock(SessionProvider.class);
+    var ctxResp = mock(HttpServerResponse.class);
+    var access = mock(AccessManager.class);
+
+    AuthData authData = new AuthData("github", "bob123");
+    UUID sessionId = UUID.randomUUID();
+
+    when(userP.getUserByAuth(authData))
+        .thenReturn(null)
+        .thenReturn(new UserData(1, "bob", null, null, null));
+    when(access.requireUser(any())).thenReturn(1);
+    doThrow(new InternalErrorException("Race condition :O"))
+        .when(userP)
+        .addUserAuthMethod(1, authData);
+
+    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, access);
+
+    assertThrows(HttpException.class, () -> authHandler.onMerge(authData, ctx));
+
+    verify(userP).getUserByAuth(authData);
+    verify(access).requireUser(any());
+    verify(userP).addUserAuthMethod(1, authData);
+
+    verifyNoMoreInteractions(ctx, userP, sessP, ctxResp, access);
+  }
 }

@@ -96,7 +96,6 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     assertEndpoint(endpoint, method, constraints, List.of(), List.of());
   }
 
-  // TODO: uncomment when implemented
   // /api/user
   @Test
   public void apiUserByidRejectsImproperData() {
@@ -118,15 +117,15 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     assertGetEndpoint("/api/user/categories", List.of(Type.Int), List.of("id"));
   }
 
-  //  @Test
-  //  public void apiUserUpdateNameRejectsImproperData() {
-  //    assertEndpoint("/api/user/update/name", Method.PUT, Map.of("id", 0, "name", "newName"));
-  //  }
-  //
-  //  @Test
-  //  public void apiUserDeleteRejectsImproperData() {
-  //    assertEndpoint("/api/user/delete", Method.DELETE, Map.of("id", 0));
-  //  }
+  @Test
+  public void apiUserUpdateNameRejectsImproperData() {
+    assertEndpoint("/api/user/update/name", Method.PUT, Map.of("name", Type.Str), List.of(), null);
+  }
+
+  @Test
+  public void apiUserDeleteRejectsImproperData() {
+    assertEndpoint("/api/user/delete", Method.DELETE, Map.of(), List.of(), null);
+  }
 
   // /api/page/
   @Test
@@ -149,11 +148,11 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     assertGetEndpoint("/api/page/category", List.of(Type.Int), List.of("id"));
   }
 
-  //  @Test
-  //  public void apiPageCreateRejectsImproperData() {
-  //    assertJsonEndpoint(
-  //        "/api/page/create", Method.POST, Map.of("title", Type.Str, "category", Type.Int));
-  //  }
+  @Test
+  public void apiPageCreateRejectsImproperData() {
+    assertJsonEndpoint(
+        "/api/page/create", Method.POST, Map.of("title", Type.Str, "category", Type.Int));
+  }
 
   @Test
   public void apiPageUpdateTitleRejectsImproperData() {
@@ -205,18 +204,16 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     assertGetEndpoint("/api/revision", List.of(Type.Int), List.of("id"));
   }
 
-  //  @Test
-  //  public void apiRevisionDraftRejectsImproperData() {
-  //    assertGetEndpoint("/api/revision/draft", List.of(Type.Int), List.of("page_id"));
-  //  }
+  @Test
+  public void apiRevisionDraftRejectsImproperData() {
+    assertGetEndpoint("/api/revision/draft", List.of(Type.Int), List.of("page_id"));
+  }
 
-  //  @Test
-  //  public void apiRevisionCreateRejectsImproperData() {
-  //    assertJsonEndpoint(
-  //        "/api/revision/create",
-  //        Method.POST,
-  //        Map.of("page_id", Type.Int, "content", Type.Str));
-  //  }
+  @Test
+  public void apiRevisionCreateRejectsImproperData() {
+    assertJsonEndpoint(
+        "/api/revision/create", Method.POST, Map.of("page_id", Type.Int, "content", Type.Str));
+  }
 
   @Test
   public void apiRevisionUpdateStatusRejectsImproperData() {
@@ -224,18 +221,16 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
         "/api/revision/update/status", Method.PUT, Map.of("id", Type.Int, "status", Type.Bool));
   }
 
-  //  @Test
-  //  public void apiRevisionDraftSaveRejectsImproperData() {
-  //    assertJsonEndpoint(
-  //        "/api/revision/draft/save",
-  //        Method.POST,
-  //        Map.of("page", Type.Int, "content", Type.Str));
-  //  }
+  @Test
+  public void apiRevisionDraftSaveRejectsImproperData() {
+    assertJsonEndpoint(
+        "/api/revision/draft/save", Method.POST, Map.of("page", Type.Int, "content", Type.Str));
+  }
 
-  //  @Test
-  //  public void apiRevisionDraftDeleteRejectsImproperData() {
-  //    assertJsonEndpoint("/api/revision/draft/delete", Method.DELETE, Map.of("page", Type.Int));
-  //  }
+  @Test
+  public void apiRevisionDraftDeleteRejectsImproperData() {
+    assertJsonEndpoint("/api/revision/draft/delete", Method.DELETE, Map.of("page", Type.Int));
+  }
 
   @Test
   public void apiRevisionDeleteRejectsImproperData() {
@@ -258,11 +253,11 @@ public class ParametersRouteHandlerIntegrationTest extends RouteHandlerIntegrati
     assertGetEndpoint("/api/comment", List.of(Type.Int), List.of("id"));
   }
 
-  //  @Test
-  //  public void apiCommentCreateRejectsImproperData() {
-  //    assertJsonEndpoint(
-  //        "/api/comment/create", Method.POST, Map.of("page_id", Type.Int, "content", Type.Str));
-  //  }
+  @Test
+  public void apiCommentCreateRejectsImproperData() {
+    assertJsonEndpoint(
+        "/api/comment/create", Method.POST, Map.of("page_id", Type.Int, "content", Type.Str));
+  }
 
   @Test
   public void apiCommentDeleteRejectsImproperData() {

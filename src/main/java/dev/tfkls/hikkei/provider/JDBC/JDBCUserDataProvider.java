@@ -146,7 +146,6 @@ public class JDBCUserDataProvider implements UserDataProvider {
     }
   }
 
-  // TODO: TEST THIS
   @Override
   public void updateGlobalPermission(int userId, PermissionLevel permissionLevel)
       throws BadDataException, InternalErrorException {
