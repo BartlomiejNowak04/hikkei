@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.server.routes;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
@@ -11,9 +12,11 @@ public class UserRouteHandler extends RouteHandler {
       Vertx vertx,
       UserDataProvider userProvider,
       FileProvider fileProvider,
-      CategoryDataProvider categoryProvider) {
+      CategoryDataProvider categoryProvider,
+      AccessManager accessManager) {
     super(vertx);
-    UserController controller = new UserController(userProvider, fileProvider, categoryProvider);
+    UserController controller =
+        new UserController(userProvider, fileProvider, categoryProvider, accessManager);
 
     router.get("/").blockingHandler(controller::getSelf);
     router.get("/:id").blockingHandler(controller::getUser);

@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.provider.auth;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.auth.AuthEventHandler;
 import dev.tfkls.hikkei.model.auth.SessionProvider;
 import dev.tfkls.hikkei.model.exceptions.AuthenticationException;
@@ -8,7 +9,6 @@ import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.user.AuthData;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
-import dev.tfkls.hikkei.server.util.AccessManager;
 import io.vertx.core.http.Cookie;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.HttpException;
@@ -18,16 +18,23 @@ public class StandardAuthEventHandler implements AuthEventHandler {
   private final UserDataProvider userDataProvider;
   private final SessionProvider sessionProvider;
   private final String cookieName;
+  private final AccessManager accessManager;
 
   public StandardAuthEventHandler(
-      UserDataProvider userDataProvider, SessionProvider sessionProvider) {
-    this(userDataProvider, sessionProvider, "HikkeiSession");
+      UserDataProvider userDataProvider,
+      SessionProvider sessionProvider,
+      AccessManager accessManager) {
+    this(userDataProvider, sessionProvider, accessManager, "HikkeiSession");
   }
 
   StandardAuthEventHandler(
-      UserDataProvider userDataProvider, SessionProvider sessionProvider, String cookieName) {
+      UserDataProvider userDataProvider,
+      SessionProvider sessionProvider,
+      AccessManager accessManager,
+      String cookieName) {
     this.userDataProvider = userDataProvider;
     this.sessionProvider = sessionProvider;
+    this.accessManager = accessManager;
     this.cookieName = cookieName;
   }
 
@@ -80,7 +87,7 @@ public class StandardAuthEventHandler implements AuthEventHandler {
 
   @Override
   public void onMerge(AuthData authData, RoutingContext ctx) {
-    int userId = AccessManager.requireUser(ctx);
+    int userId = accessManager.requireUser(ctx);
 
     if (checkIfAuthIsUnused(authData, ctx, userId)) {
       ctx.redirect("/auth/success");

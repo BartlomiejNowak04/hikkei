@@ -1,6 +1,7 @@
 package dev.tfkls.hikkei.server.routes.error;
 
 import static dev.tfkls.hikkei.server.util.RestCaller.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
@@ -61,17 +62,19 @@ public class ErrorPageRouteHandlerIntegrationTest extends RouteHandlerIntegratio
     testGetException("/api/page/category/10", ie);
   }
 
-  //  @Test
-  //  void createBadDataTest() throws Exception {
-  //    when(pageProvider.createPage(any())).thenThrow(bad);
-  //    testException("/api/page/create", Method.POST, create1, bad);
-  //  }
-  //
-  //  @Test
-  //  void createInternalErrorTest() throws Exception {
-  //    when(pageProvider.createPage(any())).thenThrow(ie);
-  //    testException("/api/page/create", Method.POST, create1, ie);
-  //  }
+  @Test
+  void createBadDataTest() throws Exception {
+    setupAccessManager();
+    when(pageProvider.createPage(any())).thenThrow(bad);
+    testException("/api/page/create", Method.POST, create1, bad);
+  }
+
+  @Test
+  void createInternalErrorTest() throws Exception {
+    setupAccessManager();
+    when(pageProvider.createPage(any())).thenThrow(ie);
+    testException("/api/page/create", Method.POST, create1, ie);
+  }
 
   @Test
   void updateTitleBadDataTest() throws Exception {

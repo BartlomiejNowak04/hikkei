@@ -1,14 +1,15 @@
 package dev.tfkls.hikkei.server.routes;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.blob.BlobDataProvider;
 import dev.tfkls.hikkei.server.controllers.BlobController;
 import io.vertx.core.Vertx;
 
 public class BlobRouteHandler extends RouteHandler {
 
-  public BlobRouteHandler(Vertx vertx, BlobDataProvider blobProvider) {
+  public BlobRouteHandler(Vertx vertx, BlobDataProvider blobProvider, AccessManager accessManager) {
     super(vertx);
-    BlobController blobController = new BlobController(blobProvider);
+    BlobController blobController = new BlobController(blobProvider, accessManager);
 
     router.get("/user/:id").blockingHandler(blobController::getUserBlobs);
     router.post("/create").blockingHandler(blobController::createBlob);

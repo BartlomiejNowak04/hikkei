@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.server.routes;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.page.PageRenderer;
@@ -13,10 +14,12 @@ public class RevisionRouteHandler extends RouteHandler {
       RevisionDataProvider revisionProvider,
       VersionProvider versionProvider,
       PageDataProvider pageProvider,
-      PageRenderer pageRenderer) {
+      PageRenderer pageRenderer,
+      AccessManager accessManager) {
     super(vertx);
     RevisionController controller =
-        new RevisionController(revisionProvider, versionProvider, pageProvider, pageRenderer);
+        new RevisionController(
+            revisionProvider, versionProvider, pageProvider, pageRenderer, accessManager);
 
     router.get("/user/:id").blockingHandler(controller::getByUser);
     router.get("/page/:id").blockingHandler(controller::getByPage);

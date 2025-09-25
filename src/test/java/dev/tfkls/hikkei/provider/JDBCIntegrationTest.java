@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.sql.*;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -112,6 +113,26 @@ public abstract class JDBCIntegrationTest extends IntegrationTest {
             PreparedStatement.RETURN_GENERATED_KEYS)) {
       st.setInt(1, page);
       st.setString(2, content);
+      st.executeUpdate();
+      st.getGeneratedKeys().next();
+      return st.getGeneratedKeys().getInt(1);
+    }
+  }
+
+  protected int create_blob(byte[] data) throws SQLException {
+    int blob_owner = create_user(UUID.randomUUID().toString(), null);
+    return create_blob(data, blob_owner);
+  }
+
+  protected int create_blob(byte[] file, int user_id) throws SQLException {
+    try (PreparedStatement st =
+        connection.prepareStatement(
+            "INSERT INTO blobs (file, mime, user_id, size) VALUES (?, ?, ?, ?)",
+            PreparedStatement.RETURN_GENERATED_KEYS)) {
+      st.setBytes(1, file);
+      st.setString(2, "text/plain");
+      st.setInt(3, user_id);
+      st.setInt(4, 0);
       st.executeUpdate();
       st.getGeneratedKeys().next();
       return st.getGeneratedKeys().getInt(1);

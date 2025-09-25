@@ -2,6 +2,9 @@ package dev.tfkls.hikkei.server.routes;
 
 import static dev.tfkls.hikkei.server.util.RestCaller.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
@@ -12,6 +15,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.OptionalInt;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -108,19 +112,22 @@ public class PageRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
     assertPage(pd, body.getJsonObject(0));
   }
 
-  /*
   @Test
   void createWorkingTest() throws Exception {
+    when(accessManager.requireUser(any())).thenReturn(1);
+    when(accessManager.fetchUser(any())).thenReturn(OptionalInt.of(1));
+    doNothing().when(accessManager).setCategory(any(), anyInt());
+    doNothing().when(accessManager).verifyPermission(any(), any());
     when(pageProvider.createPage(any())).thenReturn(1);
+
     JsonObject body =
         callEndpointObject(
             "/api/page/create",
-              Method.POST,
-              new JsonObject().put("title", "a").put("category", 1),
-              201);
-      assertEquals(1, body.getInteger("id"));
-    }
-   */
+            Method.POST,
+            new JsonObject().put("title", "a").put("category", 1),
+            201);
+    assertEquals(1, body.getInteger("id"));
+  }
 
   @Test
   void updateTitleWorkingTest() throws Exception {

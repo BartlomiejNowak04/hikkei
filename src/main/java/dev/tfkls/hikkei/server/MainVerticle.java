@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.server;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.auth.AuthEventHandler;
 import dev.tfkls.hikkei.model.auth.AuthenticationProvider;
 import dev.tfkls.hikkei.model.auth.SessionProvider;
@@ -45,6 +46,7 @@ public class MainVerticle extends VerticleBase {
   private final URI baseUri;
   private final @Nullable Map<String, Function<URI, AuthenticationProvider>> authMethods;
   private final PageRenderer pageRenderer;
+  private final AccessManager accessManager;
 
   public MainVerticle(
       UserDataProvider userProvider,
@@ -58,7 +60,8 @@ public class MainVerticle extends VerticleBase {
       Integer port,
       URI baseUri,
       @Nullable Map<String, Function<URI, AuthenticationProvider>> authMethods,
-      PageRenderer pageRenderer) {
+      PageRenderer pageRenderer,
+      AccessManager accessManager) {
     super();
     this.userProvider = userProvider;
     this.pageProvider = pageProvider;
@@ -72,21 +75,22 @@ public class MainVerticle extends VerticleBase {
     this.baseUri = baseUri;
     this.authMethods = authMethods;
     this.pageRenderer = pageRenderer;
+    this.accessManager = accessManager;
   }
 
   @Override
   public Future<?> start() {
     UserRouteHandler userRoute =
-        new UserRouteHandler(vertx, userProvider, fileProvider, categoryProvider);
-    PageRouteHandler pageRoute = new PageRouteHandler(vertx, pageProvider);
+        new UserRouteHandler(vertx, userProvider, fileProvider, categoryProvider, accessManager);
+    PageRouteHandler pageRoute = new PageRouteHandler(vertx, pageProvider, accessManager);
     RevisionRouteHandler revisionRoute =
         new RevisionRouteHandler(
-            vertx, revisionProvider, versionProvider, pageProvider, pageRenderer);
+            vertx, revisionProvider, versionProvider, pageProvider, pageRenderer, accessManager);
     CommentRouteHandler commentRoute =
-        new CommentRouteHandler(vertx, commentProvider, pageProvider);
+        new CommentRouteHandler(vertx, commentProvider, pageProvider, accessManager);
     CategoryRouteHandler categoryRoute =
-        new CategoryRouteHandler(vertx, categoryProvider, userProvider);
-    BlobRouteHandler blobRoute = new BlobRouteHandler(vertx, blobProvider);
+        new CategoryRouteHandler(vertx, categoryProvider, userProvider, accessManager);
+    BlobRouteHandler blobRoute = new BlobRouteHandler(vertx, blobProvider, accessManager);
 
     // * Auth configuration section *//
     SessionProvider sessionProvider;
@@ -94,7 +98,7 @@ public class MainVerticle extends VerticleBase {
     PermissionVerifier permissionVerifier;
     if (authMethods != null) {
       sessionProvider = new StandardSessionProvider(Duration.ofDays(7), LocalDateTime::now);
-      authEventHandler = new StandardAuthEventHandler(userProvider, sessionProvider);
+      authEventHandler = new StandardAuthEventHandler(userProvider, sessionProvider, accessManager);
       permissionVerifier = new StandardPermissionVerifier(userProvider, categoryProvider);
     } else {
       sessionProvider = new DummySessionProvider();

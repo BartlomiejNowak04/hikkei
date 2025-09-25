@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei.server.routes;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.server.controllers.CategoryController;
@@ -7,9 +8,13 @@ import io.vertx.core.Vertx;
 
 public class CategoryRouteHandler extends RouteHandler {
   public CategoryRouteHandler(
-      Vertx vertx, CategoryDataProvider categoryProvider, UserDataProvider userProvider) {
+      Vertx vertx,
+      CategoryDataProvider categoryProvider,
+      UserDataProvider userProvider,
+      AccessManager accessManager) {
     super(vertx);
-    CategoryController controller = new CategoryController(categoryProvider, userProvider);
+    CategoryController controller =
+        new CategoryController(categoryProvider, userProvider, accessManager);
 
     router.get("/all").blockingHandler(controller::getCategories);
     router.get("/:id").blockingHandler(controller::getById);

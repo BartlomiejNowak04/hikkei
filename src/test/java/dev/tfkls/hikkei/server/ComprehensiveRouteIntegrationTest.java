@@ -11,6 +11,7 @@ import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.provider.JDBC.*;
 import dev.tfkls.hikkei.provider.JDBCIntegrationTest;
+import dev.tfkls.hikkei.provider.auth.StandardAccessManager;
 import dev.tfkls.hikkei.provider.auth.TokenAuthenticationProvider;
 import dev.tfkls.hikkei.provider.filesystem.FilesystemFileProvider;
 import dev.tfkls.hikkei.provider.filesystem.FilesystemVersionProvider;
@@ -70,7 +71,8 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
                 port,
                 URI.create(String.format("%s:%d", RestAssured.baseURI, port)),
                 Map.of("admin", uri -> new TokenAuthenticationProvider(TOKEN, uri)),
-                new MarkdownPageRenderer()))
+                new MarkdownPageRenderer(),
+                new StandardAccessManager()))
         .onComplete(testContext.succeedingThenComplete());
   }
 

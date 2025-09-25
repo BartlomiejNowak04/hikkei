@@ -23,6 +23,7 @@ public class ErrorRevisionRouteHandlerIntegrationTest extends RouteHandlerIntegr
   private JsonObject create1;
   private JsonObject status1;
   private JsonObject draftSave1;
+  private PageData pd;
 
   @BeforeAll
   void init() {
@@ -32,6 +33,8 @@ public class ErrorRevisionRouteHandlerIntegrationTest extends RouteHandlerIntegr
     create1 = new JsonObject().put("page_id", 7).put("content", "revision content");
     status1 = new JsonObject().put("id", 1).put("status", true);
     draftSave1 = new JsonObject().put("page", 7).put("content", "draft content");
+
+    pd = new PageData(7, "access_required", 1);
   }
 
   @Test
@@ -71,59 +74,81 @@ public class ErrorRevisionRouteHandlerIntegrationTest extends RouteHandlerIntegr
     testGetException("/api/revision/1", ie);
   }
 
-  //  @Test
-  //  void draftInternalErrorTest() throws Exception {
-  //    when(revisionProvider.getDraft(5, 7)).thenThrow(ie);
-  //    testGetException("/api/revision/draft/7", ie);
-  //  }
+  @Test
+  void draftInternalErrorTest() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
 
-  //  @Test
-  //  void draftInternalErrorTest2() throws Exception {
-  //    when(revisionProvider.getDraft(5, 7)).thenReturn(new byte[0]);
-  //    when(versionProvider.getVersion(any())).thenThrow(ie);
-  //    testGetException("/api/revision/draft/7", ie);
-  //  }
+    when(revisionProvider.getDraft(1, 7)).thenThrow(ie);
+    testGetException("/api/revision/draft/7", ie);
+  }
 
-  //  @Test
-  //  void draftInternalErrorTest3() throws Exception {
-  //    when(revisionProvider.getDraft(5, 7)).thenReturn(new byte[0]);
-  //    when(versionProvider.getVersion(any())).thenReturn(null);
-  //    testGetException(
-  //        "/api/revision/draft/7",
-  //        new InternalErrorException("Incorrect data id"));
-  //  }
+  @Test
+  void draftInternalErrorTest2() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
 
-  //  @Test
-  //  void createBadDataTest() throws Exception {
-  //    when(revisionProvider.createRevision(any())).thenThrow(bad);
-  //    testException("/api/revision/create", Method.POST, create1, bad);
-  //  }
+    when(revisionProvider.getDraft(1, 7)).thenReturn(new byte[0]);
+    when(versionProvider.getVersion(any())).thenThrow(ie);
+    testGetException("/api/revision/draft/7", ie);
+  }
 
-  //  @Test
-  //  void createBadDataTest2() throws Exception {
-  //    when(versionProvider.storeVersion(any(), any())).thenThrow(bad);
-  //    testException(
-  //        "/api/revision/create", Method.POST, create1, new
-  // InternalErrorException(bad.getMessage()));
-  //  }
+  @Test
+  void draftInternalErrorTest3() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
 
-  //  @Test
-  //  void createInternalErrorTest() throws Exception {
-  //    when(revisionProvider.getByPage(anyInt())).thenThrow(ie);
-  //    testException("/api/revision/create", Method.POST, create1, ie);
-  //  }
+    when(revisionProvider.getDraft(1, 7)).thenReturn(new byte[0]);
+    when(versionProvider.getVersion(any())).thenReturn(null);
+    testGetException("/api/revision/draft/7", new InternalErrorException("Incorrect data id"));
+  }
 
-  //  @Test
-  //  void createInternalErrorTest2() throws Exception {
-  //    when(versionProvider.storeVersion(any(), any())).thenThrow(ie);
-  //    testException("/api/revision/create", Method.POST, create1, ie);
-  //  }
+  @Test
+  void createBadDataTest() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
 
-  //  @Test
-  //  void createInternalErrorTest3() throws Exception {
-  //    when(revisionProvider.createRevision(any())).thenThrow(ie);
-  //    testException("/api/revision/create", Method.POST, create1, ie);
-  //  }
+    when(revisionProvider.createRevision(any())).thenThrow(bad);
+    testException("/api/revision/create", Method.POST, create1, bad);
+  }
+
+  @Test
+  void createBadDataTest2() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
+
+    when(versionProvider.storeVersion(any(), any())).thenThrow(bad);
+    testException(
+        "/api/revision/create", Method.POST, create1, new InternalErrorException(bad.getMessage()));
+  }
+
+  @Test
+  void createInternalErrorTest() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
+
+    when(revisionProvider.getByPage(anyInt())).thenThrow(ie);
+
+    testException("/api/revision/create", Method.POST, create1, ie);
+  }
+
+  @Test
+  void createInternalErrorTest2() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
+
+    when(versionProvider.storeVersion(any(), any())).thenThrow(ie);
+    testException("/api/revision/create", Method.POST, create1, ie);
+  }
+
+  @Test
+  void createInternalErrorTest3() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
+
+    when(revisionProvider.createRevision(any())).thenThrow(ie);
+    testException("/api/revision/create", Method.POST, create1, ie);
+  }
 
   @Test
   void updateStatusBadDataTest() throws Exception {
@@ -141,57 +166,81 @@ public class ErrorRevisionRouteHandlerIntegrationTest extends RouteHandlerIntegr
     testException("/api/revision/update/status", Method.PUT, status1, ie);
   }
 
-  //  @Test
-  //  void draftSaveBadDataTest() throws Exception {
-  //    doThrow(bad).when(revisionProvider).saveDraft(anyInt(), anyInt(), any());
-  //    testException("/api/revision/draft/save", Method.POST, draftSave1, bad);
-  //  }
+  @Test
+  void draftSaveBadDataTest() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
 
-  //  @Test
-  //  void draftSaveBadDataTest2() throws Exception {
-  //    doThrow(bad).when(versionProvider).storeVersion(any(), any());
-  //    testException(
-  //        "/api/revision/draft/save",
-  //        Method.POST,
-  //        draftSave1,
-  //        new InternalErrorException(bad.getMessage()));
-  //  }
+    doThrow(bad).when(revisionProvider).saveDraft(anyInt(), anyInt(), any());
+    testException("/api/revision/draft/save", Method.POST, draftSave1, bad);
+  }
 
-  //  @Test
-  //  void draftSaveInternalErrorTest() throws Exception {
-  //    doThrow(ie).when(revisionProvider).saveDraft(anyInt(), anyInt(), any());
-  //    testException("/api/revision/draft/save", Method.POST, draftSave1, ie);
-  //  }
+  @Test
+  void draftSaveBadDataTest2() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
 
-  //  @Test
-  //  void draftSaveInternalErrorTest2() throws Exception {
-  //    doThrow(ie).when(revisionProvider).getDraft(5, 7);
-  //    testException("/api/revision/draft/save", Method.POST, draftSave1, ie);
-  //  }
+    doThrow(bad).when(versionProvider).storeVersion(any(), any());
+    testException(
+        "/api/revision/draft/save",
+        Method.POST,
+        draftSave1,
+        new InternalErrorException(bad.getMessage()));
+  }
 
-  //  @Test
-  //  void draftSaveInternalErrorTest3() throws Exception {
-  //    doThrow(ie).when(versionProvider).storeVersion(any(), any());
-  //    testException("/api/revision/draft/save", Method.POST, draftSave1, ie);
-  //  }
+  @Test
+  void draftSaveInternalErrorTest() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
 
-  //  @Test
-  //  void draftDeleteInternalErrorTest() throws Exception {
-  //    doThrow(ie).when(revisionProvider).deleteDraft(5, 7);
-  //    testException("/api/revision/draft/delete", Method.DELETE, draft1, ie);
-  //  }
-  //
-  //  @Test
-  //  void draftDeleteInternalErrorTest2() throws Exception {
-  //    doThrow(ie).when(revisionProvider).getDraft(5, 7);
-  //    testException("/api/revision/draft/delete", Method.DELETE, draft1, ie);
-  //  }
-  //
-  //  @Test
-  //  void draftDeleteInternalErrorTest3() throws Exception {
-  //    doThrow(ie).when(versionProvider).deleteVersion(any());
-  //    testException("/api/revision/draft/delete", Method.DELETE, draft1, ie);
-  //  }
+    doThrow(ie).when(revisionProvider).saveDraft(anyInt(), anyInt(), any());
+    testException("/api/revision/draft/save", Method.POST, draftSave1, ie);
+  }
+
+  @Test
+  void draftSaveInternalErrorTest2() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
+
+    doThrow(ie).when(revisionProvider).getDraft(1, 7);
+    testException("/api/revision/draft/save", Method.POST, draftSave1, ie);
+  }
+
+  @Test
+  void draftSaveInternalErrorTest3() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
+
+    doThrow(ie).when(versionProvider).storeVersion(any(), any());
+    testException("/api/revision/draft/save", Method.POST, draftSave1, ie);
+  }
+
+  @Test
+  void draftDeleteInternalErrorTest() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
+
+    doThrow(ie).when(revisionProvider).deleteDraft(1, 7);
+    testException("/api/revision/draft/delete", Method.DELETE, draft1, ie);
+  }
+
+  @Test
+  void draftDeleteInternalErrorTest2() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
+
+    doThrow(ie).when(revisionProvider).getDraft(1, 7);
+    testException("/api/revision/draft/delete", Method.DELETE, draft1, ie);
+  }
+
+  @Test
+  void draftDeleteInternalErrorTest3() throws Exception {
+    setupAccessManager();
+    when(pageProvider.getById(7)).thenReturn(pd);
+
+    doThrow(ie).when(versionProvider).deleteVersion(any());
+    testException("/api/revision/draft/delete", Method.DELETE, draft1, ie);
+  }
 
   @Test
   void deleteInternalErrorTest() throws Exception {

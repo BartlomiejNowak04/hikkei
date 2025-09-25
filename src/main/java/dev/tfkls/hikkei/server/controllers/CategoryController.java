@@ -1,12 +1,12 @@
 package dev.tfkls.hikkei.server.controllers;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.category.CategoryData;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
-import dev.tfkls.hikkei.server.util.AccessManager;
 import dev.tfkls.hikkei.server.util.Jsonify;
 import dev.tfkls.hikkei.server.util.ParamFlow;
 import dev.tfkls.hikkei.server.util.Type;
@@ -20,10 +20,15 @@ import java.util.Map;
 public class CategoryController {
   private final CategoryDataProvider categoryProvider;
   private final UserDataProvider userProvider;
+  private final AccessManager accessManager;
 
-  public CategoryController(CategoryDataProvider categoryProvider, UserDataProvider userProvider) {
+  public CategoryController(
+      CategoryDataProvider categoryProvider,
+      UserDataProvider userProvider,
+      AccessManager accessManager) {
     this.categoryProvider = categoryProvider;
     this.userProvider = userProvider;
+    this.accessManager = accessManager;
   }
 
   public void getCategories(RoutingContext ctx) {
@@ -99,8 +104,8 @@ public class CategoryController {
                   .getUserPermission(categoryId, userId)
                   .orElse(categoryProvider.getById(categoryId).defaultPermission());
 
-          AccessManager.setCategory(ctx, categoryId);
-          AccessManager.verifyPermission(
+          accessManager.setCategory(ctx, categoryId);
+          accessManager.verifyPermission(
               ctx,
               PermissionLevel.successor(
                   PermissionLevel.max(
@@ -117,7 +122,7 @@ public class CategoryController {
         Map.of("name", Type.Str),
         null,
         body -> {
-          AccessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
+          accessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
 
           int idc = categoryProvider.createCategory(new CategoryData(body.getString("name")));
           ctx.response().setStatusCode(201);
@@ -131,7 +136,7 @@ public class CategoryController {
         Map.of("id", Type.Int, "name", Type.Str),
         null,
         body -> {
-          AccessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
+          accessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
           categoryProvider.changeName(body.getInteger("id"), body.getString("name"));
           ctx.response().setStatusCode(204).end();
         });
@@ -149,7 +154,7 @@ public class CategoryController {
           } catch (IllegalArgumentException e) {
             throw new HttpException(400, "Invalid permission type");
           }
-          AccessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
+          accessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
           categoryProvider.updateDefaultPermission(body.getInteger("id"), permission);
           ctx.response().setStatusCode(204).end();
         });
@@ -161,7 +166,7 @@ public class CategoryController {
         Map.of("id", Type.Int),
         null,
         body -> {
-          AccessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
+          accessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
 
           categoryProvider.deleteCategory(body.getInteger("id"));
           ctx.response().setStatusCode(204).end();

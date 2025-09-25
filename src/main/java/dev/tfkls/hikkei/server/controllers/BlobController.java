@@ -2,11 +2,11 @@ package dev.tfkls.hikkei.server.controllers;
 
 import static dev.tfkls.hikkei.server.util.ParamFlow.*;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.blob.BlobData;
 import dev.tfkls.hikkei.model.blob.BlobDataProvider;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
-import dev.tfkls.hikkei.server.util.AccessManager;
 import dev.tfkls.hikkei.server.util.Jsonify;
 import dev.tfkls.hikkei.server.util.Type;
 import io.vertx.core.buffer.Buffer;
@@ -22,9 +22,11 @@ import java.util.OptionalInt;
 
 public class BlobController {
   private final BlobDataProvider blobProvider;
+  private final AccessManager accessManager;
 
-  public BlobController(BlobDataProvider blobProvider) {
+  public BlobController(BlobDataProvider blobProvider, AccessManager accessManager) {
     this.blobProvider = blobProvider;
+    this.accessManager = accessManager;
   }
 
   public void getUserBlobs(RoutingContext ctx) {
@@ -47,7 +49,7 @@ public class BlobController {
   }
 
   public void createBlob(RoutingContext ctx) {
-    int userId = AccessManager.requireUser(ctx);
+    int userId = accessManager.requireUser(ctx);
     byte[] data = ctx.body().buffer().getBytes();
     String mime =
         Optional.ofNullable(ctx.request().getHeader("Content-Type"))
@@ -73,9 +75,9 @@ public class BlobController {
           BlobData blobData = blobProvider.getBlobById(id);
 
           if (blobData != null) {
-            OptionalInt userId = AccessManager.fetchUser(ctx);
+            OptionalInt userId = accessManager.fetchUser(ctx);
             if (userId.isEmpty() || userId.getAsInt() != blobData.userId()) {
-              AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+              accessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
             }
 
             blobProvider.deleteBlob(id);

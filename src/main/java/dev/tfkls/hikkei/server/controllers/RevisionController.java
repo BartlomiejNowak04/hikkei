@@ -2,6 +2,7 @@ package dev.tfkls.hikkei.server.controllers;
 
 import static dev.tfkls.hikkei.server.util.ParamFlow.handle;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.file.StoredVersion;
@@ -13,7 +14,6 @@ import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.provider.page.IdentityPageRenderer;
-import dev.tfkls.hikkei.server.util.AccessManager;
 import dev.tfkls.hikkei.server.util.Jsonify;
 import dev.tfkls.hikkei.server.util.Type;
 import io.vertx.core.json.JsonArray;
@@ -29,16 +29,19 @@ public class RevisionController {
   private final VersionProvider versionProvider;
   private final PageDataProvider pageProvider;
   private final PageRenderer pageRenderer;
+  private final AccessManager accessManager;
 
   public RevisionController(
       RevisionDataProvider revisionProvider,
       VersionProvider versionProvider,
       PageDataProvider pageProvider,
-      PageRenderer pageRenderer) {
+      PageRenderer pageRenderer,
+      AccessManager accessManager) {
     this.revisionProvider = revisionProvider;
     this.versionProvider = versionProvider;
     this.pageProvider = pageProvider;
     this.pageRenderer = pageRenderer;
+    this.accessManager = accessManager;
   }
 
   public void addRevision(RoutingContext ctx) {
@@ -47,11 +50,11 @@ public class RevisionController {
         Map.of("page_id", Type.Int, "content", Type.Str),
         null,
         body -> {
-          int userId = AccessManager.requireUser(ctx);
+          int userId = accessManager.requireUser(ctx);
 
           int pageCategory = pageProvider.getById(body.getInteger("page_id")).category();
-          AccessManager.setCategory(ctx, pageCategory);
-          AccessManager.verifyPermission(ctx, PermissionLevel.TRUSTED);
+          accessManager.setCategory(ctx, pageCategory);
+          accessManager.verifyPermission(ctx, PermissionLevel.TRUSTED);
 
           byte[] previous = null;
           List<RevisionData> revs = revisionProvider.getByPage(body.getInteger("page_id"));
@@ -80,8 +83,8 @@ public class RevisionController {
           RevisionData data = revisionProvider.getById(body.getInteger("id"));
           if (data != null) {
             int pageCategory = pageProvider.getById(data.pageId()).category();
-            AccessManager.setCategory(ctx, pageCategory);
-            AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+            accessManager.setCategory(ctx, pageCategory);
+            accessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
 
             revisionProvider.changeState(body.getInteger("id"), body.getBoolean("status"));
             ctx.response().setStatusCode(204).end();
@@ -102,15 +105,15 @@ public class RevisionController {
           List<RevisionData> data;
           if (type.equals("page")) {
             int pageCategory = pageProvider.getById(id).category();
-            AccessManager.setCategory(ctx, pageCategory);
-            AccessManager.verifyPermission(ctx, PermissionLevel.UNTRUSTED);
+            accessManager.setCategory(ctx, pageCategory);
+            accessManager.verifyPermission(ctx, PermissionLevel.UNTRUSTED);
 
             data = revisionProvider.getByPage(id);
           } else if (type.equals("user")) {
-            OptionalInt userId = AccessManager.fetchUser(ctx);
+            OptionalInt userId = accessManager.fetchUser(ctx);
             // Only global moderators can see other users' contributions
             if (userId.isEmpty() || userId.getAsInt() != id) {
-              AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+              accessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
             }
 
             data = revisionProvider.getByUser(id);
@@ -153,8 +156,8 @@ public class RevisionController {
 
           PageData pageData = pageProvider.getById(id);
           if (pageData == null) throw new BadDataException("Invalid page id");
-          AccessManager.setCategory(ctx, pageData.category());
-          AccessManager.verifyPermission(ctx, PermissionLevel.UNTRUSTED);
+          accessManager.setCategory(ctx, pageData.category());
+          accessManager.verifyPermission(ctx, PermissionLevel.UNTRUSTED);
 
           List<RevisionData> revisions = revisionProvider.getByPage(id);
           if (revisions == null) throw new BadDataException("Invalid page id");
@@ -185,8 +188,8 @@ public class RevisionController {
           else if (data == RevisionData.DELETED) ctx.response().setStatusCode(404).end();
           else {
             int pageCategory = pageProvider.getById(data.pageId()).category();
-            AccessManager.setCategory(ctx, pageCategory);
-            AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+            accessManager.setCategory(ctx, pageCategory);
+            accessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
 
             ctx.response().setStatusCode(200);
             ctx.json(Jsonify.revisionToJson(data));
@@ -200,12 +203,12 @@ public class RevisionController {
         null,
         Map.of("page_id", Type.Int),
         body -> {
-          int userId = AccessManager.requireUser(ctx);
+          int userId = accessManager.requireUser(ctx);
           int pageId = body.getInteger("page_id");
 
           int pageCategory = pageProvider.getById(pageId).category();
-          AccessManager.setCategory(ctx, pageCategory);
-          AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+          accessManager.setCategory(ctx, pageCategory);
+          accessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
 
           byte[] id = revisionProvider.getDraft(userId, pageId);
           String content = "";
@@ -226,11 +229,11 @@ public class RevisionController {
         Map.of("page", Type.Int, "content", Type.Str),
         null,
         body -> {
-          int userId = AccessManager.requireUser(ctx);
+          int userId = accessManager.requireUser(ctx);
           int pageId = body.getInteger("page");
           int pageCategory = pageProvider.getById(pageId).category();
-          AccessManager.setCategory(ctx, pageCategory);
-          AccessManager.verifyPermission(ctx, PermissionLevel.TRUSTED);
+          accessManager.setCategory(ctx, pageCategory);
+          accessManager.verifyPermission(ctx, PermissionLevel.TRUSTED);
 
           byte[] id = revisionProvider.getDraft(userId, pageId);
           byte[] nid;
@@ -250,11 +253,11 @@ public class RevisionController {
         Map.of("page", Type.Int),
         null,
         body -> {
-          int userId = AccessManager.requireUser(ctx);
+          int userId = accessManager.requireUser(ctx);
           int pageId = body.getInteger("page");
           int pageCategory = pageProvider.getById(pageId).category();
-          AccessManager.setCategory(ctx, pageCategory);
-          AccessManager.verifyPermission(ctx, PermissionLevel.TRUSTED);
+          accessManager.setCategory(ctx, pageCategory);
+          accessManager.verifyPermission(ctx, PermissionLevel.TRUSTED);
 
           byte[] id = revisionProvider.getDraft(userId, pageId);
           revisionProvider.deleteDraft(userId, pageId);
@@ -272,8 +275,8 @@ public class RevisionController {
           RevisionData revisionPage = revisionProvider.getById(body.getInteger("id"));
           if (revisionPage != null) {
             int pageCategory = pageProvider.getById(revisionPage.pageId()).category();
-            AccessManager.setCategory(ctx, pageCategory);
-            AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+            accessManager.setCategory(ctx, pageCategory);
+            accessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
 
             revisionProvider.deleteRevision(body.getInteger("id"));
           }
@@ -299,8 +302,8 @@ public class RevisionController {
           RevisionData revision = revisionProvider.getById(id);
           if (revision == null) throw new HttpException(404, "Revision not found");
 
-          AccessManager.setCategory(ctx, pageProvider.getById(revision.pageId()).category());
-          AccessManager.verifyPermission(ctx, PermissionLevel.TRUSTED);
+          accessManager.setCategory(ctx, pageProvider.getById(revision.pageId()).category());
+          accessManager.verifyPermission(ctx, PermissionLevel.TRUSTED);
 
           StoredVersion file = versionProvider.getVersion(revision.file());
           if (file == null || file.data() == null) {

@@ -31,7 +31,7 @@ public class StandardAuthEventHandlerMockTest {
     when(sessP.createSession(1)).thenReturn(sessionId);
     when(ctx.response()).thenReturn(ctxResp);
 
-    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP);
+    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, mock());
 
     authHandler.onLogin(authData, ctx);
 
@@ -56,7 +56,7 @@ public class StandardAuthEventHandlerMockTest {
 
     when(userP.getUserByAuth(authData)).thenReturn(null);
 
-    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP);
+    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, mock());
 
     assertThrows(HttpException.class, () -> authHandler.onLogin(authData, ctx));
 
@@ -84,7 +84,7 @@ public class StandardAuthEventHandlerMockTest {
     when(ctx.response()).thenReturn(ctxResp);
     when(sessP.createSession(1)).thenReturn(sessionId);
 
-    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP);
+    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, mock());
 
     authHandler.onRegister(authData, ctx);
 
@@ -113,7 +113,7 @@ public class StandardAuthEventHandlerMockTest {
 
     when(userP.getUserByAuth(authData)).thenReturn(new UserData(1, "bob", null, null, null));
 
-    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP);
+    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, mock());
 
     assertThrows(HttpException.class, () -> authHandler.onRegister(authData, ctx));
 
@@ -140,7 +140,7 @@ public class StandardAuthEventHandlerMockTest {
         .when(userP)
         .addUserAuthMethod(1, authData);
 
-    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP);
+    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, mock());
 
     assertThrows(HttpException.class, () -> authHandler.onRegister(authData, ctx));
   }

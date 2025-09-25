@@ -2,6 +2,7 @@ package dev.tfkls.hikkei.server.controllers;
 
 import static dev.tfkls.hikkei.server.util.ParamFlow.handle;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.category.CategoryData;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
@@ -11,7 +12,6 @@ import dev.tfkls.hikkei.model.file.StoredFile;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
-import dev.tfkls.hikkei.server.util.AccessManager;
 import dev.tfkls.hikkei.server.util.Jsonify;
 import dev.tfkls.hikkei.server.util.Type;
 import io.vertx.core.buffer.Buffer;
@@ -29,16 +29,21 @@ public class UserController {
   private final UserDataProvider userProvider;
   private final FileProvider fileProvider;
   private final CategoryDataProvider categoryProvider;
+  private final AccessManager accessManager;
 
   public UserController(
-      UserDataProvider provider, FileProvider fileProvider, CategoryDataProvider categoryProvider) {
+      UserDataProvider provider,
+      FileProvider fileProvider,
+      CategoryDataProvider categoryProvider,
+      AccessManager accessManager) {
     this.userProvider = provider;
     this.fileProvider = fileProvider;
     this.categoryProvider = categoryProvider;
+    this.accessManager = accessManager;
   }
 
   public void getSelf(RoutingContext ctx) {
-    int userId = AccessManager.requireUser(ctx);
+    int userId = accessManager.requireUser(ctx);
     ctx.pathParams().put("id", String.valueOf(userId));
     getUser(ctx);
   }
@@ -65,7 +70,7 @@ public class UserController {
 
   public void updatePfp(RoutingContext ctx) {
     try {
-      int id = AccessManager.requireUser(ctx);
+      int id = accessManager.requireUser(ctx);
       if (!userProvider.doesUserExist(id)) throw new BadDataException("Incorrect parameter: id");
       if (ctx.fileUploads().size() != 1)
         throw new BadDataException("Exactly one file must be supplied");
@@ -131,7 +136,7 @@ public class UserController {
         Map.of("name", Type.Str),
         null,
         body -> {
-          AccessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
+          accessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
           int id = userProvider.createUser(new UserData(body.getString("name")));
           ctx.response().setStatusCode(201);
           ctx.json(new JsonObject().put("id", id));
@@ -160,7 +165,7 @@ public class UserController {
           PermissionLevel oldLevel = userData.globalPermission();
           PermissionLevel maxLevel = PermissionLevel.max(newLevel, oldLevel);
 
-          AccessManager.verifyPermission(ctx, PermissionLevel.successor(maxLevel));
+          accessManager.verifyPermission(ctx, PermissionLevel.successor(maxLevel));
 
           userProvider.updateGlobalPermission(userData.id(), newLevel);
           ctx.response().setStatusCode(200).end();
@@ -173,7 +178,7 @@ public class UserController {
         Map.of("name", Type.Str),
         null,
         body -> {
-          int id = AccessManager.requireUser(ctx);
+          int id = accessManager.requireUser(ctx);
           userProvider.updateUsername(id, body.getString("name"));
           ctx.response().setStatusCode(204).end();
         });
@@ -185,7 +190,7 @@ public class UserController {
         null,
         null,
         body -> {
-          int id = AccessManager.requireUser(ctx);
+          int id = accessManager.requireUser(ctx);
           userProvider.deleteUser(id);
           ctx.response().setStatusCode(204).end();
         });

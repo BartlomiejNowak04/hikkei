@@ -1,13 +1,14 @@
 package dev.tfkls.hikkei.server.routes;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.server.controllers.PageController;
 import io.vertx.core.Vertx;
 
 public class PageRouteHandler extends RouteHandler {
-  public PageRouteHandler(Vertx vertx, PageDataProvider pageProvider) {
+  public PageRouteHandler(Vertx vertx, PageDataProvider pageProvider, AccessManager accessManager) {
     super(vertx);
-    PageController controller = new PageController(pageProvider);
+    PageController controller = new PageController(pageProvider, accessManager);
 
     router.get("/random").blockingHandler(controller::getRandomPage);
     router.get("/title/:title").blockingHandler(ctx -> controller.getPageByTitle(ctx, false));

@@ -15,6 +15,7 @@ import dev.tfkls.hikkei.model.user.AuthData;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.provider.JDBC.*;
+import dev.tfkls.hikkei.provider.auth.StandardAccessManager;
 import dev.tfkls.hikkei.provider.auth.TokenAuthenticationProvider;
 import dev.tfkls.hikkei.provider.auth.VertxOAuth2AuthenticationProviderFactory;
 import dev.tfkls.hikkei.provider.filesystem.FilesystemFileProvider;
@@ -100,7 +101,8 @@ public class Main {
             port,
             baseUri,
             authMethods.isEmpty() ? null : authMethods,
-            new MarkdownPageRenderer()));
+            new MarkdownPageRenderer(),
+            new StandardAccessManager()));
   }
   ;
 

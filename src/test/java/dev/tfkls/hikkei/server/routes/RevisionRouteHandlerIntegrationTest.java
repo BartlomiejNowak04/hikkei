@@ -3,8 +3,7 @@ package dev.tfkls.hikkei.server.routes;
 import static dev.tfkls.hikkei.server.util.RestCaller.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.file.StoredVersion;
@@ -14,10 +13,7 @@ import io.restassured.http.Method;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -132,33 +128,39 @@ public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegration
     assertRevision(rd, body);
   }
 
-  //  @Test
-  //  void draftNotSaved() throws Exception {
-  //    when(revisionProvider.getDraft(1, 1)).thenReturn(null);
-  //    JsonObject body = callGetEndpointObject("/api/revision/draft/1", 200);
-  //    assertEquals("", body.getString("content"));
-  //  }
+  @Test
+  void draftNotSaved() throws Exception {
+    setupAccessManager();
 
-  //  @Test
-  //  void draftWorkingTest() throws Exception {
-  //    when(revisionProvider.getDraft(1, 1)).thenReturn(new byte[0]);
-  //    when(versionProvider.getVersion(any())).thenReturn("test");
-  //    JsonObject body = callGetEndpointObject("/api/revision/draft/1", 200);
-  //    assertEquals("test", body.getString("content"));
-  //  }
+    when(revisionProvider.getDraft(1, 1)).thenReturn(null);
+    JsonObject body = callGetEndpointObject("/api/revision/draft/1", 200);
+    assertEquals("", body.getString("content"));
+  }
 
-  //  @Test
-  //  void createWorkingTest() throws Exception {
-  //    when(versionProvider.storeVersion(any(), any())).thenReturn(new byte[0]);
-  //    when(revisionProvider.createRevision(any())).thenReturn(7);
-  //    JsonObject body =
-  //        callEndpointObject(
-  //            "/api/revision/create",
-  //            Method.POST,
-  //            new JsonObject().put("page_id", 1).put("content", "test"),
-  //            201);
-  //    assertEquals(7, body.getInteger("id"));
-  //  }
+  @Test
+  void draftWorkingTest() throws Exception {
+    setupAccessManager();
+
+    when(revisionProvider.getDraft(1, 1)).thenReturn(new byte[0]);
+    when(versionProvider.getVersion(any())).thenReturn(new StoredVersion("test", "test"));
+    JsonObject body = callGetEndpointObject("/api/revision/draft/1", 200);
+    assertEquals("test", body.getString("content"));
+  }
+
+  @Test
+  void createWorkingTest() throws Exception {
+    setupAccessManager();
+
+    when(versionProvider.storeVersion(any(), any())).thenReturn(new byte[0]);
+    when(revisionProvider.createRevision(any())).thenReturn(7);
+    JsonObject body =
+        callEndpointObject(
+            "/api/revision/create",
+            Method.POST,
+            new JsonObject().put("page_id", 1).put("content", "test"),
+            201);
+    assertEquals(7, body.getInteger("id"));
+  }
 
   @Test
   void updateStatusFoundTest() throws Exception {
@@ -183,21 +185,25 @@ public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegration
         "");
   }
 
-  //  @Test
-  //  void draftSaveWorkingTest() {
-  //    callEndpoint(
-  //        "/api/revision/draft/save",
-  //        Method.POST,
-  //        new JsonObject().put("page", 1).put("content", "aa"),
-  //        204,
-  //        "");
-  //  }
+  @Test
+  void draftSaveWorkingTest() throws Exception {
+    setupAccessManager();
 
-  //  @Test
-  //  void draftDeleteWorkingTest() {
-  //    callEndpoint("/api/revision/draft/delete", Method.DELETE, new JsonObject().put("page", 1),
-  // 204, "");
-  //  }
+    callEndpoint(
+        "/api/revision/draft/save",
+        Method.POST,
+        new JsonObject().put("page", 1).put("content", "aa"),
+        204,
+        "");
+  }
+
+  @Test
+  void draftDeleteWorkingTest() throws Exception {
+    setupAccessManager();
+
+    callEndpoint(
+        "/api/revision/draft/delete", Method.DELETE, new JsonObject().put("page", 1), 204, "");
+  }
 
   @Test
   void deleteWorkingTest() {

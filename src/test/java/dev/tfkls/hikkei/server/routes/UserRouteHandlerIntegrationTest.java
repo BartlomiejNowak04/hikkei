@@ -1,6 +1,8 @@
 package dev.tfkls.hikkei.server.routes;
 
 import static dev.tfkls.hikkei.server.util.RestCaller.*;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -13,6 +15,7 @@ import dev.tfkls.hikkei.model.user.UserData;
 import io.restassured.http.Method;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -119,95 +122,91 @@ public class UserRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
     assertEquals(1, body.getInteger("id"));
   }
 
-  // TODO: mock session and uncomment
-  //  @Test
-  //  void updateNameWorkingTest() {
-  //    callEndpoint(
-  //        "/api/user/update/name",
-  //        Method.PUT,
-  //        new JsonObject().put("name", "aaa"),
-  //        204,
-  //        "");
-  //  }
-  //
-  //  @Test
-  //  void updatePfpNoIdTest() {
-  //    testException(
-  //        "/api/user/update/pfp",
-  //        Method.PUT,
-  //        null,
-  //        new BadDataException("Missing required parameter: id"));
-  //  }
-  //
-  //  @Test
-  //  void updatePfpInvalidUserTest() {
-  //    given()
-  //        .multiPart("id", "aaa")
-  //        .when()
-  //        .put("/api/user/update/pfp")
-  //        .then()
-  //        .statusCode(400)
-  //        .body("message", equalTo("Incorrect parameter: id"));
-  //  }
-  //
-  //  @Test
-  //  void updatePfpNoFileTest() throws Exception {
-  //    when(userProvider.doesUserExist(1)).thenReturn(true);
-  //    given()
-  //        .multiPart("id", 1)
-  //        .when()
-  //        .put("/api/user/update/pfp")
-  //        .then()
-  //        .statusCode(400)
-  //        .body("message", equalTo("Exactly one file must be supplied"));
-  //  }
-  //
-  //  @Test
-  //  void updatePfpTwoFilesTest() throws Exception {
-  //    when(userProvider.doesUserExist(1)).thenReturn(true);
-  //    given()
-  //        .multiPart("id", 1)
-  //        .multiPart("file", "mock.png", new ByteArrayInputStream(new byte[] {1, 2, 3}),
-  // "image/png")
-  //        .multiPart(
-  //            "file", "mock2.jpg", new ByteArrayInputStream(new byte[] {1, 2, 3, 4}), "image/jpg")
-  //        .when()
-  //        .put("/api/user/update/pfp")
-  //        .then()
-  //        .statusCode(400)
-  //        .body("message", equalTo("Exactly one file must be supplied"));
-  //  }
-  //
-  //  @Test
-  //  void updatePfpInvalidFiletypeTest() throws Exception {
-  //    when(userProvider.doesUserExist(1)).thenReturn(true);
-  //    given()
-  //        .multiPart("id", 1)
-  //        .multiPart(
-  //            "file", "mock.pdf", new ByteArrayInputStream(new byte[] {1, 2, 3}),
-  // "application/pdf")
-  //        .when()
-  //        .put("/api/user/update/pfp")
-  //        .then()
-  //        .statusCode(400)
-  //        .body("message", equalTo("Unsupported image type"));
-  //  }
-  //
-  //  @Test
-  //  void updatePfpWorkingTest() throws Exception {
-  //    when(userProvider.doesUserExist(1)).thenReturn(true);
-  //    given()
-  //        .multiPart("id", 1)
-  //        .multiPart("file", "mock.png", new ByteArrayInputStream(new byte[] {1, 2, 3}),
-  // "image/png")
-  //        .when()
-  //        .put("/api/user/update/pfp")
-  //        .then()
-  //        .statusCode(204);
-  //  }
-  //
-  //  @Test
-  //  void deleteWorkingTest() {
-  //    callEndpoint("/api/user/delete", Method.DELETE, id1, 204, "");
-  //  }
+  @Test
+  void updateNameWorkingTest() throws Exception {
+    setupAccessManager();
+
+    callEndpoint("/api/user/update/name", Method.PUT, new JsonObject().put("name", "aaa"), 204, "");
+  }
+
+  @Test
+  void updatePfpNoIdTest() throws Exception {
+    setupAccessManager();
+
+    testException(
+        "/api/user/update/pfp", Method.PUT, null, new BadDataException("Incorrect parameter: id"));
+  }
+
+  @Test
+  void updatePfpInvalidUserTest() throws Exception {
+    setupAccessManager();
+
+    given()
+        .multiPart("id", "aaa")
+        .when()
+        .put("/api/user/update/pfp")
+        .then()
+        .statusCode(400)
+        .body("message", equalTo("Incorrect parameter: id"));
+  }
+
+  @Test
+  void updatePfpNoFileTest() throws Exception {
+    when(userProvider.doesUserExist(1)).thenReturn(true);
+    given()
+        .multiPart("id", 1)
+        .when()
+        .put("/api/user/update/pfp")
+        .then()
+        .statusCode(400)
+        .body("message", equalTo("Exactly one file must be supplied"));
+  }
+
+  @Test
+  void updatePfpTwoFilesTest() throws Exception {
+    setupAccessManager();
+
+    when(userProvider.doesUserExist(1)).thenReturn(true);
+    given()
+        .multiPart("id", 1)
+        .multiPart("file", "mock.png", new ByteArrayInputStream(new byte[] {1, 2, 3}), "image/png")
+        .multiPart(
+            "file", "mock2.jpg", new ByteArrayInputStream(new byte[] {1, 2, 3, 4}), "image/jpg")
+        .when()
+        .put("/api/user/update/pfp")
+        .then()
+        .statusCode(400)
+        .body("message", equalTo("Exactly one file must be supplied"));
+  }
+
+  @Test
+  void updatePfpInvalidFiletypeTest() throws Exception {
+    when(userProvider.doesUserExist(1)).thenReturn(true);
+    given()
+        .multiPart("id", 1)
+        .multiPart(
+            "file", "mock.pdf", new ByteArrayInputStream(new byte[] {1, 2, 3}), "application/pdf")
+        .when()
+        .put("/api/user/update/pfp")
+        .then()
+        .statusCode(400)
+        .body("message", equalTo("Unsupported image type"));
+  }
+
+  @Test
+  void updatePfpWorkingTest() throws Exception {
+    when(userProvider.doesUserExist(1)).thenReturn(true);
+    given()
+        .multiPart("id", 1)
+        .multiPart("file", "mock.png", new ByteArrayInputStream(new byte[] {1, 2, 3}), "image/png")
+        .when()
+        .put("/api/user/update/pfp")
+        .then()
+        .statusCode(204);
+  }
+
+  @Test
+  void deleteWorkingTest() {
+    callEndpoint("/api/user/delete", Method.DELETE, JsonObject.of("id", 1), 204, "");
+  }
 }

@@ -1,12 +1,16 @@
 package dev.tfkls.hikkei.server.routes;
 
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.*;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.blob.BlobDataProvider;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.comment.CommentDataProvider;
 import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.file.VersionProvider;
+import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
@@ -18,6 +22,7 @@ import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.net.URI;
+import java.util.OptionalInt;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
@@ -35,6 +40,7 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
   protected BlobDataProvider blobProvider;
   protected VersionProvider versionProvider;
   protected FileProvider fileProvider;
+  protected AccessManager accessManager;
 
   @BeforeAll
   void initServer(Vertx vertx, VertxTestContext testContext) {
@@ -50,6 +56,7 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
     blobProvider = mock();
     versionProvider = mock();
     fileProvider = mock();
+    accessManager = mock();
 
     vertx
         .deployVerticle(
@@ -65,7 +72,8 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
                 port,
                 URI.create(String.format("%s:%d", RestAssured.baseURI, port)),
                 null,
-                new IdentityPageRenderer()))
+                new IdentityPageRenderer(),
+                accessManager))
         .onComplete(testContext.succeedingThenComplete());
   }
 
@@ -79,5 +87,13 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
         categoryProvider,
         versionProvider,
         fileProvider);
+  }
+
+  protected void setupAccessManager() throws Exception {
+    when(accessManager.requireUser(any())).thenReturn(1);
+    when(accessManager.fetchUser(any())).thenReturn(OptionalInt.of(1));
+    doNothing().when(accessManager).setCategory(any(), anyInt());
+    doNothing().when(accessManager).verifyPermission(any(), any());
+    when(pageProvider.getById(1)).thenReturn(new PageData(1, "access_required", 1));
   }
 }

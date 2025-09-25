@@ -1,6 +1,7 @@
 package dev.tfkls.hikkei.server.routes.error;
 
 import static dev.tfkls.hikkei.server.util.RestCaller.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
@@ -47,17 +48,19 @@ public class ErrorCommentRouteHandlerIntegrationTest extends RouteHandlerIntegra
     testGetException("/api/comment/1", ie);
   }
 
-  //  @Test
-  //  void createInternalErrorTest() throws Exception {
-  //    when(commentProvider.addComment(any())).thenThrow(ie);
-  //    testException("/api/comment/create", Method.POST, create, ie);
-  //  }
-  //
-  //  @Test
-  //  void createBadDataTest() throws Exception {
-  //    when(commentProvider.addComment(any())).thenThrow(bad);
-  //    testException("/api/comment/create", Method.POST, create, bad);
-  //  }
+  @Test
+  void createInternalErrorTest() throws Exception {
+    setupAccessManager();
+    when(commentProvider.addComment(any())).thenThrow(ie);
+    testException("/api/comment/create", Method.POST, create, ie);
+  }
+
+  @Test
+  void createBadDataTest() throws Exception {
+    setupAccessManager();
+    when(commentProvider.addComment(any())).thenThrow(bad);
+    testException("/api/comment/create", Method.POST, create, bad);
+  }
 
   @Test
   void deleteInternalError() throws Exception {

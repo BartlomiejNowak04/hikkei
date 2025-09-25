@@ -1,11 +1,11 @@
 package dev.tfkls.hikkei.server.controllers;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.page.PageData;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
-import dev.tfkls.hikkei.server.util.AccessManager;
 import dev.tfkls.hikkei.server.util.Jsonify;
 import dev.tfkls.hikkei.server.util.ParamFlow;
 import dev.tfkls.hikkei.server.util.Type;
@@ -18,9 +18,11 @@ import java.util.OptionalInt;
 
 public class PageController {
   private final PageDataProvider pageProvider;
+  private final AccessManager accessManager;
 
-  public PageController(PageDataProvider pageProvider) {
+  public PageController(PageDataProvider pageProvider, AccessManager accessManager) {
     this.pageProvider = pageProvider;
+    this.accessManager = accessManager;
   }
 
   // NOTE: We treat page metadata as public, as adding permission filtering would warrant a major
@@ -93,10 +95,10 @@ public class PageController {
         body -> {
           String title = body.getString("title");
           Integer category = body.getInteger("category");
-          Integer user = AccessManager.requireUser(ctx);
+          Integer user = accessManager.requireUser(ctx);
 
-          AccessManager.setCategory(ctx, category);
-          AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+          accessManager.setCategory(ctx, category);
+          accessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
 
           int id = pageProvider.createPage(new PageData(user, title, category));
           ctx.response().setStatusCode(201);
@@ -125,8 +127,8 @@ public class PageController {
         body -> {
           checkOwnerOrAdmin(ctx, body.getInteger("id"));
 
-          AccessManager.setCategory(ctx, body.getInteger("category"));
-          AccessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+          accessManager.setCategory(ctx, body.getInteger("category"));
+          accessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
 
           pageProvider.updatePageCategory(body.getInteger("id"), body.getInteger("category"));
           ctx.response().setStatusCode(204).end();
@@ -161,11 +163,11 @@ public class PageController {
   private void checkOwnerOrAdmin(RoutingContext ctx, int pageId) throws InternalErrorException {
     PageData pageData = pageProvider.getById(pageId);
 
-    OptionalInt maybeUserId = AccessManager.fetchUser(ctx);
+    OptionalInt maybeUserId = accessManager.fetchUser(ctx);
     if (maybeUserId.isEmpty() || maybeUserId.getAsInt() != pageData.userId()) {
 
-      AccessManager.setCategory(ctx, pageData.category());
-      AccessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
+      accessManager.setCategory(ctx, pageData.category());
+      accessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
     }
   }
 }
