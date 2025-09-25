@@ -45,7 +45,7 @@ public class Jsonify {
         .put("username", user.username())
         .put("picture", user.picture())
         .put("joined", user.joinedAt() == null ? null : user.joinedAt().toString())
-        .put("minimal_permission", user.minimalPermission().name());
+        .put("global_permission", user.globalPermission().name());
   }
 
   public static JsonObject categoryToJson(CategoryData category) {

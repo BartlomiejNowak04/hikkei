@@ -5,7 +5,7 @@ SELECT u.id,
        u.date_deleted,
        un.username,
        up.picture,
-       um.minimal_permission
+       um.global_permission
 FROM users u
 LEFT JOIN LATERAL (
     SELECT username
@@ -22,7 +22,7 @@ LEFT JOIN LATERAL (
     LIMIT 1
 ) up ON true
 LEFT JOIN LATERAL (
-    SELECT minimal_permission
+    SELECT global_permission
     FROM user_permission
     WHERE user_id = u.id
     ORDER BY date DESC

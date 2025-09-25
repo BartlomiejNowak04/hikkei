@@ -8,7 +8,7 @@ public record UserData(
     String username,
     byte[] picture,
     LocalDateTime joinedAt,
-    PermissionLevel minimalPermission) {
+    PermissionLevel globalPermission) {
   public UserData(String username, byte[] picture) {
     this(null, username, picture, null, PermissionLevel.NO_ACCESS);
   }

@@ -89,11 +89,11 @@ public class JDBCUserDataProvider implements UserDataProvider {
     // NOTE: decided not to allow join date other than default, nor to add deleted user accounts
     try (PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO users_with_data (username, picture, minimal_permission) VALUES (?, ?, ?::PermissionLevel)",
+            "INSERT INTO users_with_data (username, picture, global_permission) VALUES (?, ?, ?::PermissionLevel)",
             Statement.RETURN_GENERATED_KEYS)) {
       st.setString(1, data.username());
       st.setBytes(2, data.picture());
-      st.setString(3, data.minimalPermission().name());
+      st.setString(3, data.globalPermission().name());
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
@@ -148,14 +148,14 @@ public class JDBCUserDataProvider implements UserDataProvider {
 
   // TODO: TEST THIS
   @Override
-  public void updateMinimalPermission(int userId, PermissionLevel permissionLevel)
+  public void updateGlobalPermission(int userId, PermissionLevel permissionLevel)
       throws BadDataException, InternalErrorException {
     if (!doesUserExist(userId)) throw new BadDataException(invalid_user);
     if (permissionLevel == null) throw new BadDataException(invalid_permission);
 
     try (PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO user_permission (user_id, minimal_permission) VALUES (?, ?::PermissionLevel)")) {
+            "INSERT INTO user_permission (user_id, global_permission) VALUES (?, ?::PermissionLevel)")) {
       st.setInt(1, userId);
       st.setString(2, permissionLevel.name());
       st.executeUpdate();
@@ -248,6 +248,6 @@ public class JDBCUserDataProvider implements UserDataProvider {
         rs.getString("username"),
         rs.getBytes("picture"),
         rs.getTimestamp("joined").toLocalDateTime(),
-        PermissionLevel.valueOf(rs.getString("minimal_permission")));
+        PermissionLevel.valueOf(rs.getString("global_permission")));
   }
 }

@@ -1,6 +1,5 @@
 package dev.tfkls.hikkei.provider;
 
-import static dev.tfkls.hikkei.provider.JDBC.Config.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
@@ -275,9 +274,9 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
   }
 
   @Test
-  void defaultMinimalPermissionIsNoAccess() throws Exception {
+  void defaultGlobalPermissionIsNoAccess() throws Exception {
     int userId = create_user("example", null);
-    assertEquals(PermissionLevel.NO_ACCESS, provider.getUserData(userId).minimalPermission());
+    assertEquals(PermissionLevel.NO_ACCESS, provider.getUserData(userId).globalPermission());
   }
 
   @Test
@@ -285,25 +284,25 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
     int userId =
         provider.createUser(new UserData(null, "cupt", null, null, PermissionLevel.MODERATOR));
 
-    assertEquals(PermissionLevel.MODERATOR, provider.getUserData(userId).minimalPermission());
+    assertEquals(PermissionLevel.MODERATOR, provider.getUserData(userId).globalPermission());
   }
 
   @Test
-  void changeMinimalPermissionTest() throws Exception {
+  void changeGlobalPermissionTest() throws Exception {
     int userId = create_user("cmpt", null);
-    assertEquals(PermissionLevel.NO_ACCESS, provider.getUserData(userId).minimalPermission());
+    assertEquals(PermissionLevel.NO_ACCESS, provider.getUserData(userId).globalPermission());
 
-    provider.updateMinimalPermission(userId, PermissionLevel.ADMIN);
+    provider.updateGlobalPermission(userId, PermissionLevel.ADMIN);
 
     try (PreparedStatement st =
         connection.prepareStatement("select * from users_with_data where id = ?")) {
       st.setInt(1, userId);
       try (ResultSet rs = st.executeQuery()) {
         assertTrue(rs.next());
-        assertEquals(PermissionLevel.ADMIN.name(), rs.getString("minimal_permission"));
+        assertEquals(PermissionLevel.ADMIN.name(), rs.getString("global_permission"));
       }
     }
 
-    assertEquals(PermissionLevel.ADMIN, provider.getUserData(userId).minimalPermission());
+    assertEquals(PermissionLevel.ADMIN, provider.getUserData(userId).globalPermission());
   }
 }

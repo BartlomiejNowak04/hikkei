@@ -99,11 +99,11 @@ BEGIN
         VALUES (new_user_id, NEW.picture);
     END IF;
 
-    IF NEW.minimal_permission IS NOT NULL THEN
-        INSERT INTO user_permission (user_id, minimal_permission)
-        VALUES (new_user_id, NEW.minimal_permission);
+    IF NEW.global_permission IS NOT NULL THEN
+        INSERT INTO user_permission (user_id, global_permission)
+        VALUES (new_user_id, NEW.global_permission);
     END IF;
-    IF NEW.minimal_permission IS NULL THEN
+    IF NEW.global_permission IS NULL THEN
         INSERT INTO user_permission (user_id)
         VALUES (new_user_id);
     END IF;

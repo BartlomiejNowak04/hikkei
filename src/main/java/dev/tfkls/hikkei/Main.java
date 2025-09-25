@@ -75,8 +75,8 @@ public class Main {
             userDataProvider.createUser(
                 new UserData(null, "admin", null, null, PermissionLevel.SUPER_ADMIN));
         userDataProvider.addUserAuthMethod(userId, adminData);
-      } else if (userData.minimalPermission() != PermissionLevel.SUPER_ADMIN) {
-        userDataProvider.updateMinimalPermission(userData.id(), PermissionLevel.SUPER_ADMIN);
+      } else if (userData.globalPermission() != PermissionLevel.SUPER_ADMIN) {
+        userDataProvider.updateGlobalPermission(userData.id(), PermissionLevel.SUPER_ADMIN);
       }
     } catch (BadDataException | InternalErrorException err) {
       throw new RuntimeException("Failed to setup the SuperUser account", err);

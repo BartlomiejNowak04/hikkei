@@ -25,7 +25,7 @@ CREATE TABLE user_picture (
 CREATE TABLE user_permission (
     user_id INTEGER REFERENCES users(id),
     date TIMESTAMP NOT NULL DEFAULT now(),
-    minimal_permission PermissionLevel NOT NULL DEFAULT 'NO_ACCESS',
+    global_permission PermissionLevel NOT NULL DEFAULT 'NO_ACCESS',
     PRIMARY KEY (user_id, date)
 );
 

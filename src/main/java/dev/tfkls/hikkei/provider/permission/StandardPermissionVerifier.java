@@ -51,7 +51,7 @@ public class StandardPermissionVerifier implements PermissionVerifier {
 
     if (userId != null) {
       try {
-        userLevel = userDataProvider.getUserData((int) userId).minimalPermission();
+        userLevel = userDataProvider.getUserData((int) userId).globalPermission();
       } catch (InternalErrorException err) {
         throw new HttpException(500, err);
       }

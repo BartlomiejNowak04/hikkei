@@ -157,12 +157,12 @@ public class UserController {
           } catch (NullPointerException e) {
             throw new HttpException(404, "User not found.");
           }
-          PermissionLevel oldLevel = userData.minimalPermission();
+          PermissionLevel oldLevel = userData.globalPermission();
           PermissionLevel maxLevel = PermissionLevel.max(newLevel, oldLevel);
 
           AccessManager.verifyPermission(ctx, PermissionLevel.successor(maxLevel));
 
-          userProvider.updateMinimalPermission(userData.id(), newLevel);
+          userProvider.updateGlobalPermission(userData.id(), newLevel);
           ctx.response().setStatusCode(200).end();
         });
   }
