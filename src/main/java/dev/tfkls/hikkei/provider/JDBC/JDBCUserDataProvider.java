@@ -155,9 +155,9 @@ public class JDBCUserDataProvider implements UserDataProvider {
 
     try (PreparedStatement st =
         connection.prepareStatement(
-            "UPDATE users SET minimal_permission = ?::PermissionLevel WHERE id = ?")) {
-      st.setString(1, permissionLevel.name());
-      st.setInt(2, userId);
+            "INSERT INTO user_permission (user_id, minimal_permission) VALUES (?, ?::PermissionLevel)")) {
+      st.setInt(1, userId);
+      st.setString(2, permissionLevel.name());
       st.executeUpdate();
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);

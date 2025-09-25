@@ -3,7 +3,6 @@ CREATE TYPE PermissionLevel AS ENUM ('NO_ACCESS', 'UNTRUSTED', 'TRUSTED', 'MODER
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     joined TIMESTAMP NOT NULL DEFAULT now(),
-    minimal_permission PermissionLevel NOT NULL DEFAULT 'NO_ACCESS',
     deleted BOOLEAN NOT NULL DEFAULT false,
     date_deleted TIMESTAMP
 );
@@ -23,6 +22,13 @@ CREATE TABLE user_picture (
     PRIMARY KEY (user_id, date)
 );
 
+CREATE TABLE user_permission (
+    user_id INTEGER REFERENCES users(id),
+    date TIMESTAMP NOT NULL DEFAULT now(),
+    minimal_permission PermissionLevel NOT NULL DEFAULT 'NO_ACCESS',
+    PRIMARY KEY (user_id, date)
+);
+
 CREATE TABLE auth (
     user_id INTEGER REFERENCES users(id),
     type VARCHAR(125),
@@ -34,7 +40,6 @@ CREATE TABLE auth (
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
     created TIMESTAMP NOT NULL DEFAULT now(),
-    default_permission PermissionLevel NOT NULL DEFAULT 'UNTRUSTED',
     deleted BOOLEAN NOT NULL DEFAULT FALSE,
     date_deleted TIMESTAMP
 );
@@ -43,6 +48,13 @@ CREATE TABLE category_name (
     category_id INTEGER REFERENCES categories(id),
     date TIMESTAMP NOT NULL DEFAULT now(),
     name VARCHAR(125) NOT NULL,
+    PRIMARY KEY (category_id, date)
+);
+
+CREATE TABLE category_permission (
+    category_id INTEGER REFERENCES categories(id),
+    date TIMESTAMP NOT NULL DEFAULT now(),
+    default_permission PermissionLevel NOT NULL DEFAULT 'UNTRUSTED',
     PRIMARY KEY (category_id, date)
 );
 

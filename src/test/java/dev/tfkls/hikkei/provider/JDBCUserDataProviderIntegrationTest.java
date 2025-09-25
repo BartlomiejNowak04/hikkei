@@ -291,6 +291,8 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
   @Test
   void changeMinimalPermissionTest() throws Exception {
     int userId = create_user("cmpt", null);
+    assertEquals(PermissionLevel.NO_ACCESS, provider.getUserData(userId).minimalPermission());
+
     provider.updateMinimalPermission(userId, PermissionLevel.ADMIN);
 
     try (PreparedStatement st =

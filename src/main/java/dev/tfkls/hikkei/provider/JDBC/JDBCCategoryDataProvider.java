@@ -27,9 +27,11 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
 
     try (PreparedStatement st =
         connection.prepareStatement(
-            "INSERT INTO categories_with_data (name) VALUES (?)",
+            "INSERT INTO categories_with_data (name, default_permission) VALUES (?, ?::PermissionLevel)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
       st.setString(1, data.name());
+      st.setString(
+          2, Optional.ofNullable(data.defaultPermission()).map(String::valueOf).orElse(null));
       st.executeUpdate();
 
       try (ResultSet rs = st.getGeneratedKeys()) {
@@ -94,23 +96,21 @@ public class JDBCCategoryDataProvider implements CategoryDataProvider {
     }
   }
 
-  // TODO: TEST
   public void updateDefaultPermission(int id, PermissionLevel permissionLevel)
       throws InternalErrorException, BadDataException {
     if (permissionLevel == null) throw new BadDataException(invalid_permission);
 
     try (PreparedStatement st =
         connection.prepareStatement(
-            "UPDATE categories SET default_permission=?::PermissionLevel WHERE id = ?")) {
-      st.setString(1, permissionLevel.name());
-      st.setInt(2, id);
+            "INSERT INTO category_permission (category_id, default_permission) VALUES (?, ?::PermissionLevel)")) {
+      st.setInt(1, id);
+      st.setString(2, permissionLevel.name());
       st.executeUpdate();
     } catch (SQLException e) {
       throw new InternalErrorException(internal_error);
     }
   }
 
-  // TODO: TEST
   @Override
   public Optional<PermissionLevel> getUserPermission(int categoryId, int userId)
       throws InternalErrorException, BadDataException {

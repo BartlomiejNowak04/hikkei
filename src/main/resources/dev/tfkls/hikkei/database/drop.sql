@@ -14,7 +14,9 @@ DROP TABLE IF EXISTS
     users,
     drafts,
     user_category,
-    blobs
+    blobs,
+    user_permission,
+    category_permission
 CASCADE;
 
 DROP FUNCTION IF EXISTS

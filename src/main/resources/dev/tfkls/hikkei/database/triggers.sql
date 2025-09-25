@@ -88,15 +88,8 @@ RETURNS TRIGGER AS $$
 DECLARE
     new_user_id INTEGER;
 BEGIN
-    IF NEW.minimal_permission IS NULL THEN
-        INSERT INTO users DEFAULT VALUES
-        RETURNING id INTO new_user_id;
-    END IF;
-    IF NEW.minimal_permission IS NOT NULL THEN
-        INSERT INTO users (minimal_permission)
-        VALUES (NEW.minimal_permission)
-        RETURNING id INTO new_user_id;
-    END IF;
+    INSERT INTO users DEFAULT VALUES
+    RETURNING id INTO new_user_id;
 
     INSERT INTO user_name (user_id, username)
     VALUES (new_user_id, NEW.username);
@@ -104,6 +97,15 @@ BEGIN
     IF NEW.picture IS NOT NULL THEN
         INSERT INTO user_picture (user_id, picture)
         VALUES (new_user_id, NEW.picture);
+    END IF;
+
+    IF NEW.minimal_permission IS NOT NULL THEN
+        INSERT INTO user_permission (user_id, minimal_permission)
+        VALUES (new_user_id, NEW.minimal_permission);
+    END IF;
+    IF NEW.minimal_permission IS NULL THEN
+        INSERT INTO user_permission (user_id)
+        VALUES (new_user_id);
     END IF;
 
     NEW.id = new_user_id;
@@ -140,18 +142,20 @@ RETURNS TRIGGER AS $$
 DECLARE
     new_category_id INTEGER;
 BEGIN
-    IF NEW.default_permission IS NULL THEN
-        INSERT INTO categories DEFAULT VALUES
-        RETURNING id INTO new_category_id;
-    END IF;
-    IF NEW.default_permission IS NOT NULL THEN
-        INSERT INTO categories (default_permission)
-        VALUES (NEW.default_permission)
-        RETURNING id INTO new_category_id;
-    END IF;
+    INSERT INTO categories DEFAULT VALUES
+    RETURNING id INTO new_category_id;
 
     INSERT INTO category_name (category_id, name)
     VALUES (new_category_id, NEW.name);
+
+    IF NEW.default_permission IS NOT NULL THEN
+        INSERT INTO category_permission (category_id, default_permission)
+        VALUES (new_category_id, NEW.default_permission);
+    END IF;
+    IF NEW.default_permission IS NULL THEN
+        INSERT INTO category_permission (category_id)
+        VALUES (new_category_id);
+    END IF;
 
     NEW.id = new_category_id;
     RETURN NEW;

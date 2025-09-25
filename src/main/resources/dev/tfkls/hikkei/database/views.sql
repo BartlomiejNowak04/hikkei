@@ -1,11 +1,11 @@
 CREATE VIEW users_with_data AS
 SELECT u.id,
        u.joined,
-       u.minimal_permission,
        u.deleted,
        u.date_deleted,
        un.username,
-       up.picture
+       up.picture,
+       um.minimal_permission
 FROM users u
 LEFT JOIN LATERAL (
     SELECT username
@@ -20,15 +20,22 @@ LEFT JOIN LATERAL (
     WHERE user_id = u.id
     ORDER BY date DESC
     LIMIT 1
-) up ON true;
+) up ON true
+LEFT JOIN LATERAL (
+    SELECT minimal_permission
+    FROM user_permission
+    WHERE user_id = u.id
+    ORDER BY date DESC
+    LIMIT 1
+) um ON true;
 
 CREATE VIEW categories_with_data AS
 SELECT c.id,
        c.created,
-       c.default_permission,
        c.deleted,
        c.date_deleted,
-       cn.name
+       cn.name,
+       cd.default_permission
 FROM categories c
 LEFT JOIN LATERAL (
     SELECT name
@@ -36,7 +43,15 @@ LEFT JOIN LATERAL (
     WHERE category_id = c.id
     ORDER BY date DESC
     LIMIT 1
-) cn ON true;
+) cn ON true
+LEFT JOIN LATERAL (
+    SELECT default_permission
+    FROM category_permission
+    WHERE category_id = c.id
+    ORDER BY date DESC
+    LIMIT 1
+) cd ON true;
+
 
 CREATE VIEW pages_with_data AS
 SELECT p.id,
