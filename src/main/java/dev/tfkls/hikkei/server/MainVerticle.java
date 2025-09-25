@@ -16,6 +16,7 @@ import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.provider.auth.*;
 import dev.tfkls.hikkei.provider.permission.DummyPermissionVerifier;
 import dev.tfkls.hikkei.provider.permission.StandardPermissionVerifier;
+import dev.tfkls.hikkei.server.handlers.AuthFailureHandler;
 import dev.tfkls.hikkei.server.handlers.FailureHandler;
 import dev.tfkls.hikkei.server.handlers.PermissionHandler;
 import dev.tfkls.hikkei.server.handlers.SessionHandler;
@@ -111,6 +112,7 @@ public class MainVerticle extends VerticleBase {
     }
 
     Router router = Router.router(vertx);
+    router.route("/api/auth/*").failureHandler(new AuthFailureHandler());
     router.route("/api/*").failureHandler(new FailureHandler());
     router.route("/api/*").handler(new SessionHandler(sessionProvider));
     router.route("/api/*").handler(new PermissionHandler(permissionVerifier));

@@ -13,9 +13,6 @@ public class FailureHandler implements Handler<RoutingContext> {
   public void handle(RoutingContext ctx) {
     Throwable e = ctx.failure();
 
-    if (ctx.response().ended()) {
-      return;
-    }
     if (!(e instanceof BadDataException)
         && !(e instanceof InternalErrorException)
         && !(e instanceof AuthenticationException)

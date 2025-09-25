@@ -21,7 +21,7 @@ public class AccessManager {
     try {
       return Objects.requireNonNull(ctx.get("UserIdentifier"));
     } catch (NullPointerException ex) {
-      throw new HttpException(401, "You need to be logged in to view this resource.");
+      throw new HttpException(401, "You need to be logged in to perform this operation.");
     }
   }
 

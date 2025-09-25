@@ -9,6 +9,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.ext.auth.oauth2.OAuth2AuthorizationURL;
+import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.auth.oauth2.Oauth2Credentials;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.HttpException;
@@ -47,7 +48,7 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
   private final Vertx vertx;
   private final OAuth2Auth oauthAuth;
 
-  private URI callbackUri;
+  private final URI callbackUri;
   private final Function<JsonObject, String> infoAccessor;
 
   private final BoundedMap<UUID, AuthenticationCallback> authRequests;
@@ -71,17 +72,26 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
           400, new AuthenticationException("OAuth2 flow error: unable to retrieve OAuth2 code."));
     }
 
+    String userId;
     try {
       User userObj =
           oauthAuth
               .authenticate(
-                  new Oauth2Credentials().setCode(code).setRedirectUri(callbackUri.toString()))
-              .await();
+                  new Oauth2Credentials()
+                      .setFlow(OAuth2FlowType.AUTH_CODE)
+                      .setCode(code)
+                      .setRedirectUri(callbackUri.toString()))
+              .toCompletionStage()
+              .toCompletableFuture()
+              .get();
 
-      callback.onAuthenticate(infoAccessor.apply(oauthAuth.userInfo(userObj).await()), ctx);
+      userId =
+          infoAccessor.apply(
+              oauthAuth.userInfo(userObj).toCompletionStage().toCompletableFuture().get());
     } catch (Exception ex) {
-      throw new HttpException(400);
+      throw new HttpException(500, ex);
     }
+    callback.onAuthenticate(userId, ctx);
   }
 
   @Override

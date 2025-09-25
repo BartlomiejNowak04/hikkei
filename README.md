@@ -109,12 +109,17 @@ The frontend application communicates with the backend server through an API. Be
     - GET `user/:id`: get all non-deleted blobs created by a given user
     - DELETE `delete`: delete a blob object and it's data, params: Integer id
 - `/api/auth`:
-    - GET `methods`: get available auth methods (same as above)
+    - GET `methods`: get available auth methods
     - GET `login/:method`: login a user with the specified method
     - GET `register/:method`: register a user with the specified method
     - GET `merge/:method`: add a new auth method for a user
     - GET `callback/:method`: route internally managed by each auth provider
-    - *NOTE: as the login/register/merge endpoints begin an auth flow, the client should be redirected to them directly*
+    - *NOTES*
+      - As the login/register/merge endpoints begin an auth flow, the client should be redirected to them directly*
+      - The auth client redirects to `/auth/success` on success and `/auth/failure` with the query parameters `error`, `debug` and `status`
+        on failure, with the parameters containing respectively the error message, debug error message & the assigned HTTP response status
+        (i.e. whether the error is client or server-side). These paths are not prefixed with `/api/` and are thus not handled.
+        This is done so that the frontend can render the returned information to the user accordingly.
 
 
 ## Setup

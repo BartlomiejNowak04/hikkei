@@ -35,7 +35,7 @@ public class DummyAuthenticationProvider implements AuthenticationProvider {
     AuthenticationCallback callback;
     try {
       id = UUID.fromString(ctx.queryParam("dummy_id").getFirst());
-      callback = map.get(id).orElseThrow();
+      callback = map.remove(id).orElseThrow();
       callback.onAuthenticate("dummy", ctx);
     } catch (IllegalArgumentException | NullPointerException e) {
       ctx.fail(e);

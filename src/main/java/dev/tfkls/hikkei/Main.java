@@ -16,6 +16,7 @@ import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.provider.JDBC.*;
 import dev.tfkls.hikkei.provider.auth.TokenAuthenticationProvider;
+import dev.tfkls.hikkei.provider.auth.VertxOAuth2AuthenticationProviderFactory;
 import dev.tfkls.hikkei.provider.filesystem.FilesystemFileProvider;
 import dev.tfkls.hikkei.provider.filesystem.FilesystemVersionProvider;
 import dev.tfkls.hikkei.provider.page.MarkdownPageRenderer;
@@ -43,7 +44,6 @@ public class Main {
     String file_dir = dotenv.get("FILE_DIRECTORY");
     String img_dir = dotenv.get("IMAGE_DIRECTORY");
     Integer port = Integer.valueOf(dotenv.get("PORT"));
-    String admin_pass = dotenv.get("ADMIN_PASS");
     URI baseUri = URI.create(dotenv.get("BASE_URI"));
     System.out.println("Read environment variables");
 
@@ -66,29 +66,27 @@ public class Main {
     FileProvider fileProvider = new FilesystemFileProvider(img_dir);
     BlobDataProvider blobDataProvider = new JDBCBlobDataProvider(connection, fileProvider);
 
-    // Admin auth setup
-    Map<String, Function<URI, AuthenticationProvider>> authMethods = new HashMap<>();
-
-    if (admin_pass != null) {
-      authMethods.put("admin", uri -> new TokenAuthenticationProvider(admin_pass, uri));
-      try {
-        AuthData adminData = new AuthData("admin", "");
-        @Nullable UserData userData = userDataProvider.getUserByAuth(adminData);
-        if (userData == null) {
-          int userId =
-              userDataProvider.createUser(
-                  new UserData(null, "admin", null, null, PermissionLevel.SUPER_ADMIN));
-          userDataProvider.addUserAuthMethod(userId, adminData);
-        } else if (userData.minimalPermission() != PermissionLevel.SUPER_ADMIN) {
-          userDataProvider.updateMinimalPermission(userData.id(), PermissionLevel.SUPER_ADMIN);
-        }
-      } catch (BadDataException | InternalErrorException err) {
-        throw new RuntimeException("Failed to setup the SuperUser account", err);
+    // SuperUser setup
+    try {
+      AuthData adminData = new AuthData("admin", "");
+      @Nullable UserData userData = userDataProvider.getUserByAuth(adminData);
+      if (userData == null) {
+        int userId =
+            userDataProvider.createUser(
+                new UserData(null, "admin", null, null, PermissionLevel.SUPER_ADMIN));
+        userDataProvider.addUserAuthMethod(userId, adminData);
+      } else if (userData.minimalPermission() != PermissionLevel.SUPER_ADMIN) {
+        userDataProvider.updateMinimalPermission(userData.id(), PermissionLevel.SUPER_ADMIN);
       }
+    } catch (BadDataException | InternalErrorException err) {
+      throw new RuntimeException("Failed to setup the SuperUser account", err);
     }
 
     System.out.println("Deploying the application");
     Vertx vertx = Vertx.vertx();
+
+    Map<String, Function<URI, AuthenticationProvider>> authMethods = getAuthMethods(dotenv, vertx);
+
     vertx.deployVerticle(
         new MainVerticle(
             userDataProvider,
@@ -103,5 +101,32 @@ public class Main {
             baseUri,
             authMethods.isEmpty() ? null : authMethods,
             new MarkdownPageRenderer()));
+  }
+  ;
+
+  public static Map<String, Function<URI, AuthenticationProvider>> getAuthMethods(
+      Dotenv dotenv, Vertx vertx) {
+    Map<String, Function<URI, AuthenticationProvider>> methods = new HashMap<>();
+
+    { /// Admin login
+      String admin_pass = dotenv.get("ADMIN_PASS");
+      if (admin_pass != null)
+        methods.put("admin", uri -> new TokenAuthenticationProvider(admin_pass, uri));
+    }
+
+    { /// GitHub
+      String github_client = dotenv.get("AUTH_GITHUB_CLIENT");
+      String github_secret = dotenv.get("AUTH_GITHUB_SECRET");
+
+      if (github_client != null && github_secret != null) {
+        methods.put(
+            "github",
+            uri ->
+                VertxOAuth2AuthenticationProviderFactory.github(
+                    vertx, uri, github_client, github_secret));
+      }
+    }
+
+    return methods;
   }
 }

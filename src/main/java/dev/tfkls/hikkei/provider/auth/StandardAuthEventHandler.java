@@ -8,6 +8,7 @@ import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.user.AuthData;
 import dev.tfkls.hikkei.model.user.UserData;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
+import dev.tfkls.hikkei.server.util.AccessManager;
 import io.vertx.core.http.Cookie;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.HttpException;
@@ -17,22 +18,17 @@ public class StandardAuthEventHandler implements AuthEventHandler {
   private final UserDataProvider userDataProvider;
   private final SessionProvider sessionProvider;
   private final String cookieName;
-  private final String contextName;
 
   public StandardAuthEventHandler(
       UserDataProvider userDataProvider, SessionProvider sessionProvider) {
-    this(userDataProvider, sessionProvider, "HikkeiSession", "UserIdentifier");
+    this(userDataProvider, sessionProvider, "HikkeiSession");
   }
 
   StandardAuthEventHandler(
-      UserDataProvider userDataProvider,
-      SessionProvider sessionProvider,
-      String cookieName,
-      String contextName) {
+      UserDataProvider userDataProvider, SessionProvider sessionProvider, String cookieName) {
     this.userDataProvider = userDataProvider;
     this.sessionProvider = sessionProvider;
     this.cookieName = cookieName;
-    this.contextName = contextName;
   }
 
   @Override
@@ -41,13 +37,16 @@ public class StandardAuthEventHandler implements AuthEventHandler {
       UserData userData = userDataProvider.getUserByAuth(authData);
       UUID session = sessionProvider.createSession(userData.id());
       ctx.response()
-          .addCookie(Cookie.cookie(cookieName, session.toString()).setMaxAge(60 * 60 * 24 * 365));
+          .addCookie(
+              Cookie.cookie(cookieName, session.toString())
+                  .setMaxAge(60 * 60 * 24 * 365)
+                  .setPath("/api/"));
       ctx.redirect("/auth/success");
     } catch (InternalErrorException err) {
       throw new HttpException(500, err);
     } catch (NullPointerException err) {
       throw new HttpException(
-          400, new AuthenticationException("Auth error: could not login user with provided data."));
+          400, new AuthenticationException("Could not login user with provided data."));
     }
   }
 
@@ -57,6 +56,8 @@ public class StandardAuthEventHandler implements AuthEventHandler {
 
     int newUser = -1;
     try {
+      // They can change the name later on, this warrants that we won't fail by giving
+      // an already used username (within a reasonable time frame, of course :)
       newUser = userDataProvider.createUser(new UserData(UUID.randomUUID().toString()));
     } catch (InternalErrorException | BadDataException err) {
       throw new HttpException(500, err);
@@ -69,6 +70,7 @@ public class StandardAuthEventHandler implements AuthEventHandler {
     } catch (InternalErrorException | BadDataException err) {
       try {
         // NOTE: This may litter the DB with some users, but this should not matter.
+        // This only happens in very rare race conditions when multiple users register at once.
         userDataProvider.deleteUser(newUser);
       } catch (InternalErrorException ignored) {
       }
@@ -78,10 +80,14 @@ public class StandardAuthEventHandler implements AuthEventHandler {
 
   @Override
   public void onMerge(AuthData authData, RoutingContext ctx) {
-    checkIfAuthIsUnused(authData, ctx);
+    int userId = AccessManager.requireUser(ctx);
+
+    if (checkIfAuthIsUnused(authData, ctx, userId)) {
+      ctx.redirect("/auth/success");
+      return;
+    }
 
     try {
-      int userId = ctx.get(contextName);
       userDataProvider.addUserAuthMethod(userId, authData);
       ctx.redirect("/auth/success");
     } catch (InternalErrorException | BadDataException err) {
@@ -92,16 +98,24 @@ public class StandardAuthEventHandler implements AuthEventHandler {
   }
 
   private void checkIfAuthIsUnused(AuthData authData, RoutingContext ctx) {
+    checkIfAuthIsUnused(authData, ctx, null);
+  }
+
+  private boolean checkIfAuthIsUnused(AuthData authData, RoutingContext ctx, Integer allowedId) {
     try {
       UserData oldUser = userDataProvider.getUserByAuth(authData);
       if (oldUser != null) {
-        throw new HttpException(
-            400,
-            new AuthenticationException(
-                "Auth error: user account with said credentials already exists."));
+        if (allowedId != null && allowedId.intValue() == oldUser.id()) {
+          return true;
+        } else {
+          throw new HttpException(
+              400,
+              new AuthenticationException("User account with said credentials already exists."));
+        }
       }
     } catch (InternalErrorException err) {
       throw new HttpException(500, err);
     }
+    return false;
   }
 }
