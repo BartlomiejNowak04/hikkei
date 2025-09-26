@@ -10,17 +10,17 @@ import java.util.OptionalInt;
 import org.jetbrains.annotations.Nullable;
 
 public class StandardAccessManager implements AccessManager {
-  private final String permissionVerifierContext;
+  private final PermissionVerifier permissionVerifier;
   private final String categoryContext;
   private final String userContext;
 
-  public StandardAccessManager() {
-    this("PermissionVerifier", "CategoryIdentifier", "UserIdentifier");
+  public StandardAccessManager(PermissionVerifier permissionVerifier) {
+    this(permissionVerifier, "CategoryIdentifier", "UserIdentifier");
   }
 
   public StandardAccessManager(
-      String permissionVerifierContext, String categoryContext, String userContext) {
-    this.permissionVerifierContext = permissionVerifierContext;
+      PermissionVerifier permissionVerifier, String categoryContext, String userContext) {
+    this.permissionVerifier = permissionVerifier;
     this.categoryContext = categoryContext;
     this.userContext = userContext;
   }
@@ -32,7 +32,7 @@ public class StandardAccessManager implements AccessManager {
 
   @Override
   public void verifyPermission(RoutingContext ctx, PermissionLevel level) {
-    ((PermissionVerifier) ctx.get(permissionVerifierContext)).verify(ctx, level);
+    permissionVerifier.verify(ctx, level);
   }
 
   @Override

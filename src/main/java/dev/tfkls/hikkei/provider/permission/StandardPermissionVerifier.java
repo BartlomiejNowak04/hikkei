@@ -75,7 +75,11 @@ public class StandardPermissionVerifier implements PermissionVerifier {
       if (userId == null) {
         throw new HttpException(401, "You may need to login to access this resource");
       } else {
-        throw new HttpException(403, "You do not have permission to access this resource");
+        throw new HttpException(
+            403,
+            "You do not have "
+                + targetLevel.name()
+                + " permission required to access this resource");
       }
     }
   }

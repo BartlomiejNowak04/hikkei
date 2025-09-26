@@ -4,6 +4,7 @@ import static dev.tfkls.hikkei.server.util.RestCaller.*;
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.tfkls.hikkei.model.category.CategoryDataProvider;
 import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.user.AuthData;
@@ -16,6 +17,7 @@ import dev.tfkls.hikkei.provider.auth.TokenAuthenticationProvider;
 import dev.tfkls.hikkei.provider.filesystem.FilesystemFileProvider;
 import dev.tfkls.hikkei.provider.filesystem.FilesystemVersionProvider;
 import dev.tfkls.hikkei.provider.page.MarkdownPageRenderer;
+import dev.tfkls.hikkei.provider.permission.StandardPermissionVerifier;
 import io.restassured.RestAssured;
 import io.restassured.http.Cookie;
 import io.restassured.http.Method;
@@ -57,6 +59,8 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
 
     FileProvider fileProvider = new FilesystemFileProvider("./.testfs/file");
 
+    CategoryDataProvider categoryDataProvider = new JDBCCategoryDataProvider(connection);
+
     vertx
         .deployVerticle(
             new MainVerticle(
@@ -64,7 +68,7 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
                 new JDBCPageDataProvider(connection),
                 new JDBCRevisionDataProvider(connection),
                 new JDBCCommentDataProvider(connection),
-                new JDBCCategoryDataProvider(connection),
+                categoryDataProvider,
                 new JDBCBlobDataProvider(connection, fileProvider),
                 new FilesystemVersionProvider("./.testfs/version"),
                 fileProvider,
@@ -72,7 +76,8 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
                 URI.create(String.format("%s:%d", RestAssured.baseURI, port)),
                 Map.of("admin", uri -> new TokenAuthenticationProvider(TOKEN, uri)),
                 new MarkdownPageRenderer(),
-                new StandardAccessManager()))
+                new StandardAccessManager(
+                    new StandardPermissionVerifier(userDataProvider, categoryDataProvider))))
         .onComplete(testContext.succeedingThenComplete());
   }
 

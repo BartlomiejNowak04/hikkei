@@ -189,9 +189,7 @@ public class StandardAuthEventHandlerMockTest {
         .thenReturn(null)
         .thenReturn(new UserData(1, "bob", null, null, null));
     when(access.requireUser(any())).thenReturn(1);
-    doThrow(new InternalErrorException("Race condition :O"))
-        .when(userP)
-        .addUserAuthMethod(1, authData);
+    doThrow(new InternalErrorException("")).when(userP).addUserAuthMethod(1, authData);
 
     AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, access);
 
@@ -200,6 +198,55 @@ public class StandardAuthEventHandlerMockTest {
     verify(userP).getUserByAuth(authData);
     verify(access).requireUser(any());
     verify(userP).addUserAuthMethod(1, authData);
+
+    verifyNoMoreInteractions(ctx, userP, sessP, ctxResp, access);
+  }
+
+  @Test
+  public void checkMergeUserExistsFailure() throws Exception {
+    var ctx = mock(RoutingContext.class);
+    var userP = mock(UserDataProvider.class);
+    var sessP = mock(SessionProvider.class);
+    var ctxResp = mock(HttpServerResponse.class);
+    var access = mock(AccessManager.class);
+
+    AuthData authData = new AuthData("github", "bob123");
+    UUID sessionId = UUID.randomUUID();
+
+    when(userP.getUserByAuth(authData)).thenReturn(new UserData(2, "bob", null, null, null));
+    when(access.requireUser(any())).thenReturn(1);
+
+    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, access);
+
+    assertThrows(HttpException.class, () -> authHandler.onMerge(authData, ctx));
+
+    verify(userP).getUserByAuth(authData);
+    verify(access).requireUser(any());
+
+    verifyNoMoreInteractions(ctx, userP, sessP, ctxResp, access);
+  }
+
+  @Test
+  public void checkMergeSameUserSuccess() throws Exception {
+    var ctx = mock(RoutingContext.class);
+    var userP = mock(UserDataProvider.class);
+    var sessP = mock(SessionProvider.class);
+    var ctxResp = mock(HttpServerResponse.class);
+    var access = mock(AccessManager.class);
+
+    AuthData authData = new AuthData("github", "bob123");
+    UUID sessionId = UUID.randomUUID();
+
+    when(userP.getUserByAuth(authData)).thenReturn(new UserData(1, "bob", null, null, null));
+    when(access.requireUser(any())).thenReturn(1);
+
+    AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, access);
+
+    authHandler.onMerge(authData, ctx);
+
+    verify(userP).getUserByAuth(authData);
+    verify(access).requireUser(any());
+    verify(ctx).redirect("/auth/success");
 
     verifyNoMoreInteractions(ctx, userP, sessP, ctxResp, access);
   }

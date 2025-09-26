@@ -1,5 +1,6 @@
 package dev.tfkls.hikkei;
 
+import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.auth.AuthenticationProvider;
 import dev.tfkls.hikkei.model.blob.BlobDataProvider;
 import dev.tfkls.hikkei.model.category.CategoryDataProvider;
@@ -21,6 +22,7 @@ import dev.tfkls.hikkei.provider.auth.VertxOAuth2AuthenticationProviderFactory;
 import dev.tfkls.hikkei.provider.filesystem.FilesystemFileProvider;
 import dev.tfkls.hikkei.provider.filesystem.FilesystemVersionProvider;
 import dev.tfkls.hikkei.provider.page.MarkdownPageRenderer;
+import dev.tfkls.hikkei.provider.permission.StandardPermissionVerifier;
 import dev.tfkls.hikkei.server.MainVerticle;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvBuilder;
@@ -66,6 +68,9 @@ public class Main {
     VersionProvider versionProvider = new FilesystemVersionProvider(file_dir);
     FileProvider fileProvider = new FilesystemFileProvider(img_dir);
     BlobDataProvider blobDataProvider = new JDBCBlobDataProvider(connection, fileProvider);
+    AccessManager accessManager =
+        new StandardAccessManager(
+            new StandardPermissionVerifier(userDataProvider, categoryDataProvider));
 
     // SuperUser setup
     try {
@@ -83,10 +88,30 @@ public class Main {
       throw new RuntimeException("Failed to setup the SuperUser account", err);
     }
 
-    System.out.println("Deploying the application");
     Vertx vertx = Vertx.vertx();
+    Map<String, Function<URI, AuthenticationProvider>> authMethods = new HashMap<>();
+    /// ============= AUTH METHODS =================
+    { /// Admin
+      String admin_pass = dotenv.get("ADMIN_PASS");
+      if (admin_pass != null)
+        authMethods.put("admin", uri -> new TokenAuthenticationProvider(admin_pass, uri));
+    }
 
-    Map<String, Function<URI, AuthenticationProvider>> authMethods = getAuthMethods(dotenv, vertx);
+    { /// GitHub
+      String github_client = dotenv.get("AUTH_GITHUB_CLIENT");
+      String github_secret = dotenv.get("AUTH_GITHUB_SECRET");
+
+      if (github_client != null && github_secret != null) {
+        authMethods.put(
+            "github",
+            uri ->
+                VertxOAuth2AuthenticationProviderFactory.github(
+                    vertx, uri, github_client, github_secret));
+      }
+    }
+
+    /// =========== END AUTH METHODS ===========
+    System.out.println("Deploying the application");
 
     vertx.deployVerticle(
         new MainVerticle(
@@ -102,33 +127,6 @@ public class Main {
             baseUri,
             authMethods.isEmpty() ? null : authMethods,
             new MarkdownPageRenderer(),
-            new StandardAccessManager()));
-  }
-  ;
-
-  public static Map<String, Function<URI, AuthenticationProvider>> getAuthMethods(
-      Dotenv dotenv, Vertx vertx) {
-    Map<String, Function<URI, AuthenticationProvider>> methods = new HashMap<>();
-
-    { /// Admin login
-      String admin_pass = dotenv.get("ADMIN_PASS");
-      if (admin_pass != null)
-        methods.put("admin", uri -> new TokenAuthenticationProvider(admin_pass, uri));
-    }
-
-    { /// GitHub
-      String github_client = dotenv.get("AUTH_GITHUB_CLIENT");
-      String github_secret = dotenv.get("AUTH_GITHUB_SECRET");
-
-      if (github_client != null && github_secret != null) {
-        methods.put(
-            "github",
-            uri ->
-                VertxOAuth2AuthenticationProviderFactory.github(
-                    vertx, uri, github_client, github_secret));
-      }
-    }
-
-    return methods;
+            accessManager));
   }
 }
