@@ -114,6 +114,8 @@ The frontend application communicates with the backend server through an API. Be
     - GET `register/:method`: register a user with the specified method
     - GET `merge/:method`: add a new auth method for a user
     - GET `callback/:method`: route internally managed by each auth provider
+    - GET `logout`: logout of the account
+    - GET `logout/global`: logout of all the account's sessions
     - *NOTES*
       - As the login/register/merge endpoints begin an auth flow, the client should be redirected to them directly*
       - The auth client redirects to `/auth/success` on success and `/auth/failure` with the query parameters `error`, `debug` and `status`

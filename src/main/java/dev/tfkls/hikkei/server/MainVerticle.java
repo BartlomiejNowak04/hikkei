@@ -110,7 +110,9 @@ public class MainVerticle extends VerticleBase {
       authEventHandler = new DummyAuthEventHandler();
     }
 
-    AuthRouteHandler authRoute = new AuthRouteHandler(vertx, baseUri, authEventHandler);
+    SessionHandler sessionHandler = new SessionHandler(sessionProvider);
+    AuthRouteHandler authRoute =
+        new AuthRouteHandler(vertx, baseUri, authEventHandler, sessionHandler);
     if (authMethods != null) {
       for (var authEntry : authMethods.entrySet()) {
         authRoute.registerProvider(
@@ -122,7 +124,7 @@ public class MainVerticle extends VerticleBase {
     Router router = Router.router(vertx);
     router.route("/api/auth/*").failureHandler(new AuthFailureHandler(afterAuthCallbackRoute));
     router.route("/api/*").failureHandler(new FailureHandler());
-    router.route("/api/*").handler(new SessionHandler(sessionProvider));
+    router.route("/api/*").handler(sessionHandler);
     router.route("/api/*").handler(new LogHandler(requestLogger, accessManager));
 
     router

@@ -3,12 +3,15 @@ package dev.tfkls.hikkei.server.routes;
 import dev.tfkls.hikkei.model.auth.AuthEventHandler;
 import dev.tfkls.hikkei.model.auth.AuthenticationProvider;
 import dev.tfkls.hikkei.server.controllers.AuthController;
+import dev.tfkls.hikkei.server.handlers.SessionHandler;
 import io.vertx.core.Vertx;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 public class AuthRouteHandler extends RouteHandler {
-  public AuthRouteHandler(Vertx vertx, URI baseUri, AuthEventHandler handler) {
+
+  public AuthRouteHandler(
+      Vertx vertx, URI baseUri, AuthEventHandler handler, SessionHandler sessionHandler) {
     super(vertx);
 
     try {
@@ -22,6 +25,9 @@ public class AuthRouteHandler extends RouteHandler {
     controller = new AuthController(handler);
     router.get("/").blockingHandler(controller::getProviderList);
     router.get("/methods").blockingHandler(controller::getProviderList);
+
+    router.get("/logout").blockingHandler(sessionHandler::logout);
+    router.get("/logout/global").blockingHandler(sessionHandler::globalLogout);
   }
 
   private final URI baseUri;

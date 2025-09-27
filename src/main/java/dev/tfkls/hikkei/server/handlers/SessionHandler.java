@@ -1,26 +1,35 @@
 package dev.tfkls.hikkei.server.handlers;
 
 import dev.tfkls.hikkei.model.auth.SessionProvider;
+import dev.tfkls.hikkei.model.exceptions.AuthenticationSuccessException;
 import io.vertx.core.Handler;
 import io.vertx.core.http.Cookie;
 import io.vertx.ext.web.RoutingContext;
 import java.util.Optional;
 import java.util.UUID;
+import org.jetbrains.annotations.Nullable;
 
 public class SessionHandler implements Handler<RoutingContext> {
+
   public SessionHandler(SessionProvider provider) {
-    this(provider, "HikkeiSession", "UserIdentifier");
+    this(provider, "HikkeiSession", "UserIdentifier", "SessionIdentifier");
   }
 
-  public SessionHandler(SessionProvider provider, String cookieName, String contextName) {
+  public SessionHandler(
+      SessionProvider provider,
+      String cookieName,
+      String userContextName,
+      String sessionContextName) {
     this.provider = provider;
     this.cookieName = cookieName;
-    this.contextName = contextName;
+    this.userContextName = userContextName;
+    this.sessionContextName = sessionContextName;
   }
 
   private final SessionProvider provider;
   private final String cookieName;
-  private final String contextName;
+  private final String userContextName;
+  private final String sessionContextName;
 
   @Override
   public void handle(RoutingContext ctx) {
@@ -38,13 +47,35 @@ public class SessionHandler implements Handler<RoutingContext> {
       ctx.next();
       return;
     }
+    ctx.put(sessionContextName, sessionId);
+
     Optional<Integer> userId = provider.getUserBySession(sessionId);
     if (userId.isPresent()) {
-      ctx.put(contextName, userId.get());
+      ctx.put(userContextName, userId.get());
     } else {
       expireCookie(ctx);
     }
     ctx.next();
+  }
+
+  public void logout(RoutingContext ctx) {
+    @Nullable UUID sessionId = ctx.get(sessionContextName);
+    if (sessionId != null) {
+      provider.dropSession(sessionId);
+    }
+
+    expireCookie(ctx);
+    throw new AuthenticationSuccessException("Successfully logged out of session");
+  }
+
+  public void globalLogout(RoutingContext ctx) {
+    @Nullable Integer userId = ctx.get(userContextName);
+    if (userId != null) {
+      provider.dropUserSessions(userId);
+    }
+
+    expireCookie(ctx);
+    throw new AuthenticationSuccessException("Successfully logged out of all account sessions");
   }
 
   private void expireCookie(RoutingContext ctx) {

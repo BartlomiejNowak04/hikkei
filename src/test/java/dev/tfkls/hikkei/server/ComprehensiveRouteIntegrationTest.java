@@ -296,5 +296,22 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
         "/api/blob/delete", Method.DELETE, JsonObject.of("id", blobId), 204, "", sessionCookie);
 
     callEndpoint("/api/blob/" + blobId + "/data", Method.GET, null, 404, "", sessionCookie);
+
+    assertEquals(
+        "",
+        given()
+            .redirects()
+            .follow(false)
+            .when()
+            .body("")
+            .cookie(sessionCookie)
+            .request(Method.GET, "/api/auth/logout")
+            .then()
+            .statusCode(302)
+            .cookie("HikkeiSession")
+            .extract()
+            .cookie("HikkeiSession"));
+
+    callEndpoint("/api/user/", Method.GET, null, 401, "", sessionCookie);
   }
 }

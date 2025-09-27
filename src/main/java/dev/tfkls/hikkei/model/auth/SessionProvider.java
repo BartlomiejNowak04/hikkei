@@ -18,9 +18,9 @@ public interface SessionProvider {
   /// Drop a given session. Returns true if a session was valid before, false otherwise.
   boolean dropSession(UUID sessionId);
 
-  /// Drop all sessions of a given user. Returns the number of sessions dropped.
+  /// Drop all sessions of a given user.
   void dropUserSessions(int userId);
 
-  /// Drop all sessions of all users. Returns the number of sessions dropped.
+  /// Drop all sessions of all users.
   void dropAllSessions();
 }
