@@ -67,8 +67,6 @@ dependencies {
 
   implementation 'io.vertx:vertx-auth-common:5.0.4'
   implementation 'io.vertx:vertx-auth-oauth2:5.0.4'
-
-  implementation "io.mikael:urlbuilder:2.0.9"
 }
 
 /// Test naming convention:
