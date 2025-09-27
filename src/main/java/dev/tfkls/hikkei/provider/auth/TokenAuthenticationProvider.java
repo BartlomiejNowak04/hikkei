@@ -2,9 +2,9 @@ package dev.tfkls.hikkei.provider.auth;
 
 import dev.tfkls.hikkei.model.auth.AuthenticationCallback;
 import dev.tfkls.hikkei.model.auth.AuthenticationProvider;
+import dev.tfkls.hikkei.model.exceptions.AuthenticationFailureException;
 import dev.tfkls.hikkei.util.BoundedMap;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.HttpException;
 import java.net.URI;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -31,14 +31,14 @@ public class TokenAuthenticationProvider implements AuthenticationProvider {
   @Override
   public void handle(RoutingContext ctx) {
     if (ctx.queryParam("state").isEmpty()) {
-      throw new HttpException(400, "Missing the state parameter");
+      throw new AuthenticationFailureException("Missing the state URI parameter");
     }
     String state = ctx.queryParam("state").getFirst();
     AuthenticationCallback callback;
     try {
       callback = authRequests.get(UUID.fromString(state)).orElseThrow();
     } catch (IllegalArgumentException | NoSuchElementException err) {
-      throw new HttpException(400, "Invalid state parameter");
+      throw new AuthenticationFailureException("Invalid/expired state URI parameter");
     }
 
     if (!ctx.queryParam("token").isEmpty()) {
@@ -46,7 +46,7 @@ public class TokenAuthenticationProvider implements AuthenticationProvider {
       if (token.equals(this.token)) {
         callback.onAuthenticate("", ctx);
       } else {
-        throw new HttpException(403, "Invalid access token");
+        throw new AuthenticationFailureException("Invalid access token");
       }
     } else {
       ctx.response().setStatusCode(200);

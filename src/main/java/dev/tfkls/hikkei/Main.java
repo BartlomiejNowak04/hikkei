@@ -33,6 +33,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,6 +50,9 @@ public class Main {
     Integer port = Integer.valueOf(dotenv.get("PORT"));
     URI baseUri = URI.create(dotenv.get("BASE_URI"));
     System.out.println("Read environment variables");
+
+    String auth_frontend_redirect =
+        Optional.ofNullable(dotenv.get("AUTH_FRONTEND_REDIRECT")).orElse("/auth");
 
     Connection connection;
     try {
@@ -141,6 +145,7 @@ public class Main {
             authMethods.isEmpty() ? null : authMethods,
             new MarkdownPageRenderer(),
             accessManager,
-            System.out::print));
+            System.out::print,
+            auth_frontend_redirect));
   }
 }

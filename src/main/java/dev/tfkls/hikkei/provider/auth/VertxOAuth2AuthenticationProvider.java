@@ -2,7 +2,7 @@ package dev.tfkls.hikkei.provider.auth;
 
 import dev.tfkls.hikkei.model.auth.AuthenticationCallback;
 import dev.tfkls.hikkei.model.auth.AuthenticationProvider;
-import dev.tfkls.hikkei.model.exceptions.AuthenticationException;
+import dev.tfkls.hikkei.model.exceptions.AuthenticationFailureException;
 import dev.tfkls.hikkei.util.BoundedMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -12,7 +12,6 @@ import io.vertx.ext.auth.oauth2.OAuth2AuthorizationURL;
 import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.auth.oauth2.Oauth2Credentials;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.HttpException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -74,15 +73,14 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
       state = UUID.fromString(ctx.request().getParam("state"));
       callback = authRequests.remove(state).orElseThrow();
     } catch (IllegalArgumentException | NullPointerException | NoSuchElementException ex) {
-      throw new HttpException(
-          400, new AuthenticationException("OAuth2 flow error: unable to retrieve OAuth2 state."));
+      throw new AuthenticationFailureException(
+          "OAuth2 flow error: unable to retrieve OAuth2 state");
     }
     String code;
     try {
       code = Objects.requireNonNull(ctx.request().getParam("code"));
     } catch (NullPointerException ex) {
-      throw new HttpException(
-          400, new AuthenticationException("OAuth2 flow error: unable to retrieve OAuth2 code."));
+      throw new AuthenticationFailureException("OAuth2 flow error: unable to retrieve OAuth2 code");
     }
 
     String userId;
@@ -103,7 +101,8 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
 
       userId = infoAccessor.apply(userInfo);
     } catch (Exception ex) {
-      throw new HttpException(500, ex);
+      throw new AuthenticationFailureException(
+          "OAuth2 flow error: failed to retrieve OAuth2 data from provider", ex);
     }
 
     callback.onAuthenticate(userId, ctx);
@@ -122,7 +121,7 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
                   .setScopes(oauthScopes)
                   .setState(stateId.toString())));
     } catch (URISyntaxException ex) {
-      throw new IllegalStateException("OAuth2Auth.authorizeURL returned an invalid URI.", ex);
+      throw new IllegalStateException("OAuth2Auth.authorizeURL returned an invalid URI", ex);
     }
   }
 }

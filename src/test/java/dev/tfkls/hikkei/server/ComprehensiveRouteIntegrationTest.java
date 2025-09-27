@@ -78,7 +78,8 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
                 new MarkdownPageRenderer(),
                 new StandardAccessManager(
                     new StandardPermissionVerifier(userDataProvider, categoryDataProvider)),
-                null))
+                null,
+                "/auth"))
         .onComplete(testContext.succeedingThenComplete());
   }
 

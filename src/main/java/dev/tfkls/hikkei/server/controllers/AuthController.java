@@ -2,6 +2,7 @@ package dev.tfkls.hikkei.server.controllers;
 
 import dev.tfkls.hikkei.model.auth.AuthEventHandler;
 import dev.tfkls.hikkei.model.auth.AuthenticationProvider;
+import dev.tfkls.hikkei.model.exceptions.AuthenticationException;
 import dev.tfkls.hikkei.model.user.AuthData;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.web.RoutingContext;
@@ -45,7 +46,7 @@ public class AuthController {
   }
 
   protected interface ExtendedAuthenticationCallback {
-    void callback(AuthData authData, RoutingContext ctx);
+    void callback(AuthData authData, RoutingContext ctx) throws AuthenticationException;
   }
 
   protected void handleRequest(

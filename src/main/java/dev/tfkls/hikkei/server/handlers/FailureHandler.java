@@ -1,6 +1,5 @@
 package dev.tfkls.hikkei.server.handlers;
 
-import dev.tfkls.hikkei.model.exceptions.AuthenticationException;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import io.vertx.core.Handler;
@@ -19,7 +18,6 @@ public class FailureHandler implements Handler<RoutingContext> {
 
     if (!(e instanceof BadDataException)
         && !(e instanceof InternalErrorException)
-        && !(e instanceof AuthenticationException)
         && !(e instanceof HttpException)) {
       ctx.response().setStatusCode(500);
       ctx.json(new JsonObject().put("message", "Internal server error: " + e.getMessage()));

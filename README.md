@@ -145,6 +145,10 @@ AUTH_GITHUB_SECRET=[oauth2_secret_token]
 AUTH_GOOGLE_CLIENT=[oauth2_client_id]
 AUTH_GOOGLE_CLIENT=[oauth2_secret_token]
 
+# If frontend is not mounted on root.
+# The backend redirects the user to [path]/success
+#  or [path]/failure after the auth workflow.
+AUTH_FRONTEND_REDIRECT=[path]
 ```
 
 ### Database

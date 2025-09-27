@@ -38,9 +38,7 @@ public class StandardSessionProvider implements SessionProvider {
   @Override
   public UUID createSession(int userId) {
     Session session =
-        new Session(
-            // NOTE: maybe pass random via DI as well?
-            UUID.randomUUID(), userId, clockView.getCurrentTime().plus(expiry));
+        new Session(UUID.randomUUID(), userId, clockView.getCurrentTime().plus(expiry));
     sessionByUUID.put(session.sessionId, session);
     return session.sessionId;
   }

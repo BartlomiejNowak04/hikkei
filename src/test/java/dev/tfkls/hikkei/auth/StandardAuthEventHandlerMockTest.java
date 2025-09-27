@@ -6,6 +6,8 @@ import static org.mockito.Mockito.*;
 import dev.tfkls.hikkei.model.auth.AccessManager;
 import dev.tfkls.hikkei.model.auth.AuthEventHandler;
 import dev.tfkls.hikkei.model.auth.SessionProvider;
+import dev.tfkls.hikkei.model.exceptions.AuthenticationFailureException;
+import dev.tfkls.hikkei.model.exceptions.AuthenticationSuccessException;
 import dev.tfkls.hikkei.model.exceptions.InternalErrorException;
 import dev.tfkls.hikkei.model.user.AuthData;
 import dev.tfkls.hikkei.model.user.UserData;
@@ -13,7 +15,6 @@ import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.provider.auth.StandardAuthEventHandler;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.HttpException;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -34,13 +35,12 @@ public class StandardAuthEventHandlerMockTest {
 
     AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, mock());
 
-    authHandler.onLogin(authData, ctx);
+    assertThrows(AuthenticationSuccessException.class, () -> authHandler.onLogin(authData, ctx));
 
     verify(userP).getUserByAuth(authData);
     verify(sessP).createSession(1);
     verify(ctx).response();
     verify(ctxResp).addCookie(any());
-    verify(ctx).redirect("/auth/success");
 
     verifyNoMoreInteractions(ctx, userP, sessP, ctxResp);
   }
@@ -59,7 +59,7 @@ public class StandardAuthEventHandlerMockTest {
 
     AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, mock());
 
-    assertThrows(HttpException.class, () -> authHandler.onLogin(authData, ctx));
+    assertThrows(AuthenticationFailureException.class, () -> authHandler.onLogin(authData, ctx));
 
     verify(userP).getUserByAuth(authData);
 
@@ -87,7 +87,7 @@ public class StandardAuthEventHandlerMockTest {
 
     AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, mock());
 
-    authHandler.onRegister(authData, ctx);
+    assertThrows(AuthenticationSuccessException.class, () -> authHandler.onRegister(authData, ctx));
 
     verify(userP, times(2)).getUserByAuth(authData);
     verify(userP).createUser(any());
@@ -97,7 +97,6 @@ public class StandardAuthEventHandlerMockTest {
     verify(sessP).createSession(1);
     verify(ctx).response();
     verify(ctxResp).addCookie(any());
-    verify(ctx).redirect("/auth/success");
 
     verifyNoMoreInteractions(ctx, userP, sessP, ctxResp);
   }
@@ -116,7 +115,7 @@ public class StandardAuthEventHandlerMockTest {
 
     AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, mock());
 
-    assertThrows(HttpException.class, () -> authHandler.onRegister(authData, ctx));
+    assertThrows(AuthenticationFailureException.class, () -> authHandler.onRegister(authData, ctx));
 
     verify(userP).getUserByAuth(authData);
 
@@ -143,7 +142,9 @@ public class StandardAuthEventHandlerMockTest {
 
     AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, mock());
 
-    assertThrows(HttpException.class, () -> authHandler.onRegister(authData, ctx));
+    assertThrows(AuthenticationFailureException.class, () -> authHandler.onRegister(authData, ctx));
+
+    verify(userP).deleteUser(1);
   }
 
   @Test
@@ -164,12 +165,11 @@ public class StandardAuthEventHandlerMockTest {
 
     AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, access);
 
-    authHandler.onMerge(authData, ctx);
+    assertThrows(AuthenticationSuccessException.class, () -> authHandler.onMerge(authData, ctx));
 
     verify(userP).getUserByAuth(authData);
     verify(access).requireUser(any());
     verify(userP).addUserAuthMethod(1, authData);
-    verify(ctx).redirect("/auth/success");
 
     verifyNoMoreInteractions(ctx, userP, sessP, ctxResp, access);
   }
@@ -193,7 +193,7 @@ public class StandardAuthEventHandlerMockTest {
 
     AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, access);
 
-    assertThrows(HttpException.class, () -> authHandler.onMerge(authData, ctx));
+    assertThrows(AuthenticationFailureException.class, () -> authHandler.onMerge(authData, ctx));
 
     verify(userP).getUserByAuth(authData);
     verify(access).requireUser(any());
@@ -218,7 +218,7 @@ public class StandardAuthEventHandlerMockTest {
 
     AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, access);
 
-    assertThrows(HttpException.class, () -> authHandler.onMerge(authData, ctx));
+    assertThrows(AuthenticationFailureException.class, () -> authHandler.onMerge(authData, ctx));
 
     verify(userP).getUserByAuth(authData);
     verify(access).requireUser(any());
@@ -242,11 +242,10 @@ public class StandardAuthEventHandlerMockTest {
 
     AuthEventHandler authHandler = new StandardAuthEventHandler(userP, sessP, access);
 
-    authHandler.onMerge(authData, ctx);
+    assertThrows(AuthenticationSuccessException.class, () -> authHandler.onMerge(authData, ctx));
 
     verify(userP).getUserByAuth(authData);
     verify(access).requireUser(any());
-    verify(ctx).redirect("/auth/success");
 
     verifyNoMoreInteractions(ctx, userP, sessP, ctxResp, access);
   }

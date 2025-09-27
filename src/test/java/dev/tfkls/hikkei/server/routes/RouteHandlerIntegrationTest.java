@@ -74,7 +74,8 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
                 null,
                 new IdentityPageRenderer(),
                 accessManager,
-                null))
+                null,
+                "/auth"))
         .onComplete(testContext.succeedingThenComplete());
   }
 

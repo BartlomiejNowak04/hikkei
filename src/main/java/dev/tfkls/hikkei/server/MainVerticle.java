@@ -48,6 +48,7 @@ public class MainVerticle extends VerticleBase {
   private final PageRenderer pageRenderer;
   private final AccessManager accessManager;
   private final LogFunction requestLogger;
+  private final String afterAuthCallbackRoute;
 
   public MainVerticle(
       UserDataProvider userProvider,
@@ -63,7 +64,8 @@ public class MainVerticle extends VerticleBase {
       @Nullable Map<String, Function<URI, AuthenticationProvider>> authMethods,
       PageRenderer pageRenderer,
       AccessManager accessManager,
-      @Nullable LogFunction requestLogger) {
+      @Nullable LogFunction requestLogger,
+      String afterAuthCallbackRoute) {
     super();
     this.userProvider = userProvider;
     this.pageProvider = pageProvider;
@@ -79,6 +81,7 @@ public class MainVerticle extends VerticleBase {
     this.pageRenderer = pageRenderer;
     this.accessManager = accessManager;
     this.requestLogger = Optional.ofNullable(requestLogger).orElse(ignored -> {});
+    this.afterAuthCallbackRoute = afterAuthCallbackRoute;
   }
 
   @Override
@@ -117,7 +120,7 @@ public class MainVerticle extends VerticleBase {
     }
 
     Router router = Router.router(vertx);
-    router.route("/api/auth/*").failureHandler(new AuthFailureHandler());
+    router.route("/api/auth/*").failureHandler(new AuthFailureHandler(afterAuthCallbackRoute));
     router.route("/api/*").failureHandler(new FailureHandler());
     router.route("/api/*").handler(new SessionHandler(sessionProvider));
     router.route("/api/*").handler(new LogHandler(requestLogger, accessManager));

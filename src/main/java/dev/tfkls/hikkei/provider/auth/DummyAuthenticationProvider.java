@@ -2,10 +2,10 @@ package dev.tfkls.hikkei.provider.auth;
 
 import dev.tfkls.hikkei.model.auth.AuthenticationCallback;
 import dev.tfkls.hikkei.model.auth.AuthenticationProvider;
+import dev.tfkls.hikkei.model.exceptions.AuthenticationFailureException;
 import dev.tfkls.hikkei.util.BoundedMap;
 import io.vertx.ext.web.RoutingContext;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.UUID;
 
 public class DummyAuthenticationProvider implements AuthenticationProvider {
@@ -22,11 +22,7 @@ public class DummyAuthenticationProvider implements AuthenticationProvider {
   public URI requestAuthentication(AuthenticationCallback callback) {
     UUID id = UUID.randomUUID();
     map.put(id, callback);
-    try {
-      return new URI(redirectUri.toString() + "?dummy_id=" + id.toString());
-    } catch (URISyntaxException e) {
-      throw new RuntimeException("Invalid redirectUri!", e);
-    }
+    return URI.create(redirectUri.toString() + "?state=" + id);
   }
 
   @Override
@@ -34,11 +30,11 @@ public class DummyAuthenticationProvider implements AuthenticationProvider {
     UUID id;
     AuthenticationCallback callback;
     try {
-      id = UUID.fromString(ctx.queryParam("dummy_id").getFirst());
+      id = UUID.fromString(ctx.queryParam("state").getFirst());
       callback = map.remove(id).orElseThrow();
       callback.onAuthenticate("dummy", ctx);
     } catch (IllegalArgumentException | NullPointerException e) {
-      ctx.fail(e);
+      throw new AuthenticationFailureException("Invalid state URI parameter");
     }
   }
 }
