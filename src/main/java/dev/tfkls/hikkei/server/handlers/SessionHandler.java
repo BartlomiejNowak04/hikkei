@@ -18,9 +18,9 @@ public class SessionHandler implements Handler<RoutingContext> {
     this.contextName = contextName;
   }
 
-  private SessionProvider provider;
-  private String cookieName;
-  private String contextName;
+  private final SessionProvider provider;
+  private final String cookieName;
+  private final String contextName;
 
   @Override
   public void handle(RoutingContext ctx) {

@@ -77,7 +77,8 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
                 Map.of("admin", uri -> new TokenAuthenticationProvider(TOKEN, uri)),
                 new MarkdownPageRenderer(),
                 new StandardAccessManager(
-                    new StandardPermissionVerifier(userDataProvider, categoryDataProvider))))
+                    new StandardPermissionVerifier(userDataProvider, categoryDataProvider)),
+                null))
         .onComplete(testContext.succeedingThenComplete());
   }
 

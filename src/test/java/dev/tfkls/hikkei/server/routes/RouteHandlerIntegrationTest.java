@@ -73,7 +73,8 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
                 URI.create(String.format("%s:%d", RestAssured.baseURI, port)),
                 null,
                 new IdentityPageRenderer(),
-                accessManager))
+                accessManager,
+                null))
         .onComplete(testContext.succeedingThenComplete());
   }
 

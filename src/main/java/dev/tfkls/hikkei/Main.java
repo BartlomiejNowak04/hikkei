@@ -140,6 +140,7 @@ public class Main {
             baseUri,
             authMethods.isEmpty() ? null : authMethods,
             new MarkdownPageRenderer(),
-            accessManager));
+            accessManager,
+            System.out::print));
   }
 }

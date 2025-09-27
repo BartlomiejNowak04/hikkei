@@ -17,8 +17,10 @@ import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.provider.auth.*;
 import dev.tfkls.hikkei.server.handlers.AuthFailureHandler;
 import dev.tfkls.hikkei.server.handlers.FailureHandler;
+import dev.tfkls.hikkei.server.handlers.LogHandler;
 import dev.tfkls.hikkei.server.handlers.SessionHandler;
 import dev.tfkls.hikkei.server.routes.*;
+import dev.tfkls.hikkei.server.util.LogFunction;
 import io.vertx.core.Future;
 import io.vertx.core.VerticleBase;
 import io.vertx.ext.web.Router;
@@ -27,6 +29,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,6 +47,7 @@ public class MainVerticle extends VerticleBase {
   private final @Nullable Map<String, Function<URI, AuthenticationProvider>> authMethods;
   private final PageRenderer pageRenderer;
   private final AccessManager accessManager;
+  private final LogFunction requestLogger;
 
   public MainVerticle(
       UserDataProvider userProvider,
@@ -58,7 +62,8 @@ public class MainVerticle extends VerticleBase {
       URI baseUri,
       @Nullable Map<String, Function<URI, AuthenticationProvider>> authMethods,
       PageRenderer pageRenderer,
-      AccessManager accessManager) {
+      AccessManager accessManager,
+      @Nullable LogFunction requestLogger) {
     super();
     this.userProvider = userProvider;
     this.pageProvider = pageProvider;
@@ -73,6 +78,7 @@ public class MainVerticle extends VerticleBase {
     this.authMethods = authMethods;
     this.pageRenderer = pageRenderer;
     this.accessManager = accessManager;
+    this.requestLogger = Optional.ofNullable(requestLogger).orElse(ignored -> {});
   }
 
   @Override
@@ -114,6 +120,7 @@ public class MainVerticle extends VerticleBase {
     router.route("/api/auth/*").failureHandler(new AuthFailureHandler());
     router.route("/api/*").failureHandler(new FailureHandler());
     router.route("/api/*").handler(new SessionHandler(sessionProvider));
+    router.route("/api/*").handler(new LogHandler(requestLogger, accessManager));
 
     router
         .route("/api/*")
