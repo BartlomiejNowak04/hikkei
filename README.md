@@ -133,7 +133,18 @@ FILE_DIRECTORY=/directory/where/revisions/are/kept
 IMAGE_DIRECTORY=/directory/where/images/are/kept
 PORT=[port_number]
 BASE_URI=[base_site_uri]
+
+# For site administration
 ADMIN_PASS=[default_superadmin_access_token]
+
+# For GitHub login support
+AUTH_GITHUB_CLIENT=[oauth2_client_id]
+AUTH_GITHUB_SECRET=[oauth2_secret_token]
+
+# For Google login support
+AUTH_GOOGLE_CLIENT=[oauth2_client_id]
+AUTH_GOOGLE_CLIENT=[oauth2_secret_token]
+
 ```
 
 ### Database

@@ -15,10 +15,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.HttpException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 
 public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider {
@@ -29,7 +26,7 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
       OAuth2Auth oauthAuth,
       URI redirectUri,
       Function<JsonObject, String> infoAccessor) {
-    this(vertx, oauthAuth, redirectUri, infoAccessor, DEFAULT_CONCURRENT_REQUESTS_LIMIT);
+    this(vertx, oauthAuth, redirectUri, infoAccessor, List.of());
   }
 
   public VertxOAuth2AuthenticationProvider(
@@ -37,21 +34,37 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
       OAuth2Auth oauthAuth,
       URI redirectUri,
       Function<JsonObject, String> infoAccessor,
+      Collection<String> oauthScopes) {
+    this(
+        vertx,
+        oauthAuth,
+        redirectUri,
+        infoAccessor,
+        oauthScopes,
+        DEFAULT_CONCURRENT_REQUESTS_LIMIT);
+  }
+
+  public VertxOAuth2AuthenticationProvider(
+      Vertx vertx,
+      OAuth2Auth oauthAuth,
+      URI redirectUri,
+      Function<JsonObject, String> infoAccessor,
+      Collection<String> oauthScopes,
       int concurrentRequestsLimit) {
     this.vertx = vertx;
     this.oauthAuth = oauthAuth;
     this.authRequests = new BoundedMap<>(concurrentRequestsLimit);
     this.infoAccessor = infoAccessor;
     this.callbackUri = redirectUri;
+    this.oauthScopes = new ArrayList<>(oauthScopes);
   }
 
   private final Vertx vertx;
   private final OAuth2Auth oauthAuth;
-
   private final URI callbackUri;
   private final Function<JsonObject, String> infoAccessor;
-
   private final BoundedMap<UUID, AuthenticationCallback> authRequests;
+  private final List<String> oauthScopes;
 
   @Override
   public void handle(RoutingContext ctx) {
@@ -85,12 +98,14 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
               .toCompletableFuture()
               .get();
 
-      userId =
-          infoAccessor.apply(
-              oauthAuth.userInfo(userObj).toCompletionStage().toCompletableFuture().get());
+      JsonObject userInfo =
+          oauthAuth.userInfo(userObj).toCompletionStage().toCompletableFuture().get();
+
+      userId = infoAccessor.apply(userInfo);
     } catch (Exception ex) {
       throw new HttpException(500, ex);
     }
+
     callback.onAuthenticate(userId, ctx);
   }
 
@@ -104,7 +119,7 @@ public class VertxOAuth2AuthenticationProvider implements AuthenticationProvider
           oauthAuth.authorizeURL(
               new OAuth2AuthorizationURL()
                   .setRedirectUri(callbackUri.toString())
-                  .setScopes(List.of())
+                  .setScopes(oauthScopes)
                   .setState(stateId.toString())));
     } catch (URISyntaxException ex) {
       throw new IllegalStateException("OAuth2Auth.authorizeURL returned an invalid URI.", ex);

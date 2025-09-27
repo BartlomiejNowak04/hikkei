@@ -98,15 +98,28 @@ public class Main {
     }
 
     { /// GitHub
-      String github_client = dotenv.get("AUTH_GITHUB_CLIENT");
-      String github_secret = dotenv.get("AUTH_GITHUB_SECRET");
+      String oauth_client = dotenv.get("AUTH_GITHUB_CLIENT");
+      String oauth_secret = dotenv.get("AUTH_GITHUB_SECRET");
 
-      if (github_client != null && github_secret != null) {
+      if (oauth_client != null && oauth_secret != null) {
         authMethods.put(
             "github",
             uri ->
                 VertxOAuth2AuthenticationProviderFactory.github(
-                    vertx, uri, github_client, github_secret));
+                    vertx, uri, oauth_client, oauth_secret));
+      }
+    }
+
+    { /// Google
+      String oauth_client = dotenv.get("AUTH_GOOGLE_CLIENT");
+      String oauth_secret = dotenv.get("AUTH_GOOGLE_SECRET");
+
+      if (oauth_client != null && oauth_secret != null) {
+        authMethods.put(
+            "google",
+            uri ->
+                VertxOAuth2AuthenticationProviderFactory.google(
+                    vertx, uri, oauth_client, oauth_secret));
       }
     }
 

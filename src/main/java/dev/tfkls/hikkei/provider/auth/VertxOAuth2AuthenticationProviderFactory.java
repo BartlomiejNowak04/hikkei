@@ -4,6 +4,7 @@ import io.vertx.core.Vertx;
 import io.vertx.ext.auth.oauth2.providers.GithubAuth;
 import io.vertx.ext.auth.oauth2.providers.GoogleAuth;
 import java.net.URI;
+import java.util.List;
 
 public class VertxOAuth2AuthenticationProviderFactory {
   public static VertxOAuth2AuthenticationProvider github(
@@ -21,6 +22,7 @@ public class VertxOAuth2AuthenticationProviderFactory {
         vertx,
         GoogleAuth.create(vertx, clientId, clientSecret),
         redirectUri,
-        json -> json.getString("sub"));
+        json -> json.getString("id"),
+        List.of("openid"));
   }
 }
