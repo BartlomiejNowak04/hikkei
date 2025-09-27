@@ -46,19 +46,19 @@ public class StandardSessionProvider implements SessionProvider {
   }
 
   @Override
-  public OptionalInt getUserBySession(UUID sessionId) {
+  public Optional<Integer> getUserBySession(UUID sessionId) {
     Session session = sessionByUUID.getOrDefault(sessionId, null);
     if (session == null) {
-      return OptionalInt.empty();
+      return Optional.empty();
     } else {
       if (session.expiry.isBefore(clockView.getCurrentTime())
           || session.expiry.isBefore(
               sessionInvalidations.getOrDefault(
                   session.userId, LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC)))) {
         sessionByUUID.remove(sessionId);
-        return OptionalInt.empty();
+        return Optional.empty();
       } else {
-        return OptionalInt.of(session.userId);
+        return Optional.of(session.userId);
       }
     }
   }

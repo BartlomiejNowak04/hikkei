@@ -2,7 +2,7 @@ package dev.tfkls.hikkei.model.auth;
 
 import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import io.vertx.ext.web.RoutingContext;
-import java.util.OptionalInt;
+import java.util.Optional;
 
 public interface AccessManager {
   void setCategory(RoutingContext ctx, int categoryId);
@@ -11,5 +11,5 @@ public interface AccessManager {
 
   int requireUser(RoutingContext ctx);
 
-  OptionalInt fetchUser(RoutingContext ctx);
+  Optional<Integer> fetchUser(RoutingContext ctx);
 }

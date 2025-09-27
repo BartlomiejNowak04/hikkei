@@ -14,7 +14,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalInt;
+import java.util.Optional;
 
 public class PageController {
   private final PageDataProvider pageProvider;
@@ -163,9 +163,8 @@ public class PageController {
   private void checkOwnerOrAdmin(RoutingContext ctx, int pageId) throws InternalErrorException {
     PageData pageData = pageProvider.getById(pageId);
 
-    OptionalInt maybeUserId = accessManager.fetchUser(ctx);
-    if (maybeUserId.isEmpty() || maybeUserId.getAsInt() != pageData.userId()) {
-
+    Optional<Integer> maybeUserId = accessManager.fetchUser(ctx);
+    if (maybeUserId.isEmpty() || !maybeUserId.get().equals(pageData.userId())) {
       accessManager.setCategory(ctx, pageData.category());
       accessManager.verifyPermission(ctx, PermissionLevel.ADMIN);
     }

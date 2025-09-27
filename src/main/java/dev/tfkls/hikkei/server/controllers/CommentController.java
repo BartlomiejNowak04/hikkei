@@ -14,7 +14,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalInt;
+import java.util.Optional;
 
 public class CommentController {
   private final CommentDataProvider commentProvider;
@@ -55,10 +55,10 @@ public class CommentController {
         Map.of("id", Type.Int),
         null,
         body -> {
-          OptionalInt maybeUserId = accessManager.fetchUser(ctx);
+          Optional<Integer> maybeUserId = accessManager.fetchUser(ctx);
           CommentData commentData = commentProvider.getById(body.getInteger("id"));
 
-          if (maybeUserId.isEmpty() || maybeUserId.getAsInt() != commentData.userId()) {
+          if (maybeUserId.isEmpty() || !maybeUserId.get().equals(commentData.userId())) {
 
             accessManager.setCategory(ctx, pageProvider.getById(commentData.pageId()).category());
             accessManager.verifyPermission(ctx, PermissionLevel.UNTRUSTED);
@@ -85,9 +85,9 @@ public class CommentController {
 
             data = commentProvider.getByPage(id);
           } else if (type.equals("user")) {
-            OptionalInt userId = accessManager.fetchUser(ctx);
+            Optional<Integer> userId = accessManager.fetchUser(ctx);
             // Only global moderators can see other users' comments
-            if (userId.isEmpty() || userId.getAsInt() != id) {
+            if (userId.isEmpty() || !userId.get().equals(id)) {
               accessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
             }
 

@@ -1,6 +1,6 @@
 package dev.tfkls.hikkei.model.auth;
 
-import java.util.OptionalInt;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface SessionProvider {
@@ -10,9 +10,10 @@ public interface SessionProvider {
   UUID createSession(int userId);
 
   /// Get the data of a user based on the session ID.
+  ///
   /// @param sessionId Identifier of a session to authorize.
-  /// @return The userId of a user, or empty OptionalInt if id is invalid/expired.
-  OptionalInt getUserBySession(UUID sessionId);
+  /// @return The userId of a user, or empty Optional if id is invalid/expired.
+  Optional<Integer> getUserBySession(UUID sessionId);
 
   /// Drop a given session. Returns true if a session was valid before, false otherwise.
   boolean dropSession(UUID sessionId);

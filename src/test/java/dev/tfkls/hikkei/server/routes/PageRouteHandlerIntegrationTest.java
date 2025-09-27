@@ -15,7 +15,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.OptionalInt;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -115,7 +115,7 @@ public class PageRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
   @Test
   void createWorkingTest() throws Exception {
     when(accessManager.requireUser(any())).thenReturn(1);
-    when(accessManager.fetchUser(any())).thenReturn(OptionalInt.of(1));
+    when(accessManager.fetchUser(any())).thenReturn(Optional.of(1));
     doNothing().when(accessManager).setCategory(any(), anyInt());
     doNothing().when(accessManager).verifyPermission(any(), any());
     when(pageProvider.createPage(any())).thenReturn(1);

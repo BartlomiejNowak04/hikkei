@@ -6,7 +6,7 @@ import dev.tfkls.hikkei.model.permission.PermissionVerifier;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.HttpException;
 import java.util.Objects;
-import java.util.OptionalInt;
+import java.util.Optional;
 import org.jetbrains.annotations.Nullable;
 
 public class StandardAccessManager implements AccessManager {
@@ -45,12 +45,12 @@ public class StandardAccessManager implements AccessManager {
   }
 
   @Override
-  public OptionalInt fetchUser(RoutingContext ctx) {
+  public Optional<Integer> fetchUser(RoutingContext ctx) {
     @Nullable Integer userId = ctx.get(userContext);
     if (userId == null) {
-      return OptionalInt.empty();
+      return Optional.empty();
     } else {
-      return OptionalInt.of(userId);
+      return Optional.of(userId);
     }
   }
 }

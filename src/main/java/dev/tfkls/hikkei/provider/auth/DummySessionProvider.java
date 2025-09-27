@@ -1,7 +1,7 @@
 package dev.tfkls.hikkei.provider.auth;
 
 import dev.tfkls.hikkei.model.auth.SessionProvider;
-import java.util.OptionalInt;
+import java.util.Optional;
 import java.util.UUID;
 
 public class DummySessionProvider implements SessionProvider {
@@ -11,8 +11,8 @@ public class DummySessionProvider implements SessionProvider {
   }
 
   @Override
-  public OptionalInt getUserBySession(UUID sessionId) {
-    return OptionalInt.empty();
+  public Optional<Integer> getUserBySession(UUID sessionId) {
+    return Optional.empty();
   }
 
   @Override

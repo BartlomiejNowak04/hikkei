@@ -18,7 +18,6 @@ import io.vertx.ext.web.handler.HttpException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 
 public class BlobController {
   private final BlobDataProvider blobProvider;
@@ -75,8 +74,8 @@ public class BlobController {
           BlobData blobData = blobProvider.getBlobById(id);
 
           if (blobData != null) {
-            OptionalInt userId = accessManager.fetchUser(ctx);
-            if (userId.isEmpty() || userId.getAsInt() != blobData.userId()) {
+            Optional<Integer> userId = accessManager.fetchUser(ctx);
+            if (userId.isEmpty() || !userId.get().equals(blobData.userId())) {
               accessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
             }
 

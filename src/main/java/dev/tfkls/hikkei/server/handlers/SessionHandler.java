@@ -4,7 +4,7 @@ import dev.tfkls.hikkei.model.auth.SessionProvider;
 import io.vertx.core.Handler;
 import io.vertx.core.http.Cookie;
 import io.vertx.ext.web.RoutingContext;
-import java.util.OptionalInt;
+import java.util.Optional;
 import java.util.UUID;
 
 public class SessionHandler implements Handler<RoutingContext> {
@@ -38,9 +38,9 @@ public class SessionHandler implements Handler<RoutingContext> {
       ctx.next();
       return;
     }
-    OptionalInt userId = provider.getUserBySession(sessionId);
+    Optional<Integer> userId = provider.getUserBySession(sessionId);
     if (userId.isPresent()) {
-      ctx.put(contextName, userId.getAsInt());
+      ctx.put(contextName, userId.get());
     } else {
       expireCookie(ctx);
     }

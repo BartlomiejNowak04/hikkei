@@ -22,7 +22,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.HttpException;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalInt;
+import java.util.Optional;
 
 public class RevisionController {
   private final RevisionDataProvider revisionProvider;
@@ -110,9 +110,9 @@ public class RevisionController {
 
             data = revisionProvider.getByPage(id);
           } else if (type.equals("user")) {
-            OptionalInt userId = accessManager.fetchUser(ctx);
+            Optional<Integer> userId = accessManager.fetchUser(ctx);
             // Only global moderators can see other users' contributions
-            if (userId.isEmpty() || userId.getAsInt() != id) {
+            if (userId.isEmpty() || !userId.get().equals(id)) {
               accessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
             }
 

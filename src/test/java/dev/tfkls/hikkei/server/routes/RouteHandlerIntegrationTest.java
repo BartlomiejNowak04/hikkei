@@ -22,7 +22,7 @@ import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.net.URI;
-import java.util.OptionalInt;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
@@ -91,7 +91,7 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
 
   protected void setupAccessManager() throws Exception {
     when(accessManager.requireUser(any())).thenReturn(1);
-    when(accessManager.fetchUser(any())).thenReturn(OptionalInt.of(1));
+    when(accessManager.fetchUser(any())).thenReturn(Optional.of(1));
     doNothing().when(accessManager).setCategory(any(), anyInt());
     doNothing().when(accessManager).verifyPermission(any(), any());
     when(pageProvider.getById(1)).thenReturn(new PageData(1, "access_required", 1));
