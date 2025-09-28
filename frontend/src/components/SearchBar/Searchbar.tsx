@@ -5,8 +5,7 @@ import styles from "./Searchbar.module.css";
 
 type Article = { id: number; title: string; url: string };
 
-const API = process.env.NEXT_PUBLIC_API_BASE ?? "";
-const SEARCH_BASE = `${API}/api/page/search`;
+const SEARCH_BASE = `/api/page/search`;
 
 export default function SearchBar({
                                       autoFocus = false,

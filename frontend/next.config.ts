@@ -35,8 +35,8 @@ const nextConfig: NextConfig = {
     async rewrites() {
         return [
             {
-                source: "/backend/:path*",
-                destination: "http://localhost:8888/api/:path*",
+                source: "/api/:path*",
+                destination: `${process.env.NEXT_PUBLIC_API_BASE}/api/:path*`,
             },
         ];
     },

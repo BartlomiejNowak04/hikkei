@@ -19,7 +19,7 @@ export default function AuthMethodsPage({ mode }: { mode: "login" | "register" }
     useEffect(() => {
         (async () => {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/auth/methods`, {
+                const res = await fetch(`/api/auth/methods`, {
                     cache: "no-store",
                 });
                 if (!res.ok) {
@@ -64,8 +64,6 @@ export default function AuthMethodsPage({ mode }: { mode: "login" | "register" }
         );
     }
 
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE;
-
     return (
         <main className={styles.container}>
             <h1>{mode === "login" ? "Zaloguj się" : "Zarejestruj się"}</h1>
@@ -75,8 +73,7 @@ export default function AuthMethodsPage({ mode }: { mode: "login" | "register" }
                     .filter((m)=>!(mode==="register" && m.key.toLowerCase()=== "admin"))
                     .map((m) => (
                     <li key={m.key}>
-                        {/*<Link href={`/backend/auth/login/admin`}>{m.label}</Link><br/>*/}
-                        <a href={`${process.env.NEXT_PUBLIC_API_BASE}/api/auth/${mode}/${encodeURIComponent(m.key)}`}>
+                        <a href={`/api/auth/${mode}/${encodeURIComponent(m.key)}`}>
                             {m.label}
                         </a>
                     </li>
