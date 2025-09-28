@@ -1,0 +1,46 @@
+.wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.input {
+    width: 320px;
+    padding: 10px 14px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+}
+
+.status,
+.error {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    padding: 6px 8px;
+    font-size: 12px;
+}
+
+.status { color: var(--header-text); opacity: .85; }
+.error { color: #b00020; }
+
+.dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: var(--background);
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.08);
+    list-style: none;
+    padding: 6px;
+    margin: 0;
+    z-index: 20;
+}
+
+.item { padding: 6px 8px; border-radius: 8px; }
+.item:hover {
+    background: color-mix(in oklab, var(--header-bg) 22%, transparent);
+}
