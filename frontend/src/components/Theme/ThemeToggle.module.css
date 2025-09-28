@@ -1,0 +1,41 @@
+.switch {
+    --w: 48px;
+    --h: 26px;
+    --p: 3px;
+
+    width: var(--w);
+    height: var(--h);
+    border-radius: calc(var(--h) / 2);
+    background: var(--header-text);
+    border: none;
+    padding: var(--p);
+    cursor: pointer;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    transition: background 0.2s ease;
+}
+
+.switch:hover {
+    filter: brightness(1.05);
+}
+
+.knob {
+    width: calc(var(--h) - 2 * var(--p));
+    height: calc(var(--h) - 2 * var(--p));
+    border-radius: 999px;
+    background: var(--background);
+    display: block;
+    transform: translateX(0);
+    transition: transform 0.2s ease, background 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.active {
+    background: var(--header-text); /* w trybie aktywnym zmieniamy kolor tła */
+}
+
+.active .knob {
+    transform: translateX(calc(var(--w) - var(--h)));
+    background: var(--background); /* żeby gałka kontrastowała */
+}
