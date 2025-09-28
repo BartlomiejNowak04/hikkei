@@ -59,7 +59,7 @@ The frontend application communicates with the backend server through an API. Be
     - POST `create`: create a user, params: String name
     - PUT `update/name`: update logged in user's username, params: String name
     - PUT `update/pfp`: update profile picture, send the picture as multi-part file
-    - PUT `update/permission`: update profile picture, send the picture as multi-part file
+    - PUT `update/permission`: update user's global permission, Params: Integer id, String permission
     - DELETE `delete`: delete the account
 - `/api/page/`:
     - GET `random`: get a random page

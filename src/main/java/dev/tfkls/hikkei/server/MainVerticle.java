@@ -11,7 +11,6 @@ import dev.tfkls.hikkei.model.file.FileProvider;
 import dev.tfkls.hikkei.model.file.VersionProvider;
 import dev.tfkls.hikkei.model.page.PageDataProvider;
 import dev.tfkls.hikkei.model.page.PageRenderer;
-import dev.tfkls.hikkei.model.permission.PermissionVerifier;
 import dev.tfkls.hikkei.model.revision.RevisionDataProvider;
 import dev.tfkls.hikkei.model.user.UserDataProvider;
 import dev.tfkls.hikkei.provider.auth.*;
@@ -101,7 +100,6 @@ public class MainVerticle extends VerticleBase {
     // * Auth configuration section *//
     SessionProvider sessionProvider;
     AuthEventHandler authEventHandler;
-    PermissionVerifier permissionVerifier;
     if (authMethods != null) {
       sessionProvider = new StandardSessionProvider(Duration.ofDays(7), LocalDateTime::now);
       authEventHandler = new StandardAuthEventHandler(userProvider, sessionProvider, accessManager);
