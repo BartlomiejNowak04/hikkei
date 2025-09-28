@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import styles from "./Auth.module.css";
-import Link from "next/link";
 
 type RawMethod = string | { method?: string; name?: string; id?: string; slug?: string };
 
