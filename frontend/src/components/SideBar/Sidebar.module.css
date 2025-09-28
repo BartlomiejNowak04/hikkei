@@ -39,3 +39,26 @@
 .text {
     margin-bottom: 0.5rem;
 }
+
+.profile
+{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:12px;
+}
+
+.avatar
+{
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    object-fit:cover;
+
+}
+
+.username
+{
+    font-weight:600;
+}
+

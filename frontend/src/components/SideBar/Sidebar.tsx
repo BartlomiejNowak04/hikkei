@@ -5,35 +5,37 @@ import styles from "./Sidebar.module.css";
 type Props = {
     position: "left" | "right";
     isLogged: boolean;
-    user?: { name?: string };
+    user?: { name?: string; avatar?: string };
 };
 
 export default function Sidebar({ position, isLogged, user }: Props) {
     if (position === "left") {
         return (
             <aside className={styles.box}>
-                <h2 className={styles.title}>Nawigacja</h2>
-                <ul className={styles.list}>
-                    <li className={styles.listItem}>
-                        <a href="/articles" className={styles.link}>Artykuły</a>
-                    </li>
-
-                    {isLogged ? (
-                        <>
-                            <li className={styles.listItem}>
-                                <a href="/profile" className={styles.link}>Mój profil</a>
-                            </li>
-                            <li className={styles.listItem}>
-                                <a href="/settings" className={styles.link}>Moje artykuły</a>
-                            </li>
-                            <li className={styles.listItem}>
-                                <a href="/logout" className={styles.link}>Wyloguj</a>
-                            </li>
-                        </>
-                    ) : (
-                        <p className={styles.text}></p>
-                    )}
-                </ul>
+                {isLogged ? (
+                    <>
+                        <div className={styles.profile}>
+                            <img
+                                src={user?.avatar || "/icons/kiwi-bird-solid.svg"}
+                                alt={user?.name || "Avatar"}
+                                className={styles.avatar}
+                            />
+                            <div className={styles.username}>{user?.name || "Użytkownik"}</div>
+                        </div>
+                        <h2 className={styles.title}>Moje konto</h2>
+                        <ul className={styles.list}>
+                            <li><a className={styles.link} href="/account">Edytuj konto</a></li>
+                            <li><a className={styles.link} href="/my-articles">Moje artykuły</a></li>
+                            <li><a className={styles.link} href="/logout">Wyloguj</a></li>
+                        </ul>
+                    </>
+                ) : (
+                    <>
+                        <h2 className={styles.title}>Nawigacja</h2>
+                        <p className={styles.text}>Jesteś gościem. Zaloguj się, aby tworzyć artykuły.</p>
+                        <a className={styles.link} href="/auth">Zaloguj się</a>
+                    </>
+                )}
             </aside>
         );
     }
@@ -41,28 +43,17 @@ export default function Sidebar({ position, isLogged, user }: Props) {
     // prawy
     return (
         <aside className={styles.box}>
-            <h2 className={styles.title}>
-                {isLogged ? `Witaj, ${user?.name ?? "Użytkowniku"}!` : ""}
-            </h2>
-
+            <h2 className={styles.title}>Akcje</h2>
             {isLogged ? (
-                <>
-                    <p className={styles.text}>Szybkie akcje:</p>
-                    <ul className={styles.list}>
-                        <li className={styles.listItem}>
-                            <a href="/articles/new" className={styles.link}>+ Nowy artykuł</a>
-                        </li>
-                        <li className={styles.listItem}>
-                            <a href="/drafts" className={styles.link}>Szkice</a>
-                        </li>
-                    </ul>
-                </>
+                <ul className={styles.list}>
+                    <li><a className={styles.link} href="/articles/new">Dodaj artykuł</a></li>
+                    <li><a className={styles.link} href="/articles/edit">Edytuj artykuł</a></li>
+                    <li><a className={styles.link} href="/categories/new">Dodaj kategorię</a></li>
+                    <li><a className={styles.link} href="/categories">Spis kategorii</a></li>
+                    <li><a className={styles.link} href="/comments">Komentarze</a></li>
+                </ul>
             ) : (
-                <>
-                    <p className={styles.text}>
-                        Jesteś gościem. Zaloguj się, aby tworzyć i zapisywać artykuły.
-                    </p>
-                </>
+                <p className={styles.text}>Zaloguj się, by dodawać i edytować.</p>
             )}
         </aside>
     );
