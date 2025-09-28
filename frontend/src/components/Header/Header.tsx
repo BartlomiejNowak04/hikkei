@@ -93,11 +93,11 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import styles from "./Header.module.css";
 import SearchBar from "@/components/SearchBar/Searchbar";
 import ThemeToggle from "@/components/Theme/ThemeToggle";
-import {useAuth} from "@/components/Auth/AuthContext";
+import {getUser} from "@/lib/ApiCaller";
 
 const LOGO_SRC = "/icons/kiwi-bird-solid.svg";
 const SEARCH_SRC = "/icons/search-solid.svg";
@@ -105,8 +105,13 @@ const LANGUAGE_SRC = "/icons/language-solid.svg";
 
 const Header = () => {
     const [showSearch, setShowSearch] = useState(false);
+    const [isLogged, setIsLogged] = useState<boolean>(false);
 
-    const { isLogged } = useAuth();
+    useEffect(() => {
+        (async () => {
+            setIsLogged(Boolean(await getUser()));
+        })();
+    }, []);
 
     return (
         <header className={styles.header}>

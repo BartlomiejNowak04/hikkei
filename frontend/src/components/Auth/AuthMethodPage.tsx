@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./Auth.module.css";
-import {useAuth} from "@/components/Auth/AuthContext";
+import {getLogged} from "@/lib/ApiCaller";
 
 type RawMethod = string | { method?: string; name?: string; id?: string; slug?: string };
 
@@ -17,16 +17,14 @@ export default function AuthMethodsPage({ mode }: { mode: "login" | "register" }
     const [methods, setMethods] = useState<Array<{ key: string; label: string }>>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const {isLogged} = useAuth();
     const router = useRouter();
 
     useEffect(() => {
-        if (isLogged) {
-            console.log("logged");
-            router.push("/");
-        }
-
         (async () => {
+            if (await getLogged()) {
+                router.push("/");
+            }
+
             try {
                 const res = await fetch(`/api/auth/methods`, {
                     cache: "no-store",
@@ -44,7 +42,7 @@ export default function AuthMethodsPage({ mode }: { mode: "login" | "register" }
                 setLoading(false);
             }
         })();
-    }, [isLogged]);
+    }, []);
 
     if (loading) {
         return (

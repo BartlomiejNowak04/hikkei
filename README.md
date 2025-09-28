@@ -135,6 +135,7 @@ FILE_DIRECTORY=/directory/where/revisions/are/kept
 IMAGE_DIRECTORY=/directory/where/images/are/kept
 PORT=[port_number]
 BASE_URI=[base_site_uri]
+FRONTEND_URI=[frontend_hostname]
 
 # For site administration
 ADMIN_PASS=[default_superadmin_access_token]

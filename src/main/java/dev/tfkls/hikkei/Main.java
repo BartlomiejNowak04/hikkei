@@ -49,6 +49,7 @@ public class Main {
     String img_dir = dotenv.get("IMAGE_DIRECTORY");
     Integer port = Integer.valueOf(dotenv.get("PORT"));
     URI baseUri = URI.create(dotenv.get("BASE_URI"));
+    String frontendUri = dotenv.get("FRONTEND_URI");
     System.out.println("Read environment variables");
 
     String auth_frontend_redirect =
@@ -142,6 +143,7 @@ public class Main {
             fileProvider,
             port,
             baseUri,
+            frontendUri,
             authMethods.isEmpty() ? null : authMethods,
             new MarkdownPageRenderer(),
             accessManager,

@@ -1,14 +1,25 @@
 "use client";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import styles from "./Sidebar.module.css";
+import {User} from "@/lib/types";
+import {getUser} from "@/lib/ApiCaller";
 
 type Props = {
     position: "left" | "right";
-    isLogged: boolean;
-    user?: { name?: string; avatar?: string };
 };
 
-export default function Sidebar({ position, isLogged, user }: Props) {
+export default function Sidebar({ position}: Props) {
+    const [isLogged, setIsLogged] = useState<boolean>(false);
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        (async () => {
+            const val = await getUser();
+            setUser(val);
+            setIsLogged(Boolean(val));
+        })();
+    }, []);
+
     if (position === "left") {
         return (
             <aside className={styles.box}>
@@ -26,7 +37,7 @@ export default function Sidebar({ position, isLogged, user }: Props) {
                         <ul className={styles.list}>
                             <li><a className={styles.link} href="/account">Edytuj konto</a></li>
                             <li><a className={styles.link} href="/my-articles">Moje artykuły</a></li>
-                            <li><a className={styles.link} href="/logout">Wyloguj</a></li>
+                            <li><a className={styles.link} href="/api/auth/logout">Wyloguj</a></li>
                         </ul>
                     </>
                 ) : (

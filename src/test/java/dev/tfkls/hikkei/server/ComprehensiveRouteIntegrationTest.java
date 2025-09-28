@@ -74,6 +74,7 @@ public class ComprehensiveRouteIntegrationTest extends JDBCIntegrationTest {
                 fileProvider,
                 port,
                 URI.create(String.format("%s:%d", RestAssured.baseURI, port)),
+                "*",
                 Map.of("admin", uri -> new TokenAuthenticationProvider(TOKEN, uri)),
                 new MarkdownPageRenderer(),
                 new StandardAccessManager(

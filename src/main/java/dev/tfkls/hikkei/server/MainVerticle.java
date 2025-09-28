@@ -44,6 +44,7 @@ public class MainVerticle extends VerticleBase {
   private final FileProvider fileProvider;
   private final Integer port;
   private final URI baseUri;
+  private final String frontendUri;
   private final @Nullable Map<String, Function<URI, AuthenticationProvider>> authMethods;
   private final PageRenderer pageRenderer;
   private final AccessManager accessManager;
@@ -61,6 +62,7 @@ public class MainVerticle extends VerticleBase {
       FileProvider fileProvider,
       Integer port,
       URI baseUri,
+      String frontendUri,
       @Nullable Map<String, Function<URI, AuthenticationProvider>> authMethods,
       PageRenderer pageRenderer,
       AccessManager accessManager,
@@ -77,6 +79,7 @@ public class MainVerticle extends VerticleBase {
     this.fileProvider = fileProvider;
     this.port = port;
     this.baseUri = baseUri;
+    this.frontendUri = frontendUri;
     this.authMethods = authMethods;
     this.pageRenderer = pageRenderer;
     this.accessManager = accessManager;
@@ -125,7 +128,9 @@ public class MainVerticle extends VerticleBase {
     router.route("/api/*").failureHandler(new FailureHandler());
     router.route("/api/*").handler(sessionHandler);
     router.route("/api/*").handler(new LogHandler(requestLogger, accessManager));
-    router.route("/api/*").handler(CorsHandler.create());
+    router
+        .route("/api/*")
+        .handler(CorsHandler.create().addOrigin(frontendUri).allowCredentials(true));
     router
         .route("/api/*")
         .handler(BodyHandler.create().setDeleteUploadedFilesOnEnd(true).setBodyLimit(-1));
