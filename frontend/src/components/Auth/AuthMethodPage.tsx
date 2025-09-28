@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./Auth.module.css";
+import {useAuth} from "@/components/Auth/AuthContext";
 
 type RawMethod = string | { method?: string; name?: string; id?: string; slug?: string };
 
@@ -15,8 +17,15 @@ export default function AuthMethodsPage({ mode }: { mode: "login" | "register" }
     const [methods, setMethods] = useState<Array<{ key: string; label: string }>>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const {isLogged} = useAuth();
+    const router = useRouter();
 
     useEffect(() => {
+        if (isLogged) {
+            console.log("logged");
+            router.push("/");
+        }
+
         (async () => {
             try {
                 const res = await fetch(`/api/auth/methods`, {
@@ -35,7 +44,7 @@ export default function AuthMethodsPage({ mode }: { mode: "login" | "register" }
                 setLoading(false);
             }
         })();
-    }, []);
+    }, [isLogged]);
 
     if (loading) {
         return (
@@ -73,7 +82,7 @@ export default function AuthMethodsPage({ mode }: { mode: "login" | "register" }
                     .filter((m)=>!(mode==="register" && m.key.toLowerCase()=== "admin"))
                     .map((m) => (
                     <li key={m.key}>
-                        <a href={`/api/auth/${mode}/${encodeURIComponent(m.key)}`}>
+                        <a href={`/api/auth/${mode}/${encodeURIComponent(m.key)}`} className={styles.capitalize}>
                             {m.label}
                         </a>
                     </li>

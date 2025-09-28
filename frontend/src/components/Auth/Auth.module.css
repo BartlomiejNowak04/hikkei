@@ -13,6 +13,10 @@
     margin: 0.5rem 0;
 }
 
+.capitalize {
+    text-transform: capitalize;
+}
+
 .errorContainer {
     min-height: 70vh;
     display: flex;
