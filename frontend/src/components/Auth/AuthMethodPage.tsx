@@ -72,7 +72,9 @@ export default function AuthMethodsPage({ mode }: { mode: "login" | "register" }
             <h1>{mode === "login" ? "Zaloguj się" : "Zarejestruj się"}</h1>
             <p>Wybierz metodę:</p>
             <ul className={styles.list}>
-                {methods.map((m) => (
+                {methods
+                    .filter((m)=>!(mode==="register" && m.key.toLowerCase()=== "admin"))
+                    .map((m) => (
                     <li key={m.key}>
                         {/*<Link href={`/backend/auth/login/admin`}>{m.label}</Link><br/>*/}
                         <a href={`${process.env.NEXT_PUBLIC_API_BASE}/api/auth/${mode}/${encodeURIComponent(m.key)}`}>
