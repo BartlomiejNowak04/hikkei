@@ -8,14 +8,14 @@
     --header-text: #59371c;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  /*--font-sans: var(--font-geist-sans);*/
-  /*--font-mono: var(--font-geist-mono);*/
+html[data-theme="dark"] {
+    --background: #271d18;
+    --foreground: #fae4be;
+
+    --header-bg: #59371c;
+    --header-text: #f6a870;
 }
 
-/* TEMPORARY: To force theme preview in development, change 'light' below to 'dark' or vice versa. */
 @media (prefers-color-scheme: light) {
   :root {
     --background: #271d18;
@@ -46,9 +46,3 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
-
-
-/*!* chyba..... *!*/
-/*.switch.darkBackground {*/
-/*    background-color: #59371c;*/
-/*}*/
