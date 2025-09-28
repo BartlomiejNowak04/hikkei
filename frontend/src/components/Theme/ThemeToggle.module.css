@@ -32,10 +32,10 @@
 }
 
 .active {
-    background: var(--header-text); /* w trybie aktywnym zmieniamy kolor tła */
+    background: var(--header-text);
 }
 
 .active .knob {
     transform: translateX(calc(var(--w) - var(--h)));
-    background: var(--background); /* żeby gałka kontrastowała */
+    background: var(--background);
 }
