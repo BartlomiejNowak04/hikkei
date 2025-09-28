@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import {Suspense, useEffect} from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/components/Auth/AuthContext";
 
@@ -9,7 +9,7 @@ function extractUsernameFromMessage(msg: string | null): string | null {
     return m ? m[1] : null;
 }
 
-export default function AuthSuccessPage() {
+function AuthSuccessPageContent() {
     const params = useSearchParams();
     const router = useRouter();
     const { login } = useAuth();
@@ -39,6 +39,14 @@ export default function AuthSuccessPage() {
             {mode === "register" ? "Rejestracja zakończona sukcesem!" : "Logowanie udane."}
             {" "}Przekierowuję…
         </p>
+    );
+}
+
+export default function AuthSuccessPage() {
+    return (
+        <Suspense>
+            <AuthSuccessPageContent/>
+        </Suspense>
     );
 }
 

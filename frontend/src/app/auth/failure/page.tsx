@@ -1,7 +1,8 @@
 "use client";
 import { useSearchParams } from "next/navigation";
+import {Suspense} from "react";
 
-export default function AuthFailurePage() {
+function AuthFailurePageContent() {
     const params = useSearchParams();
     const mode = params.get("mode") ?? "login"; // login | register
 
@@ -23,5 +24,13 @@ export default function AuthFailurePage() {
                 Wróć do {mode === "register" ? "rejestracji" : "logowania"}
             </a>
         </main>
+    );
+}
+
+export default function AuthFailurePage() {
+    return (
+      <Suspense>
+          <AuthFailurePageContent/>
+      </Suspense>
     );
 }
