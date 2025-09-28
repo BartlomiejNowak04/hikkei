@@ -176,6 +176,24 @@ All of the static files are kept in the `[IMAGE_DIRECTORY]` directory.
 ### API Server
 The project uses Vert.x to create an asynchronous HTTP API. It is run locally, on port `[PORT]`.
 
+## Start-up
+1. In the backend directory (or in the project root if the backend is there):
+```bash
+./gradlew run
+```
+By default, the backend usually listens on `http://localhost:8080`
+(if a different port is configured, use that one).
+2. Go to the frontend directory. Create file `.env.local`:
+```bash
+NEXT_PUBLIC_API_BASE=[http-method]://[hostname]
+```
+3. Install packages and run the frontend:
+```bash
+npm install
+npm run dev
+```
+The frontend usually runs on `http://localhost:3000`.
+
 ## Testing
 Running integration tests requires appropriate environment variables to be defined in the `.test-env` file located in the project root directory. The variables are the same as in the `.env` file and have the same semantics. The integration tests will be skipped unless all necessary variables are properly defined.
 
