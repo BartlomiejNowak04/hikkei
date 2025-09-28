@@ -1,12 +1,9 @@
 "use client";
 import {Suspense, useEffect} from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
-function AuthSuccessPageContent() {
-    const params = useSearchParams();
+export default function AuthSuccessPage() {
     const router = useRouter();
-
-    const mode = params.get("mode") ?? "login";
 
     useEffect(() => {
         router.replace("/");
@@ -14,17 +11,7 @@ function AuthSuccessPageContent() {
 
     return (
         <p>
-            {mode === "register" ? "Rejestracja zakończona sukcesem!" : "Logowanie udane."}
-            {" "}Przekierowuję…
+            Przekierowuję…
         </p>
     );
 }
-
-export default function AuthSuccessPage() {
-    return (
-        <Suspense>
-            <AuthSuccessPageContent/>
-        </Suspense>
-    );
-}
-

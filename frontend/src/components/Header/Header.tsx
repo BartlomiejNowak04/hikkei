@@ -116,14 +116,16 @@ const Header = () => {
     return (
         <header className={styles.header}>
             <div className={styles.leftSection}>
-                <img
-                    src={LOGO_SRC}
-                    className={styles.logo}
-                    alt="Hikkei logo"
-                    role="img"
-                    aria-label="Hikkei logo"
-                />
-                <span className={styles.title}>HIKKEI</span>
+                <a href={"/"} className={styles.leftSection}>
+                    <img
+                        src={LOGO_SRC}
+                        className={styles.logo}
+                        alt="Hikkei logo"
+                        role="img"
+                        aria-label="Hikkei logo"
+                    />
+                    <span className={styles.title}>HIKKEI</span>
+                </a>
 
                 {
                     !isLogged &&
