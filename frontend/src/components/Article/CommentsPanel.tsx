@@ -6,7 +6,8 @@ type Comment = {
   id: number;
   page_id: number;
   content: string;
-  author?: { id: number; name?: string } | null;
+  user_id: number;
+  user_name: string | undefined;
   created_at?: string;
 };
 
@@ -37,12 +38,12 @@ export default function CommentsPanel({ pageId }: Props) {
       const data = await Promise.all(
         ((await res.json()) as Comment[] | null)?.map(
           async (comment) => {
-            if (comment.author !== null && comment.author !== undefined) {
-              const res = await fetch(`/api/user/${comment.author.id}`, {
-                credentials: "include",
-                cache: "no-store",
-              });
-              comment.author.name = (await res.json())["name"] as
+            const res = await fetch(`/api/user/${comment.user_id}`, {
+              credentials: "include",
+              cache: "no-store",
+            });
+            if (res.ok) {
+              comment.user_name = (await res.json())["name"] as
                 | string
                 | undefined;
             }
@@ -141,12 +142,12 @@ export default function CommentsPanel({ pageId }: Props) {
                         <li
                           key={c.id}
                           className={styles.longItem}
-                          aria-label={`Komentarz ${c.id}`}
+                          aria-label={`Komentarz #${c.id}`}
                         >
                           <div className={styles.row}>
                             <div className={styles.commentBody}>
                               <div className={styles.meta}>
-                                {c?.author?.name ?? "Anonim"}
+                                {c?.user_name ?? `Użytkownik #${c.user_id}`}
                                 {when ? `• ${when}` : ""}
                               </div>
                               <div className={styles.content}>{c.content}</div>
