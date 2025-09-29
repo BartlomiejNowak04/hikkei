@@ -1,5 +1,4 @@
 import {apiClient} from "@/lib/api";
-import {Id} from "@/lib/types";
 
 type Empty = {
 
@@ -18,4 +17,10 @@ export async function removeDraft(id: number | undefined) {
     await deleteObject(`${API}/api/revision/draft/delete`, JSON.stringify({
         page: id,
     }));
+}
+
+export async function removePage(id: number) {
+    await deleteObject(`${API}/api/page/delete`, JSON.stringify({
+        id: id,
+    }))
 }

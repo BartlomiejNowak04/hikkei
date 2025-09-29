@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./CategoryManager.module.css";
+import {getCategories} from "@/lib/ApiCaller";
 
 export type Category = {
     id: number;
@@ -54,7 +55,7 @@ export default function CategoryManager() {
     useEffect(() => {
         (async () => {
             try {
-                const data = await request<Category[]>("/api/category/all");
+                const data = await getCategories();
                 setCategories(Array.isArray(data) ? data : []);
             } catch (err) {
                 console.error("Nie udało się pobrać kategorii:", err);
@@ -234,13 +235,14 @@ export default function CategoryManager() {
                                     </div>
                                 ) : (
                                     <div className={styles.row}>
-              <span
+              <a
                   className={styles.categoryName}
                   title={cat.name}
                   aria-label={`Kategoria: ${cat.name}`}
+                  href={`/categories/home?id=${cat.id}`}
               >
                 {cat.name}
-              </span>
+              </a>
                                         <div className={styles.rowActions}>
                                             <button
                                                 type="button"

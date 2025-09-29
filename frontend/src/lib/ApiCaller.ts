@@ -48,6 +48,14 @@ export async function getCategories() {
     return await getType<Category[]>(`${API}/api/category/all`, false, false);
 }
 
+export async function getCategory(id: string | null) {
+    return await getType<Category>(`${API}/api/category/${id}`, true, true);
+}
+
+export async function getPagesByCategory(id: string | null) {
+    return await getType<Page[]>(`${API}/api/page/category/${id}`, true, true);
+}
+
 export async function createPage(title: string, category: number) {
     return await createObject(`${API}/api/page/create`, JSON.stringify({
         title: title,
