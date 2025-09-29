@@ -34,7 +34,23 @@ export default function CommentsPanel({ pageId }: Props) {
         cache: "no-store",
       });
       if (!res.ok) throw new Error(String(res.status));
-      const data = (await res.json()) as Comment[] | null;
+      const data = Promise.all(
+        ((await res.json()) as Comment[] | null)?.map(
+          async (comment) => {
+            if (comment.author !== null && comment.author !== undefined) {
+              const res = await fetch(`/api/user/${comment.author.id}`, {
+                credentials: "include",
+                cache: "no-store",
+              });
+              comment.author.name = (await res.json())["name"] as
+                | string
+                | undefined;
+            }
+            return comment;
+          },
+        ) || [],
+      );
+
       setComments(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error(e);
@@ -121,37 +137,6 @@ export default function CommentsPanel({ pageId }: Props) {
                         ? new Date(c.created_at).toLocaleString()
                         : null;
 
-                      if (commentAuthors.get(c.id) === undefined) {
-                        if (c.id === null) {
-                          setCommentAuthors(
-                            new Map(commentAuthors).set(c.id, "Anomim"),
-                          );
-                        } else {
-                          useEffect(() => {
-                            (async () => {
-                              const res = await fetch(
-                                `/api/user/${c.author?.id}`,
-                                {
-                                  credentials: "include",
-                                  cache: "no-store",
-                                },
-                              );
-                              if (!res.ok) {
-                                setCommentAuthors(
-                                  new Map(commentAuthors).set(c.id, "Nieznany"),
-                                );
-                              } else {
-                                const name =
-                                  (await res.json())["name"] as string;
-                                setCommentAuthors(
-                                  new Map(commentAuthors).set(c.id, name),
-                                );
-                              }
-                            })();
-                          }, [commentAuthors]);
-                        }
-                      }
-
                       return (
                         <li
                           key={c.id}
@@ -161,8 +146,7 @@ export default function CommentsPanel({ pageId }: Props) {
                           <div className={styles.row}>
                             <div className={styles.commentBody}>
                               <div className={styles.meta}>
-                                {commentAuthors.get(c.id) ?? "Ładuję autora..."}
-                                {" "}
+                                {c?.author?.name ?? "Anonim"}
                                 {when ? `• ${when}` : ""}
                               </div>
                               <div className={styles.content}>{c.content}</div>
