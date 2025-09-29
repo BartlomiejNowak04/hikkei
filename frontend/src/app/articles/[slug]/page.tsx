@@ -1,5 +1,5 @@
 import ArticleClient from "@/components/Article/ArticleClient";
 
-export default function Page({ params }: { params: { slug: string } }) {
-    return <ArticleClient slug={params.slug} />;
+export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
+    return <ArticleClient slug={(await params).slug} />;
 }

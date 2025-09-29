@@ -3,6 +3,7 @@
 import { useState } from "react";
 import styles from "@/components/Content/Content.module.css";
 import modal from "./RevisionListClient.module.css";
+import {Content} from "@/lib/types";
 
 type Revision = {
     id: number;
@@ -43,7 +44,7 @@ export default function RevisionListClient({
                 const txt = await res.text().catch(() => "");
                 throw new Error(`HTTP ${res.status}${txt ? `: ${txt}` : ""}`);
             }
-            const html = await res.text();
+            const html = ((await res.json()) as Content).content;
             setPreviewHtml(html);
         } catch (e: any) {
             setErr(e?.message ?? "Nie udało się pobrać podglądu.");
