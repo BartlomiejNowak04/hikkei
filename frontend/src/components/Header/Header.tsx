@@ -142,7 +142,7 @@ const Header = () => {
             </div>
 
             <div className={styles.rightSection}>
-                <button className={styles.playButton}>GRAJ</button>
+                <button className={styles.playButton}><a href={"https://www.gry.pl/gra/ogien-i-woda-lesna-swiatynia"}>GRAJ</a></button>
 
                 <button
                     className={styles.iconButton}
@@ -159,10 +159,6 @@ const Header = () => {
                 )}
 
                 <ThemeToggle />
-
-                <button className={styles.iconButton} aria-label="Język">
-                    <img src={LANGUAGE_SRC} className={styles.iconSvg} alt="" />
-                </button>
             </div>
         </header>
     );
