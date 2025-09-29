@@ -19,10 +19,9 @@ export default function CommentsPanel({ pageId }: Props) {
   const [comments, setComments] = useState<Comment[] | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const commentAuthorMap: Map<
-    number,
-    ReturnType<typeof useState<string | null>>[0]
-  > = new Map();
+  const [commentAuthors, setCommentAuthors] = useState<Map<number, string>>(
+    new Map(),
+  );
 
   const count = comments?.length ?? 0;
 
@@ -122,17 +121,11 @@ export default function CommentsPanel({ pageId }: Props) {
                         ? new Date(c.created_at).toLocaleString()
                         : null;
 
-                      let who = commentAuthorMap.get(
-                        c.id,
-                      );
-                      if (who === undefined) {
-                        const [newWho, setWho] = useState<string | null>(null);
-                        commentAuthorMap.set(
-                          c.id,
-                          newWho,
-                        );
+                      if (commentAuthors.get(c.id) === undefined) {
                         if (c.id === null) {
-                          setWho("Anonim");
+                          setCommentAuthors(
+                            new Map(commentAuthors).set(c.id, "Anomim"),
+                          );
                         } else {
                           useEffect(() => {
                             (async () => {
@@ -144,15 +137,19 @@ export default function CommentsPanel({ pageId }: Props) {
                                 },
                               );
                               if (!res.ok) {
-                                setWho("Nieznany");
+                                setCommentAuthors(
+                                  new Map(commentAuthors).set(c.id, "Nieznany"),
+                                );
                               } else {
-                                setWho((await res.json())["name"] as string);
+                                const name =
+                                  (await res.json())["name"] as string;
+                                setCommentAuthors(
+                                  new Map(commentAuthors).set(c.id, name),
+                                );
                               }
                             })();
-                          }, [setWho]);
+                          }, [commentAuthors]);
                         }
-
-                        who = newWho;
                       }
 
                       return (
@@ -164,7 +161,8 @@ export default function CommentsPanel({ pageId }: Props) {
                           <div className={styles.row}>
                             <div className={styles.commentBody}>
                               <div className={styles.meta}>
-                                {who ?? "Ładuję autora..."}{" "}
+                                {commentAuthors.get(c.id) ?? "Ładuję autora..."}
+                                {" "}
                                 {when ? `• ${when}` : ""}
                               </div>
                               <div className={styles.content}>{c.content}</div>
