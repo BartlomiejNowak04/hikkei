@@ -81,7 +81,7 @@ public class Main {
     try {
       AuthData adminData = new AuthData("admin", "");
       @Nullable UserData userData = userDataProvider.getUserByAuth(adminData);
-      if (userData == null) {
+      if (userData == null || userData == UserData.DELETED) {
         int userId =
             userDataProvider.createUser(
                 new UserData(null, "admin", null, null, PermissionLevel.SUPER_ADMIN));
