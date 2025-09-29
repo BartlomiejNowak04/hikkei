@@ -20,6 +20,7 @@ public class UserRouteHandler extends RouteHandler {
 
     router.get("/").blockingHandler(controller::getSelf);
     router.get("/:id").blockingHandler(controller::getUser);
+    router.get("/name/:name").blockingHandler(controller::getUserByName);
     router.get("/pfp/:id").blockingHandler(controller::getPfp);
     router.get("/categories/:id").blockingHandler(controller::getCategoriesWithPermissions);
 

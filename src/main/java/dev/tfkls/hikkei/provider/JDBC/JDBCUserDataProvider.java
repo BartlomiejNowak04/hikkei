@@ -66,6 +66,19 @@ public class JDBCUserDataProvider implements UserDataProvider {
   }
 
   @Override
+  public UserData getUserByName(String name) throws InternalErrorException {
+    if (name == null) return null;
+    try (PreparedStatement st = connection.prepareStatement("SELECT * FROM users_with_data WHERE username = ?")) {
+      st.setString(1, name);
+      ResultSet rs = st.executeQuery();
+      if (!rs.next()) return null;
+      return getData(rs);
+    } catch (SQLException e) {
+      throw new InternalErrorException(internal_error);
+    }
+  }
+
+  @Override
   public List<AuthData> getUserAuthMethods(int userId) throws InternalErrorException {
     if (!doesUserExist(userId)) return null;
 

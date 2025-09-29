@@ -68,6 +68,26 @@ public class UserController {
         });
   }
 
+  public void getUserByName(RoutingContext ctx) {
+    handle(
+      ctx,
+      null,
+      Map.of("name", Type.Str),
+      body -> {
+        UserData data = userProvider.getUserByName(body.getString("name"));
+        if (data == null) {
+          ctx.response().setStatusCode(400);
+          ctx.json(new JsonObject().put("message", "Incorrect parameter: id"));
+        } else if (data == UserData.DELETED) {
+          ctx.response().setStatusCode(404);
+          ctx.json(new JsonObject().put("message", "This user is deleted"));
+        } else {
+          ctx.response().setStatusCode(200);
+          ctx.json(Jsonify.userToJson(data));
+        }
+      });
+  }
+
   public void updatePfp(RoutingContext ctx) {
     try {
       int id = accessManager.requireUser(ctx);

@@ -51,7 +51,7 @@ export default function Content({user}: ContentProps) {
 
     return (
         <div className={styles.wrapper}>
-            <a href={`/articles/${titleToUrl(page?.title ?? "")}`}><h1 className={styles.title}>{titleToUrl(page?.title ?? "")}</h1></a>
+            <a href={`/articles/${titleToUrl(page?.title ?? "")}`}><h1 className={styles.title}>{page?.title ?? ""}</h1></a>
 
             <article
                 className={styles.content}

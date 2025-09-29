@@ -1,6 +1,7 @@
 export type User = {
-    name: string;
-    avatar?: string;
+    username: string;
+    avatar?: string
+    id: number;
 };
 
 export type Page = {

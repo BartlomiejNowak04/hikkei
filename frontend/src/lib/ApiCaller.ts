@@ -28,6 +28,10 @@ export async function getUser() {
     return await getType<User>(`${API}/api/user/`, false, false);
 }
 
+export async function getUserByName(name: string) {
+    return await getType<User>(`${API}/api/user/name/${name}`, false, false);
+}
+
 export async function getLogged() {
     return Boolean(await getUser());
 }
@@ -60,7 +64,7 @@ export async function getCategories() {
     return await getType<Category[]>(`${API}/api/category/all`, false, false);
 }
 
-export async function getCategory(id: string | null) {
+export async function getCategory(id: number | null) {
     return await getType<Category>(`${API}/api/category/${id}`, true, true);
 }
 
@@ -74,6 +78,10 @@ export async function getRevisions(id: number | undefined) {
 
 export async function getRandomPage() {
     return await getType<Page>(`${API}/api/page/random`, true, true);
+}
+
+export async function getUsersWithPermission(id: number | null) {
+    return await getType<User[]>(`${API}/api/category/users/${id}`, true, true);
 }
 
 export async function createPage(title: string, category: number) {
@@ -101,5 +109,13 @@ export async function setStatus(id: number | undefined, status: boolean) {
     return await updateObject(`${API}/api/revision/update/status`, JSON.stringify({
         id: id,
         status: status,
+    }));
+}
+
+export async function setPermission(idUser: number, idCat: number | null, perm: string) {
+    return await updateObject(`${API}/api/category/permission`, JSON.stringify({
+        category: idCat,
+        user: idUser,
+        permission: perm,
     }));
 }

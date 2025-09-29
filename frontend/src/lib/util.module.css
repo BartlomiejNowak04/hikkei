@@ -1,0 +1,29 @@
+.article_title {
+    font-size: 2em;
+}
+
+.flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.button {
+    background-color: var(--background);
+    color: var(--header-text);
+    border: none;
+    border-radius: 10px;
+    padding: 5px 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.center_text {
+    text-align: center;
+}
+
+.list {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}

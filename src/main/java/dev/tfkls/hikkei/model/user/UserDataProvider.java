@@ -13,6 +13,8 @@ public interface UserDataProvider {
 
   UserData getUserData(int userId) throws InternalErrorException;
 
+  UserData getUserByName(String name) throws InternalErrorException;
+
   List<AuthData> getUserAuthMethods(int userId) throws InternalErrorException;
 
   int createUser(UserData data) throws BadDataException, InternalErrorException;

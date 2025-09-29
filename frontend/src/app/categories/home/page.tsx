@@ -3,6 +3,7 @@
 import {Suspense, useEffect, useState} from "react";
 import {getCategory} from "@/lib/ApiCaller";
 import {useRouter, useSearchParams} from "next/navigation";
+import utilStyles from '@/lib/util.module.css';
 import PagesManager from "@/components/Page/PagesManager";
 
 function CategoryPageContent() {
@@ -26,8 +27,11 @@ function CategoryPageContent() {
 
     return (
         <>
-            <h1>{name}</h1>
-            <button>Zarządzaj dostępem</button>
+            <div className={utilStyles.flex}>
+
+                <h1 className={utilStyles.article_title}>{name}</h1>
+                <button className={utilStyles.button}><a href={`/categories/users?id=${id}`}>Zarządzaj dostępem</a></button>
+            </div>
             <PagesManager id={id}/>
         </>
     );
