@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import styles from "./NewArticle.module.css";
 import { apiClient } from "@/lib/api";
 import { useRouter } from "next/navigation";
-
-type Category = { id: number; name: string };
+import {createPage, createRevision, getCategories, getPage} from "@/lib/ApiCaller";
+import {Category} from "@/lib/types";
 
 export default function NewArticle() {
     const [title, setTitle] = useState("");
@@ -18,7 +18,7 @@ export default function NewArticle() {
     useEffect(() => {
         (async () => {
             try {
-                const data = await apiClient<Category[]>("/api/category/all");
+                const data = await getCategories();
                 setCategories(Array.isArray(data) ? data : []);
                 if (data && data.length > 0) setCategory(data[0].id);
             } catch (err) {
@@ -35,20 +35,12 @@ export default function NewArticle() {
         setError(null);
 
         try {
-            const page = await apiClient<{ id: number; url: string }>("/api/page/create", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title, category }),
-            });
-
-            await apiClient("/api/revision/create", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ page_id: page.id, content }),
-            });
+            const page = await createPage(title, category);
+            if (!page) throw new Error();
+            await createRevision(page.id, content);
 
             alert("Dodano artykuł!");
-            router.push(`/articles/${encodeURIComponent(page.url)}`);
+            router.push(`/articles/${encodeURIComponent(title.replace(" ", "_"))}`);
         } catch (err) {
             console.error(err);
             setError("Nie udało się dodać artykułu.");

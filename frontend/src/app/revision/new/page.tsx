@@ -1,14 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import {Suspense, useEffect, useState} from "react";
 import styles from "@/app/Home.module.css";
-import { apiClient } from "@/lib/api";
 import { useRouter, useSearchParams } from "next/navigation";
 import {createDraft, createRevision, getDraft, getLogged, getPage, getRawCurrent, setStatus} from "@/lib/ApiCaller";
 import {Page} from "@/lib/types";
 import {removeDraft} from "@/lib/deleteCaller";
 
-
-export default function NewArticleRevision() {
+function NewArticleRevisionContent() {
     const router = useRouter();
 
     const searchParams = useSearchParams();
@@ -201,9 +199,9 @@ export default function NewArticleRevision() {
                 {error && <p className={styles.error}>{error}</p>}
 
                 <button type="submit"
-                    formAction={handleSubmit(true)}
-                    className={styles.button}
-                    disabled={loading}
+                        formAction={handleSubmit(true)}
+                        className={styles.button}
+                        disabled={loading}
                 >
                     {loading ? "Zapisywanie…" : "Dodaj rewizję"}
                 </button>
@@ -217,5 +215,13 @@ export default function NewArticleRevision() {
                 </button>
             </form>
         </>
-);
+    );
+}
+
+export default function NewArticleRevision() {
+    return (
+        <Suspense>
+            <NewArticleRevisionContent/>
+        </Suspense>
+    )
 }

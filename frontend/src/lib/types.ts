@@ -16,3 +16,5 @@ export type Content = {
 export type Id = {
     id: number;
 }
+
+export type Category = { id: number; name: string };

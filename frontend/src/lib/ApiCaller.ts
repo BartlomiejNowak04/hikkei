@@ -1,4 +1,4 @@
-import {Content, Id, Page, User} from "@/lib/types";
+import {Category, Content, Id, Page, User} from "@/lib/types";
 import {apiClient} from "@/lib/api";
 
 const API = process.env.NEXT_PUBLIC_API_BASE;
@@ -42,6 +42,17 @@ export async function getDraft(id : number | undefined) {
 
 export async function getRawCurrent(id: number | undefined) {
     return await getType<Content>(`${API}/api/revision/current/${id}/raw`, true, true);
+}
+
+export async function getCategories() {
+    return await getType<Category[]>(`${API}/api/category/all`, false, false);
+}
+
+export async function createPage(title: string, category: number) {
+    return await createObject(`${API}/api/page/create`, JSON.stringify({
+        title: title,
+        category: category,
+    }));
 }
 
 export async function createRevision(id: number | undefined, content: FormDataEntryValue | null) {
