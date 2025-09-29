@@ -34,7 +34,7 @@ export default function CommentsPanel({ pageId }: Props) {
         cache: "no-store",
       });
       if (!res.ok) throw new Error(String(res.status));
-      const data = Promise.all(
+      const data = await Promise.all(
         ((await res.json()) as Comment[] | null)?.map(
           async (comment) => {
             if (comment.author !== null && comment.author !== undefined) {
