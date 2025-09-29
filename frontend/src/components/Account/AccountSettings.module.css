@@ -1,0 +1,144 @@
+/* Motyw: korzysta z Twoich globalnych zmiennych */
+.wrapper {
+    --as-bg: var(--background);
+    --as-fg: var(--foreground);
+    --as-accent: var(--header-bg);
+    --as-accent-fg: var(--header-text);
+    --as-border: color-mix(in oklab, var(--foreground) 22%, transparent);
+    --as-border-strong: color-mix(in oklab, var(--foreground) 35%, transparent);
+    --as-ring: color-mix(in oklab, var(--header-bg) 45%, transparent);
+
+    color: var(--as-fg);
+    /*font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;*/
+}
+
+.pageTitle {
+    font-family: "Poppins", sans-serif;
+    font-size: clamp(24px, 2.4vw, 36px);
+    letter-spacing: 0.05em;
+    color: var(--as-accent-fg);
+    margin: 8px 0 18px;
+}
+
+.card,
+.cardDanger {
+    background: color-mix(in oklab, var(--as-bg) 92%, var(--as-accent) 8%);
+    border: 1px solid var(--as-border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+.cardDanger {
+    background: color-mix(in oklab, #ff5a6b 8%, var(--as-bg) 92%);
+    border-color: color-mix(in oklab, #ff5a6b 40%, var(--as-border));
+}
+
+.sectionTitle {
+    font-family: "Poppins", sans-serif;
+    font-size: 22px;
+    color: var(--as-accent-fg);
+    margin: 0 0 10px;
+}
+
+.label {
+    display: block;
+    font-size: 13px;
+    color: color-mix(in oklab, var(--as-fg) 70%, transparent);
+    margin-bottom: 6px;
+}
+
+.inputRow { display: flex; gap: 8px; align-items: center; }
+
+.input,
+.inputLg {
+    width: 100%;
+    background: color-mix(in oklab, var(--as-bg) 85%, var(--as-accent) 15%);
+    color: var(--as-fg);
+    border: 1px solid var(--as-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+.inputLg { padding: 12px 14px; font-size: 16px; }
+.input:focus, .inputLg:focus {
+    border-color: var(--as-accent);
+    box-shadow: 0 0 0 4px var(--as-ring);
+}
+
+.actions { display: flex; gap: 8px; margin-top: 8px; }
+
+.buttonPrimary,
+.buttonGhost,
+.buttonDanger {
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 700;
+    border: 1px solid var(--as-border);
+    cursor: pointer;
+    transition: transform 90ms ease, background 120ms ease, border-color 120ms ease;
+}
+.buttonPrimary {
+    background: var(--as-accent);
+    color: var(--as-accent-fg);
+}
+.buttonPrimary:hover { transform: translateY(-1px); }
+
+.buttonGhost {
+    background: transparent;
+    color: var(--as-accent-fg);
+}
+.buttonGhost:hover {
+    background: color-mix(in oklab, var(--as-accent) 20%, transparent);
+    border-color: var(--as-border-strong);
+}
+
+.buttonDanger {
+    background: transparent;
+    color: color-mix(in oklab, var(--as-accent-fg) 70%, #ff5a6b 30%);
+    border-color: color-mix(in oklab, #ff5a6b 40%, var(--as-border));
+}
+.buttonDanger:hover {
+    background: color-mix(in oklab, #ff5a6b 20%, transparent);
+    border-color: var(--as-border-strong);
+}
+
+.error { color: color-mix(in oklab, var(--as-accent-fg) 70%, #ff5a6b 30%); margin: 6px 0; }
+.muted { color: color-mix(in oklab, var(--as-fg) 60%, transparent); }
+
+.avatarRow { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.avatar {
+    width: 96px; height: 96px; border-radius: 999px; object-fit: cover;
+    border: 1px solid var(--as-border);
+    background: color-mix(in oklab, var(--as-bg) 85%, var(--as-accent) 15%);
+}
+.avatarActions { flex: 1 1 280px; min-width: 260px; }
+
+.dropzone {
+    border: 2px dashed var(--as-border);
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    background: color-mix(in oklab, var(--as-bg) 95%, var(--as-accent) 5%);
+    transition: border-color 120ms ease, background 120ms ease;
+}
+.dropActive {
+    border-color: var(--as-accent);
+    background: color-mix(in oklab, var(--as-bg) 90%, var(--as-accent) 10%);
+}
+
+.skeleton {
+    height: 180px;
+    border-radius: 12px;
+    background: linear-gradient(90deg,
+    color-mix(in oklab, var(--as-bg) 80%, var(--as-accent) 20%),
+    color-mix(in oklab, var(--as-bg) 70%, var(--as-accent) 30%),
+    color-mix(in oklab, var(--as-bg) 80%, var(--as-accent) 20%)
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.3s infinite;
+}
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
