@@ -22,6 +22,7 @@ import dev.tfkls.hikkei.server.routes.*;
 import dev.tfkls.hikkei.server.util.LogFunction;
 import io.vertx.core.Future;
 import io.vertx.core.VerticleBase;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
@@ -30,6 +31,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import org.jetbrains.annotations.Nullable;
 
@@ -130,7 +132,11 @@ public class MainVerticle extends VerticleBase {
     router.route("/api/*").handler(new LogHandler(requestLogger, accessManager));
     router
         .route("/api/*")
-        .handler(CorsHandler.create().addOrigin(frontendUri).allowCredentials(true));
+        .handler(
+            CorsHandler.create()
+                .addOrigin(frontendUri)
+                .allowCredentials(true)
+                .allowedMethods(Set.of(HttpMethod.PUT, HttpMethod.DELETE)));
     router
         .route("/api/*")
         .handler(BodyHandler.create().setDeleteUploadedFilesOnEnd(true).setBodyLimit(-1));

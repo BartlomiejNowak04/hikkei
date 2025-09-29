@@ -63,7 +63,7 @@ export default function CategoryManager() {
                 setInitializing(false);
             }
         })();
-    }, []);
+    }, [initializing]);
 
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -85,10 +85,7 @@ export default function CategoryManager() {
                 body: JSON.stringify({ name }),
             });
 
-            if (created && typeof created === "object") {
-                setCategories((prev) => [created, ...prev]);
-            }
-            setName("");
+            setInitializing(true);
         } catch (err) {
             console.error(err);
             setError("Nie udało się utworzyć kategorii.");
