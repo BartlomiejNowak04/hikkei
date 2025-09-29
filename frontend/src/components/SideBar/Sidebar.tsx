@@ -85,7 +85,6 @@ export default function Sidebar({ position }: Props) {
                         <h2 className={styles.title}>Moje konto</h2>
                         <ul className={styles.list}>
                             <li><a className={styles.link} href="/account">Edytuj konto</a></li>
-                            <li><a className={styles.link} href="/my-articles">Moje artykuły</a></li>
                             <li>
                                 <a
                                     className={styles.link}
