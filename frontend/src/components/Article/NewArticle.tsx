@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import styles from "./NewArticle.module.css";
 import { apiClient } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import {createPage, createRevision, getPageTitle, setStatus} from "@/lib/ApiCaller";
+import {titleToUrl} from "@/lib/utils";
 
 type Category = { id: number; name: string };
 
@@ -36,45 +38,24 @@ export default function NewArticle() {
 
         try {
             // 1) create page
-            const created = await apiClient<{ id?: number }>(
-                "/api/page/create",
-                /* auth */ true,
-                /* error */ true,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ title: title.trim(), category }),
-                }
-            );
+            const created = await createPage(title.trim(), category);
 
             if (!created?.id) {
                 throw new Error("Błędna odpowiedź serwera: brak id nowej strony.");
             }
 
             // 2) create first revision
-            await apiClient<void>(
-                "/api/revision/create",
-                /* auth */ true,
-                /* error */ true,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ page_id: created.id, content: content.trim() }),
-                }
-            );
+            const revId = await createRevision(created.id, content.trim());
+            await setStatus(revId?.id, true);
 
-            const byTitle = await apiClient<{ id: number; title: string; url: string }>(
-                `/api/page/title/${encodeURIComponent(title.trim())}`,
-                /* auth */ false,
-                /* error */ true
-            );
+            const byTitle = await getPageTitle(title.trim());
 
-            if (!byTitle?.url) {
-                throw new Error("Serwer nie zwrócił adresu strony (url) po tytule.");
+            if (!byTitle) {
+                throw new Error("Serwer nie zwrócił adresu stronypo tytule.");
             }
 
             alert("Dodano artykuł!");
-            router.push(`/articles/${encodeURIComponent(byTitle.url)}`);
+            router.push(`/articles/${titleToUrl(byTitle.title)}`);
         } catch (err: any) {
             console.error(err);
             setError(err?.message || "Nie udało się dodać artykułu.");
