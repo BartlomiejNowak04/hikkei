@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import styles from "./NewArticle.module.css";
 import { apiClient } from "@/lib/api";
 import { useRouter } from "next/navigation";
-import {createPage, createRevision, getCategories, getPage} from "@/lib/ApiCaller";
-import {Category} from "@/lib/types";
+
+type Category = { id: number; name: string };
 
 export default function NewArticle() {
     const [title, setTitle] = useState("");
@@ -18,7 +18,7 @@ export default function NewArticle() {
     useEffect(() => {
         (async () => {
             try {
-                const data = await getCategories();
+                const data = await apiClient<Category[]>("/api/category/all", false, false);
                 setCategories(Array.isArray(data) ? data : []);
                 if (data && data.length > 0) setCategory(data[0].id);
             } catch (err) {
@@ -35,15 +35,49 @@ export default function NewArticle() {
         setError(null);
 
         try {
-            const page = await createPage(title, category);
-            if (!page) throw new Error();
-            await createRevision(page.id, content);
+            // 1) create page
+            const created = await apiClient<{ id?: number }>(
+                "/api/page/create",
+                /* auth */ true,
+                /* error */ true,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ title: title.trim(), category }),
+                }
+            );
+
+            if (!created?.id) {
+                throw new Error("Błędna odpowiedź serwera: brak id nowej strony.");
+            }
+
+            // 2) create first revision
+            await apiClient<void>(
+                "/api/revision/create",
+                /* auth */ true,
+                /* error */ true,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ page_id: created.id, content: content.trim() }),
+                }
+            );
+
+            const byTitle = await apiClient<{ id: number; title: string; url: string }>(
+                `/api/page/title/${encodeURIComponent(title.trim())}`,
+                /* auth */ false,
+                /* error */ true
+            );
+
+            if (!byTitle?.url) {
+                throw new Error("Serwer nie zwrócił adresu strony (url) po tytule.");
+            }
 
             alert("Dodano artykuł!");
-            router.push(`/articles/${encodeURIComponent(title.replace(" ", "_"))}`);
-        } catch (err) {
+            router.push(`/articles/${encodeURIComponent(byTitle.url)}`);
+        } catch (err: any) {
             console.error(err);
-            setError("Nie udało się dodać artykułu.");
+            setError(err?.message || "Nie udało się dodać artykułu.");
         } finally {
             setLoading(false);
         }
