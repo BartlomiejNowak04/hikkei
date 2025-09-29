@@ -128,7 +128,6 @@ export default function Sidebar({ position }: Props) {
             {isLogged ? (
                 <ul className={styles.list}>
                     <li><a className={styles.link} href="/articles/new">Dodaj artykuł</a></li>
-                    <li><a className={styles.link} href="/articles/edit">Edytuj artykuł</a></li>
                     <li><a className={styles.link} href="/categories">Kategorie</a></li>
                     <li><a className={styles.link} href="/comments">Komentarze</a></li>
                 </ul>

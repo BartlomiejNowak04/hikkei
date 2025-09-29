@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./Searchbar.module.css";
 
-type Article = { id: number; title: string; url: string };
+type Article = { id: number; title: string; url?: string };
 
 const SEARCH_BASE = `/api/page/search`;
 
@@ -72,7 +72,8 @@ export default function SearchBar({
             onClose?.();
         }
         if (e.key === "Enter" && results[0]) {
-            window.location.href = `/articles/${encodeURIComponent(results[0].title)}`;
+            const slug = results[0].url || results[0].title; // ⟵ fallback
+            window.location.href = `/articles/${encodeURIComponent(slug)}`;
         }
     };
 
@@ -92,13 +93,19 @@ export default function SearchBar({
 
             {results.length > 0 && (
                 <ul className={styles.dropdown}>
-                    {results.map((a) => (
-                        <li key={a.id} className={styles.item}>
-                            <a href={`/articles/${encodeURIComponent(a.title)}`} onClick={onClose}>
-                                {a.title}
-                            </a>
-                        </li>
-                    ))}
+                    {results.map((a) => {
+                        const slug = a.url || a.title; // ⟵ fallback na title
+                        return (
+                            <li key={a.id} className={styles.item}>
+                                <a
+                                    href={`/articles/${encodeURIComponent(slug)}`}
+                                    onClick={onClose}
+                                >
+                                    {a.title}
+                                </a>
+                            </li>
+                        );
+                    })}
                 </ul>
             )}
         </div>
