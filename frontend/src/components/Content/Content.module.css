@@ -1,0 +1,43 @@
+.wrapper {
+    padding: 1.5rem;
+    /*font-family: 'Poppins', sans-serif;*/
+}
+
+.title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    font-family: 'Poppins', sans-serif;
+    color: var(--header-text);
+}
+
+.text {
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.sectionTitle {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-family: 'Poppins', sans-serif;
+}
+
+.list {
+    list-style: disc;
+    padding-left: 1.25rem; /* pl-5 */
+}
+
+.listItem {
+    margin-bottom: 0.25rem; /* space-y-1 */
+}
+
+.link {
+    color: #2563eb; /* niebieski */
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.link:hover {
+    opacity: 0.8;
+}
