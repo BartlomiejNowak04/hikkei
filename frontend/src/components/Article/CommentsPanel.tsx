@@ -1,197 +1,174 @@
-// components/Article/CommentsPanel.tsx
 "use client";
-import { useState } from "react";
-import styles from "@/app/Home.module.css";
+import { useRef, useState } from "react";
+import styles from "./CommentsPanel.module.css";
 
 type Comment = {
-  id: number;
-  page_id: number;
-  content: string;
-  author?: { id: number; name?: string } | null;
-  created_at?: string;
+    id: number;
+    page_id: number;
+    content: string;
+    author?: { id: number; name?: string } | null;
+    created_at?: string;
 };
 
 type Props = { pageId: number };
 
 export default function CommentsPanel({ pageId }: Props) {
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [comments, setComments] = useState<Comment[] | null>(null);
+    const [open, setOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [err, setErr] = useState<string | null>(null);
+    const [comments, setComments] = useState<Comment[] | null>(null);
+    const formRef = useRef<HTMLFormElement>(null);
 
-  async function load() {
-    setLoading(true);
-    setErr(null);
-    try {
-      const res = await fetch(`/api/comment/page/${pageId}`, {
-        credentials: "include",
-        cache: "no-store",
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = (await res.json()) as Comment[] | null;
-      setComments(Array.isArray(data) ? data : []);
-    } catch (e: any) {
-      console.error(e);
-      setErr("Nie udało się pobrać komentarzy.");
-    } finally {
-      setLoading(false);
+    const count = comments?.length ?? 0;
+
+    async function load() {
+        setLoading(true);
+        setErr(null);
+        try {
+            const res = await fetch(`/api/comment/page/${pageId}`, {
+                credentials: "include",
+                cache: "no-store",
+            });
+            if (!res.ok) throw new Error(String(res.status));
+            const data = (await res.json()) as Comment[] | null;
+            setComments(Array.isArray(data) ? data : []);
+        } catch (e) {
+            console.error(e);
+            setErr("Nie udało się pobrać komentarzy.");
+        } finally {
+            setLoading(false);
+        }
     }
-  }
 
-  async function toggle() {
-    if (!open && comments == null) {
-      await load();
+    async function toggle() {
+        if (!open && comments == null) {
+            await load();
+        }
+        setOpen(!open);
     }
-    setOpen(!open);
-  }
 
-  const deleteComment = (id: number) => async () => {
-    try {
-      await fetch(`/api/comment/delete/`, {
-        credentials: "include",
-        cache: "no-store",
-        body: JSON.stringify({ id: id }),
-        method: "DELETE",
-      });
+    const deleteComment = (id: number) => async () => {
+        setErr(null);
+        try {
+            const res = await fetch(`/api/comment/delete`, {
+                method: "DELETE",
+                credentials: "include",
+                cache: "no-store",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id }),
+            });
+            if (!res.ok) throw new Error(String(res.status));
+            setComments((prev) => (prev ? prev.filter((c) => c.id !== id) : prev));
+        } catch (e) {
+            console.error(e);
+            setErr("Nie udało się usunąć komentarza.");
+        }
+    };
 
-      setComments(comments?.filter((comment) => comment.id !== id) ?? null);
-    } catch (err) {
-      console.error(err);
-      setErr("Nie udało się usunąć komentarza.");
-    }
-  };
+    const createComment = async (fd: FormData) => {
+        setErr(null);
+        try {
+            const content = String(fd.get("content") ?? "").trim();
+            if (!content) return;
 
-  const createComment = async (e: FormData) => {
-    try {
-      await fetch(
-        `/api/comment/create`,
-        {
-          credentials: "include",
-          cache: "no-store",
-          body: JSON.stringify({ page_id: pageId, content: e.get("content") }),
-          method: "POST",
-        },
-      );
-    } catch (err) {
-      console.error(err);
-      setErr("Nie udało się dodać komentarza.");
-      return;
-    }
-    await load();
-  };
+            const res = await fetch(`/api/comment/create`, {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ page_id: pageId, content }),
+            });
+            if (!res.ok) throw new Error(String(res.status));
 
-  return (
-    <div style={{ display: "inline-block" }}>
-      <button
-        type="button"
-        onClick={toggle}
-        style={{
-          padding: "8px 12px",
-          borderRadius: 8,
-          border: "1px solid currentColor",
-          background: "transparent",
-          cursor: "pointer",
-        }}
-      >
-        {open ? "Ukryj komentarze" : "Pokaż komentarze"}
-      </button>
+            formRef.current?.reset();
+            await load();
+        } catch (e) {
+            console.error(e);
+            setErr("Nie udało się dodać komentarza.");
+        }
+    };
 
-      {open && (
-        <div style={{ marginTop: 12 }}>
-          {loading && <p>Ładowanie…</p>}
-          {err && <p style={{ color: "crimson" }}>{err}</p>}
+    return (
+        <div className={styles.inline}>
+            <button type="button" onClick={toggle} className={styles.buttonGhost}>
+                {open ? "Ukryj komentarze" : "Pokaż komentarze"}
+                <span className={styles.counterBadge}>{count}</span>
+            </button>
 
-          {!loading && !err && (
-            <>
-              {(!comments || comments.length === 0)
-                ? <p>Brak komentarzy.</p>
-                : (
-                  <ul
-                    style={{
-                      listStyle: "none",
-                      padding: 0,
-                      margin: 0,
-                      display: "grid",
-                      gap: 8,
-                    }}
-                  >
-                    {comments.map((c) => (
-                      <li
-                        key={c.id}
-                        style={{
-                          border: "1px solid currentColor",
-                          borderRadius: 8,
-                          padding: "8px 12px",
-                          opacity: 0.9,
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: 12,
-                            opacity: 0.8,
-                            marginBottom: 4,
-                          }}
-                        >
-                          {c.author?.name ?? "Anonim"} {c.created_at
-                            ? `• ${new Date(c.created_at).toLocaleString()}`
-                            : ""}
+            {open && (
+                <div className={styles.panel}>
+                    {loading && (
+                        <div className={styles.skeletonList}>
+                            <div className={styles.skeletonItem} />
+                            <div className={styles.skeletonItem} />
                         </div>
-                        <div>{c.content}</div>
-                        <button
-                          type="button"
-                          onClick={deleteComment(c.id)}
-                          style={{
-                            padding: "8px 12px",
-                            borderRadius: 8,
-                            border: "1px solid currentColor",
-                            background: "transparent",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Usuń komentarz
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                    )}
 
-              <div style={{ marginTop: 8 }}>
-                <form action={createComment} className={styles.form}>
-                  <b>Dodaj nowy komentarz</b>
-                  <label className={styles.label}>
-                    Treść
-                    <textarea
-                      name="content"
-                      rows={4}
-                      className={styles.textarea}
-                    />
-                  </label>
+                    {err && <p className={styles.error}>{err}</p>}
 
-                  <button
-                    type="submit"
-                    className={styles.button}
-                  >
-                    Dodaj komentarz
-                  </button>
-                </form>
-                <button
-                  type="button"
-                  onClick={load}
-                  style={{
-                    padding: "6px 10px",
-                    borderRadius: 8,
-                    border: "1px solid currentColor",
-                    background: "transparent",
-                    cursor: "pointer",
-                  }}
-                >
-                  Odśwież komentarze
-                </button>
-              </div>
-            </>
-          )}
+                    {!loading && !err && (
+                        <>
+                            {(!comments || comments.length === 0) ? (
+                                <p className={styles.muted}>Brak komentarzy.</p>
+                            ) : (
+                                <ul className={styles.longList} role="list">
+                                    {comments.map((c) => {
+                                        const when = c.created_at
+                                            ? new Date(c.created_at).toLocaleString()
+                                            : null;
+                                        const who = c.author?.name ?? "Anonim";
+                                        return (
+                                            <li key={c.id} className={styles.longItem}>
+                                                <div className={styles.row}>
+                                                    <div className={styles.commentBody}>
+                                                        <div className={styles.meta}>
+                                                            {who} {when ? `• ${when}` : ""}
+                                                        </div>
+                                                        <div className={styles.content}>{c.content}</div>
+                                                    </div>
+                                                    <div className={styles.rowActions}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={deleteComment(c.id)}
+                                                            className={styles.buttonDanger}
+                                                            aria-label={`Usuń komentarz #${c.id}`}
+                                                        >
+                                                            Usuń
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            )}
+
+                            <div className={styles.card}>
+                                <form ref={formRef} action={createComment}>
+                                    <label className={styles.label} htmlFor="content">
+                                        Dodaj nowy komentarz
+                                    </label>
+                                    <textarea
+                                        id="content"
+                                        name="content"
+                                        rows={4}
+                                        className={styles.textarea}
+                                        placeholder="Napisz coś miłego…"
+                                    />
+                                    <div className={styles.actions}>
+                                        <button type="submit" className={styles.buttonPrimary}>
+                                            Dodaj komentarz
+                                        </button>
+                                        <button type="button" className={styles.buttonGhost} onClick={load}>
+                                            Odśwież komentarze
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 }
