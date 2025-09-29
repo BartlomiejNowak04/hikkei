@@ -1,0 +1,134 @@
+.wrapper {
+    --cm-bg: var(--background);
+    --cm-fg: var(--foreground);
+    --cm-accent: var(--header-bg);
+    --cm-accent-fg: var(--header-text);
+    --cm-border: color-mix(in oklab, var(--foreground) 20%, transparent);
+    --cm-border-strong: color-mix(in oklab, var(--foreground) 35%, transparent);
+    --cm-ring: color-mix(in oklab, var(--header-bg) 45%, transparent);
+
+    color: var(--cm-fg);
+}
+
+.pageTitle {
+    font-family: "Poppins", sans-serif;
+    font-size: clamp(24px, 2.4vw, 36px);
+    letter-spacing: 0.05em;
+    color: var(--cm-accent-fg);
+    margin: 8px 0 18px;
+}
+
+.card {
+    background: color-mix(in oklab, var(--cm-bg) 92%, var(--cm-accent) 8%);
+    border: 1px solid var(--cm-border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 18px;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.sectionTitle {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    color: var(--cm-accent-fg);
+    font-family: "Poppins", sans-serif;
+}
+
+.label {
+    display: block;
+    font-size: 13px;
+    color: color-mix(in oklab, var(--cm-fg) 70%, transparent);
+    margin-bottom: 6px;
+}
+
+.input,
+.inputLg,
+.textarea {
+    width: 100%;
+    background: color-mix(in oklab, var(--cm-bg) 85%, var(--cm-accent) 15%);
+    color: var(--cm-fg);
+    border: 1px solid var(--cm-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+.inputLg { padding: 12px 14px; font-size: 16px; }
+
+.textarea {
+    min-height: 280px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.input:focus,
+.inputLg:focus,
+.textarea:focus {
+    border-color: var(--cm-accent);
+    box-shadow: 0 0 0 4px var(--cm-ring);
+}
+
+.error {
+    color: color-mix(in oklab, var(--cm-accent-fg) 70%, red 30%);
+    margin-top: 8px;
+}
+
+.buttonPrimary,
+.buttonGhost,
+.buttonDanger {
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: transform 90ms ease, box-shadow 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+.buttonPrimary:disabled,
+.buttonGhost:disabled,
+.buttonDanger:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.buttonPrimary {
+    background: var(--cm-accent);
+    color: var(--cm-accent-fg);
+    border-color: var(--cm-border);
+}
+.buttonPrimary:hover { transform: translateY(-1px); }
+
+.buttonGhost {
+    background: transparent;
+    color: var(--cm-accent-fg);
+    border-color: var(--cm-border);
+}
+.buttonGhost:hover {
+    background: color-mix(in oklab, var(--cm-accent) 20%, transparent);
+    border-color: var(--cm-border-strong);
+}
+
+.buttonDanger {
+    background: transparent;
+    color: color-mix(in oklab, var(--cm-accent-fg) 70%, #ff5a6b 30%);
+    border-color: var(--cm-border);
+}
+.buttonDanger:hover {
+    background: color-mix(in oklab, #ff5a6b 20%, transparent);
+    border-color: var(--cm-border-strong);
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.muted { color: color-mix(in oklab, var(--cm-fg) 60%, transparent); }
