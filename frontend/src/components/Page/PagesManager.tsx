@@ -1,8 +1,8 @@
 import {useEffect, useMemo, useState} from "react";
 import {getPagesByCategory} from "@/lib/ApiCaller";
-import {useSearchParams} from "next/navigation";
 import {Page} from "@/lib/types";
 import styles from '../Category/CategoryManager.module.css';
+import utilStyles from '@/lib/util.module.css';
 import {removePage} from "@/lib/deleteCaller";
 
 export default function PagesManager({id} : {id : string | null}) {
@@ -82,7 +82,7 @@ export default function PagesManager({id} : {id : string | null}) {
                                             className={styles.categoryName}
                                             title={cat.title}
                                             aria-label={`Artykuł: ${cat.title}`}
-                                            href={`/categories/home?id=${cat.id}`}
+                                            href={`/articles/${cat.title}`}
                                         >
                                             {cat.title}
                                         </a>

@@ -18,3 +18,5 @@ export type Id = {
 }
 
 export type Category = { id: number; name: string };
+
+export type Revision = { id: number; page_id: number; created_at?: string };

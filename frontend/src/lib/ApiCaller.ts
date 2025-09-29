@@ -1,4 +1,4 @@
-import {Category, Content, Id, Page, User} from "@/lib/types";
+import {Category, Content, Id, Page, User, Revision} from "@/lib/types";
 import {apiClient} from "@/lib/api";
 
 const API = process.env.NEXT_PUBLIC_API_BASE;
@@ -36,12 +36,24 @@ export async function getPage(url : string) {
     return await getType<Page>(`${API}/api/page/${url}`, true, true);
 }
 
+export async function getPageTitle(url : string) {
+    return await getType<Page>(`${API}/api/page/title/${url}`, true, true);
+}
+
+export async function searchPage(url : string) {
+    return await getType<Page[]>(`${API}/api/page/search/${url}`, true, true);
+}
+
 export async function getDraft(id : number | undefined) {
     return await getType<Content>(`${API}/api/revision/draft/${id}`, true, true);
 }
 
 export async function getRawCurrent(id: number | undefined) {
     return await getType<Content>(`${API}/api/revision/current/${id}/raw`, true, true);
+}
+
+export async function getRenderedCurrent(id: number | undefined) {
+    return await getType<Content>(`${API}/api/revision/current/${id}/rendered`, true, true);
 }
 
 export async function getCategories() {
@@ -54,6 +66,10 @@ export async function getCategory(id: string | null) {
 
 export async function getPagesByCategory(id: string | null) {
     return await getType<Page[]>(`${API}/api/page/category/${id}`, true, true);
+}
+
+export async function getRevisions(id: number | undefined) {
+    return await getType<Revision[]>(`${API}/api/revision/page/${id}`, true, true);
 }
 
 export async function createPage(title: string, category: number) {

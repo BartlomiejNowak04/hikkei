@@ -1,14 +1,7 @@
-import { apiServer } from "@/lib/api";
 import { redirect } from "next/navigation";
 import styles from "./Content.module.css";
 import Landing from "@/components/Landing/Landing";
-
-type Page = {
-    id: number;
-    title: string;
-    url: string;
-    category?: number;
-};
+import {Page} from "@/lib/types";
 
 type ContentProps = {
     isLogged: boolean;
@@ -34,16 +27,17 @@ async function apiServerText(url: string): Promise<string> {
 async function fetchPage(params: { pageUrl?: string; pageTitle?: string }): Promise<Page> {
     const { pageUrl, pageTitle } = params;
 
-    if (pageUrl) {
-        // GET /api/page/:url
-        return apiServer<Page>(`/api/page/${encodeURIComponent(pageUrl)}`);
-    }
-    if (pageTitle) {
-        // GET /api/page/title/:title
-        return apiServer<Page>(`/api/page/title/${encodeURIComponent(pageTitle)}`);
-    }
-    // GET /api/page/random
-    return apiServer<Page>("/api/page/random");
+    // if (pageUrl) {
+    //     // GET /api/page/:url
+    //     return apiServer<Page>(`/api/page/${encodeURIComponent(pageUrl)}`);
+    // }
+    // if (pageTitle) {
+    //     // GET /api/page/title/:title
+    //     return apiServer<Page>(`/api/page/title/${encodeURIComponent(pageTitle)}`);
+    // }
+    // // GET /api/page/random
+    // return apiServer<Page>("/api/page/random");
+    return {id:0, category:1, title: ""};
 }
 
 async function fetchRenderedHtml(pageId: number): Promise<string> {
@@ -65,8 +59,8 @@ export default async function Content({ isLogged, user, pageUrl, pageTitle }: Co
                 <h1 className={styles.title}>{page.title}</h1>
 
                 <p className={styles.text}>
-                    <a href={`/articles/${encodeURIComponent(page.url)}`} className={styles.link}>
-                        /articles/{page.url}
+                    <a href={`/articles/${encodeURIComponent(page.title)}`} className={styles.link}>
+                        /articles/{page.title}
                     </a>
                 </p>
 
