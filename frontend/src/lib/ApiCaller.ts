@@ -72,6 +72,10 @@ export async function getRevisions(id: number | undefined) {
     return await getType<Revision[]>(`${API}/api/revision/page/${id}`, true, true);
 }
 
+export async function getRandomPage() {
+    return await getType<Page>(`${API}/api/page/random`, true, true);
+}
+
 export async function createPage(title: string, category: number) {
     return await createObject(`${API}/api/page/create`, JSON.stringify({
         title: title,
