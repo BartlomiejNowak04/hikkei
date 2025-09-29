@@ -13,12 +13,9 @@ type Revision = {
 
 const API = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:3000";
 
-type Ok<T> = { ok: true; data: T };
-type Err = { ok: false; status: number; text?: string };
-
-async function sfetch<T>(path: string): Promise<Ok<T> | Err> {
-    const cookieHeader = cookies().toString();
+async function getForwardedHeaders() {
     const h = new Headers();
+    const cookieHeader = cookies().toString();
     if (cookieHeader) h.set("cookie", cookieHeader);
 
     const reqHeaders = await headers();
@@ -27,50 +24,56 @@ async function sfetch<T>(path: string): Promise<Ok<T> | Err> {
     if (ua) h.set("user-agent", ua);
     if (lang) h.set("accept-language", lang);
 
-    const res = await fetch(`${API}${path}`, { cache: "no-store", headers: h });
-    if (!res.ok) {
-        let text: string | undefined;
-        try { text = await res.text(); } catch {}
-        return { ok: false, status: res.status, text };
-    }
-
-    const ct = (res.headers.get("content-type") || "").toLowerCase();
-    if (ct.includes("application/json")) {
-        const data = (await res.json()) as T;
-        return { ok: true, data };
-    }
-    const text = (await res.text()) as unknown as T;
-    return { ok: true, data: text };
+    return h;
 }
 
-// Fallback: najpierw /api/page/:url, potem /api/page/title/:title, na koniec /api/page/search/:title
 async function getPageBySlug(slug: string): Promise<Page | null> {
-    const byUrl = await sfetch<Page>(`/api/page/${encodeURIComponent(slug)}`);
-    if (byUrl.ok) return byUrl.data;
+    const h = await getForwardedHeaders();
+
+    {
+        const res = await fetch(`${API}/api/page/${encodeURIComponent(slug)}`, {
+            cache: "no-store",
+            headers: h,
+        });
+        if (res.ok) return (await res.json()) as Page;
+    }
 
     const decoded = decodeURIComponent(slug);
-    const byTitle = await sfetch<Page>(`/api/page/title/${encodeURIComponent(decoded)}`);
-    if (byTitle.ok) return byTitle.data;
+    {
+        const res = await fetch(`${API}/api/page/title/${encodeURIComponent(decoded)}`, {
+            cache: "no-store",
+            headers: h,
+        });
+        if (res.ok) return (await res.json()) as Page;
+    }
 
-    const search = await sfetch<Array<Page & { title: string; url: string }>>(
-        `/api/page/search/${encodeURIComponent(decoded)}`
-    );
-    if (search.ok && Array.isArray(search.data)) {
-        const exactUrl = search.data.find(p => p.url === slug);
-        if (exactUrl) return exactUrl;
-        const exactTitle = search.data.find(p => p.title === decoded);
-        if (exactTitle) return exactTitle;
-        if (search.data[0]) return search.data[0];
+    {
+        const res = await fetch(`${API}/api/page/search/${encodeURIComponent(decoded)}`, {
+            cache: "no-store",
+            headers: h,
+        });
+        if (res.ok) {
+            const data = (await res.json()) as Array<Page & { title: string; url: string }>;
+            if (Array.isArray(data)) {
+                const exactUrl = data.find((p) => p.url === slug);
+                if (exactUrl) return exactUrl;
+                const exactTitle = data.find((p) => p.title === decoded);
+                if (exactTitle) return exactTitle;
+                if (data[0]) return data[0];
+            }
+        }
     }
 
     return null;
 }
 
 function sortRevisions(revs: Revision[]): Revision[] {
-    const withDate = revs.filter(r => !!r.created_at);
-    const noDate   = revs.filter(r => !r.created_at);
+    const withDate = revs.filter((r) => !!r.created_at);
+    const noDate = revs.filter((r) => !r.created_at);
 
-    withDate.sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime());
+    withDate.sort(
+        (a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime()
+    );
     noDate.sort((a, b) => b.id - a.id);
 
     return [...withDate, ...noDate];
@@ -80,14 +83,17 @@ export default async function RevisionsPage({ params }: { params: { slug: string
     const slug = params.slug;
     if (!slug) notFound();
 
-    // 1) znajdź stronę
     const page = await getPageBySlug(slug);
     if (!page) notFound();
 
-    // 2) pobierz rewizje
-    const revListRes = await sfetch<Revision[]>(`/api/revision/page/${page.id}`);
-    if (!revListRes.ok) {
-        if (revListRes.status === 404) {
+    const h = await getForwardedHeaders();
+    const res = await fetch(`${API}/api/revision/page/${page.id}`, {
+        cache: "no-store",
+        headers: h,
+    });
+
+    if (!res.ok) {
+        if (res.status === 404) {
             return (
                 <article className={styles.wrapper}>
                     <a href={`/articles/${encodeURIComponent(slug)}`} className={styles.backLink}>
@@ -98,7 +104,7 @@ export default async function RevisionsPage({ params }: { params: { slug: string
                 </article>
             );
         }
-        if (revListRes.status === 401) {
+        if (res.status === 401) {
             return (
                 <article className={styles.wrapper}>
                     <a href={`/articles/${encodeURIComponent(slug)}`} className={styles.backLink}>
@@ -109,10 +115,11 @@ export default async function RevisionsPage({ params }: { params: { slug: string
                 </article>
             );
         }
-        throw new Error(`HTTP ${revListRes.status} on GET /api/revision/page/:id`);
+        throw new Error(`HTTP ${res.status} on GET /api/revision/page/:id`);
     }
 
-    const revisions = Array.isArray(revListRes.data) ? sortRevisions(revListRes.data) : [];
+    const data = (await res.json()) as Revision[] | unknown;
+    const revisions = Array.isArray(data) ? sortRevisions(data as Revision[]) : [];
 
     return (
         <article className={styles.wrapper}>
@@ -121,12 +128,7 @@ export default async function RevisionsPage({ params }: { params: { slug: string
             </a>
             <h1 className={styles.title}>Rewizje — {page.title}</h1>
 
-            <RevisionListClient
-                apiBase={API}
-                slug={slug}
-                pageId={page.id}
-                revisions={revisions}
-            />
+            <RevisionListClient apiBase={API} slug={slug} pageId={page.id} revisions={revisions} />
         </article>
     );
 }

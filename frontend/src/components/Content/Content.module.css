@@ -1,43 +1,90 @@
+/* --- kontener artykułu --- */
 .wrapper {
-    padding: 1.5rem;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+/*!* link powrotu *!*/
+/*.backLink {*/
+/*    display: inline-block;*/
+/*    margin-bottom: 1rem;*/
+/*    color: var(--header-text);*/
+/*    font-size: 0.9rem;*/
+/*    text-decoration: none;*/
+/*    transition: color 0.2s;*/
+/*}*/
+.backLink:hover {
+    color: #000;
+}
+
+.articleTitle {
+    font-size: 36px;
+    color: var(--header-text);
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: 0.05em;
+    margin: 0 0 14px 0;
+    display: flex;
+    align-items: flex-start;
+}
+
+.prose {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--header-text);
+    /*color: #333;*/
+    margin-bottom: 2rem;
     /*font-family: 'Poppins', sans-serif;*/
 }
 
-.title {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    font-family: 'Poppins', sans-serif;
-    color: var(--header-text);
-}
-
-.text {
-    margin-bottom: 1.5rem;
-    line-height: 1.6;
-}
-
-.sectionTitle {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
+.actionsRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
     font-family: 'Poppins', sans-serif;
 }
 
-.list {
-    list-style: disc;
-    padding-left: 1.25rem; /* pl-5 */
-}
-
-.listItem {
-    margin-bottom: 0.25rem; /* space-y-1 */
-}
-
-.link {
-    color: #2563eb; /* niebieski */
-    text-decoration: underline;
+.buttonLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
     cursor: pointer;
+
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid color-mix(in oklab, var(--header-text) 20%, transparent);
+    background-color: var(--background);
+    color: var(--header-text);
+    font-weight: 600;
+    font-size: 14px;
+
+    transition: background-color 0.2s, border-color 0.2s, transform 0.06s, opacity 0.2s;
 }
 
-.link:hover {
-    opacity: 0.8;
+.buttonLink:hover {
+    background-color: color-mix(in oklab, var(--header-text) 8%, var(--background));
+    border-color: color-mix(in oklab, var(--header-text) 35%, transparent);
+}
+.buttonLink:active {
+    transform: translateY(1px);
+}
+.buttonLink:focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--header-text) 50%, transparent);
+    outline-offset: 2px;
+    border-color: color-mix(in oklab, var(--header-text) 50%, transparent);
+}
+
+.buttonPrimary {
+    background-color: color-mix(in oklab, var(--header-text) 12%, var(--background));
+    color: var(--header-bg);
+    border-color: color-mix(in oklab, var(--header-text) 25%, transparent);
+}
+
+.buttonIcon {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
 }
