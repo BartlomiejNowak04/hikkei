@@ -23,8 +23,8 @@ public class MarkdownPageRenderer implements PageRenderer {
   }
 
   public MarkdownPageRenderer(DataHolder markdownOptions) {
-    parser = Parser.builder(defaultOptions).build();
-    renderer = HtmlRenderer.builder(defaultOptions).build();
+    parser = Parser.builder(markdownOptions).build();
+    renderer = HtmlRenderer.builder(markdownOptions).build();
   }
 
   private final Parser parser;
