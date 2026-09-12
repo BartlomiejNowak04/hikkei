@@ -11,23 +11,30 @@ import org.jetbrains.annotations.Nullable;
 
 public class SessionHandler implements Handler<RoutingContext> {
 
+  /// Path the session cookie is issued on by StandardAuthEventHandler. An expiring cookie only
+  /// replaces the live one when name, domain and path all match, so it must use the same path.
+  public static final String DEFAULT_COOKIE_PATH = "/api/";
+
   public SessionHandler(SessionProvider provider) {
-    this(provider, "HikkeiSession", "UserIdentifier", "SessionIdentifier");
+    this(provider, "HikkeiSession", DEFAULT_COOKIE_PATH, "UserIdentifier", "SessionIdentifier");
   }
 
   public SessionHandler(
       SessionProvider provider,
       String cookieName,
+      String cookiePath,
       String userContextName,
       String sessionContextName) {
     this.provider = provider;
     this.cookieName = cookieName;
+    this.cookiePath = cookiePath;
     this.userContextName = userContextName;
     this.sessionContextName = sessionContextName;
   }
 
   private final SessionProvider provider;
   private final String cookieName;
+  private final String cookiePath;
   private final String userContextName;
   private final String sessionContextName;
 
@@ -79,6 +86,6 @@ public class SessionHandler implements Handler<RoutingContext> {
   }
 
   private void expireCookie(RoutingContext ctx) {
-    ctx.response().addCookie(Cookie.cookie(cookieName, "").setMaxAge(0));
+    ctx.response().addCookie(Cookie.cookie(cookieName, "").setPath(cookiePath).setMaxAge(0));
   }
 }
