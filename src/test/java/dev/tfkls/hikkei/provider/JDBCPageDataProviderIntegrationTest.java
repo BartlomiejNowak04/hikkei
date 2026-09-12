@@ -126,6 +126,28 @@ public class JDBCPageDataProviderIntegrationTest extends JDBCIntegrationTest {
   }
 
   @Test
+  void getByTitleIgnoresDeletedPage() throws InternalErrorException, SQLException {
+    int pgId = create_page("gbtidp", 1, 1);
+    delete("page", pgId);
+
+    assertNull(provider.getByTitle("gbtidp"));
+  }
+
+  @Test
+  void getByTitleReturnsLivePageWhenDeletedOneSharesTitle()
+      throws InternalErrorException, SQLException {
+    // unique_title only guards live pages, so a title can be reused after deletion.
+    int oldId = create_page("gbtrlp", 1, 1);
+    delete("page", oldId);
+    int newId = create_page("gbtrlp", 1, 1);
+
+    PageData page = provider.getByTitle("gbtrlp");
+    assertNotNull(page);
+    assertNotEquals(PageData.DELETED, page);
+    assertEquals(newId, page.id());
+  }
+
+  @Test
   void deletePageSuccess() throws InternalErrorException, SQLException {
     int pgId = create_page("dps", 1, 1);
     provider.deletePage(pgId);

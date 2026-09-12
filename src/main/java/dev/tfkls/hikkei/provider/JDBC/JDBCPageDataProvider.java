@@ -79,7 +79,8 @@ public class JDBCPageDataProvider implements PageDataProvider {
   @Override
   public PageData getByTitle(String title) throws InternalErrorException {
     try (PreparedStatement st =
-        connection.prepareStatement("SELECT * FROM pages_with_data WHERE title = ?")) {
+        connection.prepareStatement(
+            "SELECT * FROM pages_with_data WHERE title = ? AND deleted = false")) {
       st.setString(1, title);
       try (ResultSet rs = st.executeQuery()) {
         if (!rs.next()) return null;

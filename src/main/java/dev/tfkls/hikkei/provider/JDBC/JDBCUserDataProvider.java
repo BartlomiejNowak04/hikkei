@@ -69,7 +69,8 @@ public class JDBCUserDataProvider implements UserDataProvider {
   public UserData getUserByName(String name) throws InternalErrorException {
     if (name == null) return null;
     try (PreparedStatement st =
-        connection.prepareStatement("SELECT * FROM users_with_data WHERE username = ?")) {
+        connection.prepareStatement(
+            "SELECT * FROM users_with_data WHERE username = ? AND deleted = false")) {
       st.setString(1, name);
       ResultSet rs = st.executeQuery();
       if (!rs.next()) return null;

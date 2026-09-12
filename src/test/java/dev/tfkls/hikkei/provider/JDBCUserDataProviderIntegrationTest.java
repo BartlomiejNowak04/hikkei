@@ -44,6 +44,36 @@ public class JDBCUserDataProviderIntegrationTest extends JDBCIntegrationTest {
   }
 
   @Test
+  void getUserByNameReturnsLiveUser() throws Exception {
+    int id = create_user("gubnrlu", null);
+
+    UserData user = provider.getUserByName("gubnrlu");
+    assertNotNull(user);
+    assertEquals(id, user.id());
+  }
+
+  @Test
+  void getUserByNameIgnoresDeletedUser() throws Exception {
+    int id = create_user("gubnidu", null);
+    delete("user", id);
+
+    assertNull(provider.getUserByName("gubnidu"));
+  }
+
+  @Test
+  void getUserByNameReturnsLiveUserWhenDeletedOneSharesName() throws Exception {
+    // unique_username only guards live users, so a name can be reused after deletion.
+    int oldId = create_user("gubnshared", null);
+    delete("user", oldId);
+    int newId = create_user("gubnshared", null);
+
+    UserData user = provider.getUserByName("gubnshared");
+    assertNotNull(user);
+    assertNotEquals(UserData.DELETED, user);
+    assertEquals(newId, user.id());
+  }
+
+  @Test
   void getUserByAuthTest() throws Exception {
     AuthData auth = new AuthData("google", "abc");
     assertNull(provider.getUserByAuth(auth));
