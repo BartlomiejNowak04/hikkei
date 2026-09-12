@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 import dev.tfkls.hikkei.model.exceptions.BadDataException;
 import dev.tfkls.hikkei.model.file.StoredVersion;
 import dev.tfkls.hikkei.model.page.PageData;
+import dev.tfkls.hikkei.model.permission.PermissionLevel;
 import dev.tfkls.hikkei.model.revision.RevisionData;
 import io.restassured.http.Method;
 import io.vertx.core.json.JsonArray;
@@ -145,6 +146,24 @@ public class RevisionRouteHandlerIntegrationTest extends RouteHandlerIntegration
     when(versionProvider.getVersion(any())).thenReturn(new StoredVersion("test", "test"));
     JsonObject body = callGetEndpointObject("/api/revision/draft/1", 200);
     assertEquals("test", body.getString("content"));
+  }
+
+  @Test
+  void draftReadNeedsTheSameLevelAsDraftWrite() throws Exception {
+    setupAccessManager();
+    when(revisionProvider.getDraft(1, 1)).thenReturn(null);
+
+    callGetEndpointObject("/api/revision/draft/1", 200);
+    verify(accessManager).verifyPermission(any(), eq(PermissionLevel.TRUSTED));
+
+    callEndpoint(
+        "/api/revision/draft/save",
+        Method.POST,
+        new JsonObject().put("page", 1).put("content", "aa"),
+        204,
+        "");
+    verify(accessManager, times(2)).verifyPermission(any(), eq(PermissionLevel.TRUSTED));
+    verify(accessManager, never()).verifyPermission(any(), eq(PermissionLevel.MODERATOR));
   }
 
   @Test

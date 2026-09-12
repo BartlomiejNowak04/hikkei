@@ -206,9 +206,10 @@ public class RevisionController {
           int userId = accessManager.requireUser(ctx);
           int pageId = body.getInteger("page_id");
 
+          // Same level as saveDraft/deleteDraft: whoever may write a draft may read it back.
           int pageCategory = pageProvider.getById(pageId).category();
           accessManager.setCategory(ctx, pageCategory);
-          accessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
+          accessManager.verifyPermission(ctx, PermissionLevel.TRUSTED);
 
           byte[] id = revisionProvider.getDraft(userId, pageId);
           String content = "";

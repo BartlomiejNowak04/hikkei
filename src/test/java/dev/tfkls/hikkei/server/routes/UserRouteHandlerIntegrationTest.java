@@ -152,6 +152,7 @@ public class UserRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
 
   @Test
   void updatePfpNoFileTest() throws Exception {
+    setupAccessManager();
     when(userProvider.doesUserExist(1)).thenReturn(true);
     given()
         .multiPart("id", 1)
@@ -181,6 +182,7 @@ public class UserRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
 
   @Test
   void updatePfpInvalidFiletypeTest() throws Exception {
+    setupAccessManager();
     when(userProvider.doesUserExist(1)).thenReturn(true);
     given()
         .multiPart("id", 1)
@@ -195,6 +197,7 @@ public class UserRouteHandlerIntegrationTest extends RouteHandlerIntegrationTest
 
   @Test
   void updatePfpWorkingTest() throws Exception {
+    setupAccessManager();
     when(userProvider.doesUserExist(1)).thenReturn(true);
     given()
         .multiPart("id", 1)

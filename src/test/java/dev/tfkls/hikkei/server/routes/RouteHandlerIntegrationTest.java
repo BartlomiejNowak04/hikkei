@@ -89,7 +89,8 @@ public abstract class RouteHandlerIntegrationTest extends IntegrationTest {
         commentProvider,
         categoryProvider,
         versionProvider,
-        fileProvider);
+        fileProvider,
+        accessManager);
   }
 
   protected void setupAccessManager() throws Exception {

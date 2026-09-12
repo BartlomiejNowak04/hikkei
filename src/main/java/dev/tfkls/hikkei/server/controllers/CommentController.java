@@ -57,11 +57,16 @@ public class CommentController {
         body -> {
           Optional<Integer> maybeUserId = accessManager.fetchUser(ctx);
           CommentData commentData = commentProvider.getById(body.getInteger("id"));
+          if (commentData == null) throw new BadDataException("Incorrect parameter value: id");
+          if (commentData == CommentData.DELETED) {
+            ctx.response().setStatusCode(404).end();
+            return;
+          }
 
+          // Authors may remove their own comments; anyone else needs to moderate the category.
           if (maybeUserId.isEmpty() || !maybeUserId.get().equals(commentData.userId())) {
-
             accessManager.setCategory(ctx, pageProvider.getById(commentData.pageId()).category());
-            accessManager.verifyPermission(ctx, PermissionLevel.UNTRUSTED);
+            accessManager.verifyPermission(ctx, PermissionLevel.MODERATOR);
           }
 
           commentProvider.deleteComment(body.getInteger("id"));
