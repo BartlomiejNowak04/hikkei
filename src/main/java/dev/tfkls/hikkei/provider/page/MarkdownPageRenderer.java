@@ -11,11 +11,16 @@ import dev.tfkls.hikkei.model.page.PageRenderer;
 import java.util.List;
 
 public class MarkdownPageRenderer implements PageRenderer {
+  /// Wiki links must resolve against the page URL convention shared by the frontend
+  /// (`titleToUrl`) and `PageController.getPageByTitle(fromUrl=true)`: a space in the title is an
+  /// underscore in the URL. flexmark's default maps spaces to '-', which no route understands.
   static final DataHolder defaultOptions =
       new MutableDataSet()
           .set(
               Parser.EXTENSIONS,
               List.of(WikiLinkExtension.create(), StrikethroughExtension.create()))
+          .set(WikiLinkExtension.LINK_ESCAPE_CHARS, " ")
+          .set(WikiLinkExtension.LINK_REPLACE_CHARS, "_")
           .toImmutable();
 
   public MarkdownPageRenderer() {
