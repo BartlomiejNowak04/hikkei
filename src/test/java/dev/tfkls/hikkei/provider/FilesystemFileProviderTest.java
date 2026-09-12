@@ -60,6 +60,39 @@ class FilesystemFileProviderTest {
   }
 
   @Test
+  void deleteContentRemovesStoredFile() throws Exception {
+    byte[] id = provider.storeContent("bye".getBytes(), "text/plain");
+    Path file = tempDir.resolve(new String(id).split("\\$")[0]);
+    assertTrue(Files.exists(file));
+
+    provider.deleteContent(id);
+
+    assertFalse(Files.exists(file));
+    assertNull(provider.getContent(id));
+  }
+
+  @Test
+  void deleteContentIgnoresNullId() {
+    assertDoesNotThrow(() -> provider.deleteContent(null));
+  }
+
+  @Test
+  void deleteContentIgnoresMissingFile() {
+    assertDoesNotThrow(() -> provider.deleteContent("nonexistent".getBytes()));
+  }
+
+  @Test
+  void deleteContentNeverLeavesDirectory() throws Exception {
+    Path outside = Files.createTempFile("fs-provider-outside", ".txt");
+    try {
+      provider.deleteContent(("../" + outside.getFileName()).getBytes());
+      assertTrue(Files.exists(outside));
+    } finally {
+      Files.deleteIfExists(outside);
+    }
+  }
+
+  @Test
   void testStoreGeneratesUniqueIds() throws Exception {
     byte[] data1 = "File1".getBytes();
     byte[] data2 = "File2".getBytes();

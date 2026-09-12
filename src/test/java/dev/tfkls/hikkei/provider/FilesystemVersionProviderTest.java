@@ -78,6 +78,21 @@ public class FilesystemVersionProviderTest {
   }
 
   @Test
+  void deleteVersionIgnoresNullId() {
+    assertDoesNotThrow(() -> provider.deleteVersion(null));
+  }
+
+  @Test
+  void deleteVersionRemovesStoredVersion() throws Exception {
+    byte[] id = provider.storeContent("to be deleted", null);
+    assertNotNull(provider.getVersion(id));
+
+    provider.deleteVersion(id);
+
+    assertNull(provider.getVersion(id));
+  }
+
+  @Test
   void getVersionReturnsNullForNullId() throws Exception {
     assertNull(provider.getVersion(null));
   }

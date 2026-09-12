@@ -51,6 +51,8 @@ public class FilesystemFileProvider implements FileProvider {
 
   @Override
   public void deleteContent(byte[] id) throws InternalErrorException {
+    // Mirrors getContent(null) == null: nothing stored under a null id, nothing to delete.
+    if (id == null) return;
     try {
       String decoded = new String(id);
       int stop = decoded.lastIndexOf('$');
