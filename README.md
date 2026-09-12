@@ -53,7 +53,9 @@ convention, and follow the overall good commit guidelines which are described in
 ## Backend API
 The frontend application communicates with the backend server through an API. Below is the description of available endpoints.
 - `/api/user/`:
+    - GET ``: get the logged in user
     - GET `:id`: get user by id
+    - GET `name/:name`: get user by username
     - GET `pfp/:id`: get user's profile picture
     - GET `categories/:id`: get categories that a user has a permission set for
     - POST `create`: create a user, params: String name
@@ -146,7 +148,7 @@ AUTH_GITHUB_SECRET=[oauth2_secret_token]
 
 # For Google login support
 AUTH_GOOGLE_CLIENT=[oauth2_client_id]
-AUTH_GOOGLE_CLIENT=[oauth2_secret_token]
+AUTH_GOOGLE_SECRET=[oauth2_secret_token]
 
 # If frontend is not mounted on root.
 # The backend redirects the user to [path]/success
