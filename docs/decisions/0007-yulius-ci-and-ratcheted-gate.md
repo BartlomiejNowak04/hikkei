@@ -22,7 +22,7 @@ and the dead-code tools report findings; onboarding may not change application c
     `./gradlew cleanTest build buildHealth` and fails if any test was skipped;
   - `frontend` - `scripts/ci/frontend.sh`: `npm ci`, ESLint, `next build` in compile mode,
     `tsc --noEmit` against a baseline, and knip.
-  `scripts/ci/gate.sh` runs all three in order as `[commands] gate`.
+  `scripts/ci/gate.sh` runs all three in order for a local run.
 - Existing findings are ratcheted, not fixed: ESLint errors in
   `frontend/eslint-suppressions.json` (ESLint bulk suppressions; unused suppressions fail) and a
   warning cap, TypeScript errors per file and code in `frontend/tsc-baseline.json`, knip

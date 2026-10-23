@@ -16,7 +16,7 @@ preset = "standard"   # pull requests squash into dev; a person promotes dev to 
 test = "scripts/ci/backend.sh cleanTest test"
 lint = "scripts/ci/scripts.sh && HIKKEI_TEST_DB=none scripts/ci/backend.sh spotlessCheck pmdMain pmdTest buildHealth && scripts/ci/frontend.sh lint"
 build = "./gradlew --console=plain assemble && scripts/ci/frontend.sh build"
-gate = "scripts/ci/gate.sh"
+# The whole gate locally: scripts/ci/gate.sh (runs the [[ci.jobs]] below in order).
 
 [[ci.jobs]]
 name = "scripts"
