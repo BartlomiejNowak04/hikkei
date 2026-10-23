@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="hikkei unused code"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+  <description>
+    Dead-code check of the gate: unused private members, locals, parameters and imports.
+    Style stays with spotless (google-java-format); add rules here only for dead code.
+  </description>
+  <rule ref="category/java/bestpractices.xml/UnusedPrivateField">
+    <!-- Baseline: findings that predate this check (burn-down issue linked in AGENTS.md). -->
+    <properties>
+      <property name="violationSuppressXPath" value=".[pmd:fileName() = 'VertxOAuth2AuthenticationProvider.java']"/>
+    </properties>
+  </rule>
+  <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
+  <rule ref="category/java/bestpractices.xml/UnusedLocalVariable">
+    <!-- Baseline: findings that predate this check (burn-down issue linked in AGENTS.md). -->
+    <properties>
+      <property name="violationSuppressXPath" value=".[pmd:fileName() = 'StandardAuthEventHandlerMockTest.java' or pmd:fileName() = 'ComprehensiveRouteIntegrationTest.java']"/>
+    </properties>
+  </rule>
+  <rule ref="category/java/bestpractices.xml/UnusedFormalParameter">
+    <!-- Baseline: findings that predate this check (burn-down issue linked in AGENTS.md). -->
+    <properties>
+      <property name="violationSuppressXPath" value=".[pmd:fileName() = 'StandardAuthEventHandler.java' or pmd:fileName() = 'MarkdownPageRenderer.java']"/>
+    </properties>
+  </rule>
+  <rule ref="category/java/bestpractices.xml/UnusedAssignment"/>
+  <rule ref="category/java/codestyle.xml/UnnecessaryImport">
+    <!-- Baseline: findings that predate this check (burn-down issue linked in AGENTS.md). -->
+    <properties>
+      <property name="violationSuppressXPath" value=".[pmd:fileName() = 'JDBCIntegrationTest.java']"/>
+    </properties>
+  </rule>
+</ruleset>
