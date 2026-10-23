@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="hikkei unused code"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+  <description>
+    Dead-code check of the gate: unused private members, locals, parameters and imports.
+    Style stays with spotless (google-java-format); add rules here only for dead code.
+  </description>
+  <rule ref="category/java/bestpractices.xml/UnusedPrivateField">
+    <!-- Baseline: the declarations that predate this check (AGENTS.md "Ratcheted baselines"). -->
+    <properties>
+      <property name="violationSuppressXPath" value=".[(pmd:fileName() = 'VertxOAuth2AuthenticationProvider.java' and @Name = 'vertx')]"/>
+    </properties>
+  </rule>
+  <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
+  <rule ref="category/java/bestpractices.xml/UnusedLocalVariable">
+    <!-- Baseline: the declarations that predate this check (AGENTS.md "Ratcheted baselines"). -->
+    <properties>
+      <property name="violationSuppressXPath" value=".[(pmd:fileName() = 'StandardAuthEventHandlerMockTest.java' and (@Name = 'sessionId' or @Name = 'ctxResp')) or (pmd:fileName() = 'ComprehensiveRouteIntegrationTest.java' and @Name = 'oldRedirectConfig')]"/>
+    </properties>
+  </rule>
+  <rule ref="category/java/bestpractices.xml/UnusedFormalParameter">
+    <!-- Baseline: the declarations that predate this check (AGENTS.md "Ratcheted baselines"). -->
+    <properties>
+      <property name="violationSuppressXPath" value=".[(pmd:fileName() = 'StandardAuthEventHandler.java' and @Name = 'ctx') or (pmd:fileName() = 'MarkdownPageRenderer.java' and @Name = 'markdownOptions')]"/>
+    </properties>
+  </rule>
+  <rule ref="category/java/bestpractices.xml/UnusedAssignment"/>
+  <rule ref="category/java/codestyle.xml/UnnecessaryImport">
+    <!-- Baseline: the declarations that predate this check (AGENTS.md "Ratcheted baselines"). -->
+    <properties>
+      <property name="violationSuppressXPath" value=".[(pmd:fileName() = 'JDBCIntegrationTest.java' and @ImportedName = 'dev.tfkls.hikkei.provider.JDBC.Config')]"/>
+    </properties>
+  </rule>
+</ruleset>

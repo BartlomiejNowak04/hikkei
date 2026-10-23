@@ -3,6 +3,8 @@ plugins {
   id 'application'
   id 'com.diffplug.spotless' version '7.0.2'
   id 'jacoco'
+  id 'pmd'
+  id 'com.autonomousapps.dependency-analysis' version '2.19.0'
 }
 
 spotless {
@@ -83,6 +85,36 @@ test {
   jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
   jvmArgs += "-Xshare:off"
   finalizedBy jacocoTestReport
+}
+
+/// Dead-code check (part of `check`): unused private members, locals and imports.
+pmd {
+  toolVersion = '7.16.0'
+  ruleSets = []
+  ruleSetFiles = files('config/pmd/unused-code.xml')
+  consoleOutput = true
+}
+
+/// Unused-dependency check (`./gradlew buildHealth`, run by scripts/ci/backend.sh).
+/// Only unused dependencies fail; the other advice is informational.
+dependencyAnalysis {
+  issues {
+    all {
+      onUnusedDependencies {
+        severity('fail')
+        // Used: the aggregate brings the JUnit Jupiter engine the tests run on.
+        exclude('org.junit.jupiter:junit-jupiter')
+        // Baseline: unused or used only through their transitives today.
+        exclude('com.vladsch.flexmark:flexmark-all', 'io.vertx:vertx-web-client', 'net.jqwik:jqwik')
+      }
+      onUsedTransitiveDependencies { severity('ignore') }
+      onIncorrectConfiguration { severity('ignore') }
+      onRuntimeOnly { severity('ignore') }
+      onCompileOnly { severity('ignore') }
+      onUnusedAnnotationProcessors { severity('ignore') }
+      onRedundantPlugins { severity('ignore') }
+    }
+  }
 }
 
 application {

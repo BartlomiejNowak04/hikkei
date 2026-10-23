@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreDependencies": [
+    // Used: loaded by name as a webpack loader in next.config.ts.
+    "@svgr/webpack",
+    // Used: `next lint` runs ESLint, and eslint.config.mjs extends "next/*" by name.
+    "eslint",
+    "eslint-config-next",
+    // Baseline (unused today): remove or use it, then drop this line.
+    "lucide-react"
+  ],
+  // Baseline (unused today): the component is not rendered anywhere yet.
+  "ignore": ["src/components/Forbidden/Forbidden.tsx"],
+  // Baseline: searchPage and getRevisions are exported but unused today.
+  "ignoreIssues": {
+    "src/lib/ApiCaller.ts": ["exports"]
+  }
+}
