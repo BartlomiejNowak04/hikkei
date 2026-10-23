@@ -6,7 +6,10 @@ Reads `tsc --noEmit --pretty false` output on stdin and compares the number of e
 in a file do not break the check. Fails when a count grows (a new error) and when it shrinks
 (an error was fixed: lower the baseline in the same change, so it never grows back).
 
-Usage: tsc --noEmit --pretty false | tsc_baseline.py BASELINE.json [--update]
+Errors without a location (`error TS2688: ...`) count under "<global>". With
+--tsc-status, a failing tsc whose output holds no parsable error also fails the check.
+
+Usage: tsc --noEmit --pretty false | tsc_baseline.py BASELINE.json [--tsc-status N] [--update]
 """
 
 import json
@@ -15,6 +18,15 @@ import sys
 from collections import Counter
 
 ERROR = re.compile(r"^(?P<file>.+?)\(\d+,\d+\): error (?P<code>TS\d+):")
+GLOBAL_ERROR = re.compile(r"^error (?P<code>TS\d+):")
+
+
+def error_key(line: str) -> str | None:
+    if m := ERROR.match(line):
+        return f"{m['file']} {m['code']}"
+    if m := GLOBAL_ERROR.match(line):
+        return f"<global> {m['code']}"
+    return None
 
 
 def main() -> int:
@@ -22,12 +34,17 @@ def main() -> int:
         print(__doc__, file=sys.stderr)
         return 2
     path = sys.argv[1]
+    args = sys.argv[2:]
+    tsc_status = int(args[args.index("--tsc-status") + 1]) if "--tsc-status" in args else None
     output = sys.stdin.read()
-    current = Counter(
-        f"{m['file']} {m['code']}" for m in map(ERROR.match, output.splitlines()) if m
-    )
+    current = Counter(key for key in map(error_key, output.splitlines()) if key)
 
-    if "--update" in sys.argv[2:]:
+    if tsc_status not in (None, 0) and not current:
+        print(output, file=sys.stderr)
+        print(f"tsc failed (exit {tsc_status}) without reporting an error.", file=sys.stderr)
+        return 1
+
+    if "--update" in args:
         with open(path, "w", encoding="utf-8") as f:
             json.dump(dict(sorted(current.items())), f, indent=2)
             f.write("\n")

@@ -11,3 +11,5 @@ build
 .settings
 bin/
 .testfs
+
+node_modules/

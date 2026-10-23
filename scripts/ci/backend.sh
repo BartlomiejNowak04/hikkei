@@ -32,8 +32,17 @@ free_port() {
 }
 
 if [ "${HIKKEI_TEST_DB:-docker}" = "docker" ]; then
+  # A killed run (SIGKILL) cannot clean up: remove its leftovers after six hours.
+  now="$(date +%s)"
+  for old in $(docker ps -q --filter label=hikkei-ci-pg); do
+    created="$(date -d "$(docker inspect -f '{{.Created}}' "$old")" +%s)"
+    if [ $((now - created)) -gt 21600 ]; then
+      docker rm -f "$old" >/dev/null 2>&1 || true
+    fi
+  done
+
   container="hikkei-ci-pg-$$-$(date +%s%N)"
-  docker run -d --rm --name "$container" \
+  docker run -d --rm --name "$container" --label hikkei-ci-pg \
     -e POSTGRES_USER=hikkei -e POSTGRES_PASSWORD=hikkei -e POSTGRES_DB=hikkei \
     -p 127.0.0.1::5432 "$PG_IMAGE" >/dev/null
   pg_port="$(docker port "$container" 5432/tcp | head -n1 | sed 's/.*://')"

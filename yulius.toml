@@ -15,7 +15,7 @@ preset = "standard"   # pull requests squash into dev; a person promotes dev to 
 # Backend tests run against a disposable PostgreSQL container (Docker), so none are skipped.
 test = "scripts/ci/backend.sh cleanTest test"
 lint = "scripts/ci/scripts.sh && HIKKEI_TEST_DB=none scripts/ci/backend.sh spotlessCheck pmdMain pmdTest buildHealth && scripts/ci/frontend.sh lint"
-build = "./gradlew --console=plain assemble && scripts/ci/frontend.sh build"
+build = "HIKKEI_TEST_DB=none scripts/ci/backend.sh assemble && scripts/ci/frontend.sh build"
 # The whole gate locally: scripts/ci/gate.sh (runs the [[ci.jobs]] below in order).
 
 [[ci.jobs]]

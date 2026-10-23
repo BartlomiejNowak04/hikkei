@@ -1,0 +1,8 @@
+{
+  "name": "hikkei-ci-knip",
+  "private": true,
+  "description": "Pinned knip for scripts/ci/frontend.sh (installed with npm ci, kept out of the app lockfile).",
+  "devDependencies": {
+    "knip": "6.42.1"
+  }
+}

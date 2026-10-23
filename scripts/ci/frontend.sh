@@ -29,7 +29,6 @@ export npm_config_cache="${npm_config_cache:-$HOME/.npm}"
 export npm_config_update_notifier=false
 
 ESLINT_MAX_WARNINGS=11
-KNIP_VERSION=6.42.1
 
 echo "== npm ci"
 npm ci --no-audit --no-fund
@@ -39,7 +38,9 @@ if [ "$mode" != build ]; then
   npx --no-install eslint src --max-warnings "$ESLINT_MAX_WARNINGS"
 
   echo "== knip"
-  npx -y "knip@$KNIP_VERSION" --no-progress
+  # Pinned with its own lockfile in scripts/ci/knip, outside the app's dependencies.
+  npm ci --no-audit --no-fund --prefix ../scripts/ci/knip
+  ../scripts/ci/knip/node_modules/.bin/knip --no-progress
 fi
 
 if [ "$mode" = lint ]; then
@@ -56,5 +57,6 @@ echo "== tsc"
 # Runs after the build, which generates .next/types (the route prop checks of `next build`).
 tsc_output="$(mktemp)"
 trap 'rm -f "$tsc_output"' EXIT
-npx --no-install tsc --noEmit --pretty false >"$tsc_output" 2>&1 || true
-python3 ../scripts/ci/tsc_baseline.py tsc-baseline.json <"$tsc_output"
+tsc_status=0
+npx --no-install tsc --noEmit --pretty false >"$tsc_output" 2>&1 || tsc_status=$?
+python3 ../scripts/ci/tsc_baseline.py tsc-baseline.json --tsc-status "$tsc_status" <"$tsc_output"
