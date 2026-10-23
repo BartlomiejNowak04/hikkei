@@ -26,13 +26,16 @@ and the dead-code tools report findings; onboarding may not change application c
 - Existing findings are ratcheted, not fixed: ESLint errors in
   `frontend/eslint-suppressions.json` (ESLint bulk suppressions; unused suppressions fail) and a
   warning cap, TypeScript errors per file and code in `frontend/tsc-baseline.json`, knip
-  findings in `frontend/knip.jsonc`, PMD unused-code findings per rule and file in
+  findings in `frontend/knip.jsonc` (whole-file exemptions for `Forbidden.tsx` and the exports
+  of `ApiCaller.ts`, as knip cannot exempt single exports without a code comment), PMD
+  unused-code findings per rule, file and declaration name in
   `config/pmd/unused-code.xml`, unused Gradle dependencies in the `dependencyAnalysis` block of
   `build.gradle`. New findings fail; fixing one requires shrinking the baseline.
 - Dead-code tools: PMD 7 (`UnusedPrivateField`, `UnusedPrivateMethod`, `UnusedLocalVariable`,
   `UnusedFormalParameter`, `UnusedAssignment`, `UnnecessaryImport`) as part of `check`, the
-  Gradle dependency-analysis plugin (unused dependencies only fail), and knip 6.42.1 run
-  through `npx` (pinned) so that the frontend lockfile is not regenerated.
+  Gradle dependency-analysis plugin (unused dependencies only fail), and knip 6.42.1
+  installed with `npm ci` from its own lockfile in `scripts/ci/knip/`, so the frontend
+  lockfile is not regenerated and concurrent runs share no npx cache.
 - `.github/workflows/gradle.yml` is deleted; its build-artifact upload is not replaced
   (nothing consumed it).
 - CD: nothing is deployed today (no deploy scripts, containers or platform files), so
@@ -46,8 +49,9 @@ and the dead-code tools report findings; onboarding may not change application c
   too; compile mode plus the baseline keeps them visible.
 - PostgreSQL from apt inside the job: needs root-owned system state and `initdb` as non-root;
   a container is disposable and isolated between concurrent runs.
-- Adding knip to `devDependencies`: npm 11 rewrote unrelated lockfile entries (dropped other
-  platforms' optional packages), so it runs pinned through `npx` instead.
+- Adding knip to the frontend's `devDependencies`: npm 11 rewrote unrelated lockfile entries
+  (dropped other platforms' optional packages). `npx knip@6.42.1` leaves knip's own
+  dependencies unlocked and races in a shared npx cache.
 
 ## Consequences
 

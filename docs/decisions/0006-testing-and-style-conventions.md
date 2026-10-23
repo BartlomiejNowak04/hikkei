@@ -14,8 +14,9 @@ A team of students working in parallel needed shared rules for tests, formatting
 ## Decision
 
 - Test-driven development: every non-trivial change comes with tests; no class is left untested.
-- JUnit 5 with jqwik registered as a second engine (`*PropTest` for property tests), Mockito
-  (`*MockTest`), Vert.x JUnit 5 and REST Assured for route tests.
+- JUnit 5 with jqwik registered as a second engine (`*PropTest` for property tests; none
+  exist yet, so the dependency is baselined as unused, ADR 0007), Mockito (`*MockTest`),
+  Vert.x JUnit 5 and REST Assured for route tests.
 - Integration tests (`*IntegrationTest`) read database settings from `.test-env` or the
   environment and are skipped when they are missing (`IntegrationTest.require`).
 - Java is formatted with google-java-format through spotless; `./gradlew check` fails on

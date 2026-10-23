@@ -54,8 +54,8 @@ entries to make a change pass.
 | --- | --- | --- |
 | ESLint errors | `frontend/eslint-suppressions.json` (27); warnings capped at 11 in `scripts/ci/frontend.sh` | fix, then `npx eslint src --prune-suppressions` |
 | TypeScript | `frontend/tsc-baseline.json` (2 errors; they make a plain `next build` fail) | fix, then lower the count |
-| knip | `frontend/knip.jsonc` (`Forbidden.tsx`, `lucide-react`, 2 exports in `ApiCaller.ts`) | delete or use, then drop the entry |
-| PMD unused code | `config/pmd/unused-code.xml` `violationSuppressXPath` per rule and file | fix, then drop the file name |
+| knip | `frontend/knip.jsonc`: `Forbidden.tsx` and every export of `ApiCaller.ts` are exempt as whole files (2 unused today: `searchPage`, `getRevisions`), `lucide-react` | delete or use, then drop the entry |
+| PMD unused code | `config/pmd/unused-code.xml` `violationSuppressXPath` per rule, file and declaration name | fix, then drop the entry |
 | Unused Gradle deps | `build.gradle` `dependencyAnalysis` excludes (`flexmark-all`, `vertx-web-client`, `jqwik`) | remove or replace, then drop the exclude |
 
 `npm run lint` (`next lint`) ignores the ESLint suppressions and fails until the baseline is

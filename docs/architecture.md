@@ -84,10 +84,12 @@ those views write the history rows and enforce unique usernames and titles.
 1. The browser calls `/api/...` with the `HikkeiSession` cookie (`credentials: "include"`).
 2. `SessionHandler` resolves the cookie to a user id through the `SessionProvider`.
 3. The controller loads the target object, sets the category in the routing context and
-   asks the `AccessManager` to verify the level the action needs (403 when it is too low).
+   asks the `AccessManager` to verify the level the action needs (401 for an anonymous user,
+   403 for a signed-in user whose level is too low).
 4. Providers read or write PostgreSQL and the filesystem; the controller answers JSON.
-5. Failures map to HTTP codes in `FailureHandler` (`BadDataException` 400,
-   `InternalErrorException` and anything else 500); auth failures redirect to
+5. Failures map to HTTP codes in `FailureHandler`: an `HttpException` keeps its status
+   (400/401/403/404 from controllers and permission checks), `BadDataException` 400,
+   `InternalErrorException` and anything else 500; auth failures redirect to
    `AUTH_FRONTEND_REDIRECT` + `/failure` (default `/auth/failure`).
 
 ## Frontend (`frontend/`)
