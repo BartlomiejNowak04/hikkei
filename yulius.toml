@@ -1,0 +1,40 @@
+# Yulius configuration for hikkei (see AGENTS.md and docs/decisions/0007-yulius-ci-and-ratcheted-gate.md).
+
+[docs]
+agents = "AGENTS.md"
+product = "docs/product.md"
+architecture = "docs/architecture.md"
+decisions = "docs/decisions"
+specs_dir = "docs/specs"
+changes = "docs/changes.md"
+
+[delivery]
+preset = "standard"   # pull requests squash into dev; a person promotes dev to main
+
+[commands]
+# Backend tests run against a disposable PostgreSQL container (Docker), so none are skipped.
+test = "scripts/ci/backend.sh cleanTest test"
+lint = "scripts/ci/scripts.sh && HIKKEI_TEST_DB=none scripts/ci/backend.sh spotlessCheck pmdMain pmdTest buildHealth && scripts/ci/frontend.sh lint"
+build = "./gradlew --console=plain assemble && scripts/ci/frontend.sh build"
+gate = "scripts/ci/gate.sh"
+
+[[ci.jobs]]
+name = "scripts"
+command = "scripts/ci/scripts.sh"
+
+[[ci.jobs]]
+name = "backend"
+command = "scripts/ci/backend.sh"
+
+[[ci.jobs]]
+name = "frontend"
+command = "scripts/ci/frontend.sh"
+
+[resources.env]
+GRADLE_OPTS = "-Dorg.gradle.workers.max={cpus}"
+
+[cd.dev]
+about = "Nothing deploys yet: no dev machine, deploy script, container or platform file exists (ADR 0007)."
+
+[cd.prod]
+about = "Nothing deploys yet: there is no production deployment; a person defines one before the first release (ADR 0007)."
